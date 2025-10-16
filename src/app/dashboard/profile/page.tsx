@@ -22,6 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 import { useAuth as useAppAuth } from '@/hooks/use-auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useFirestore, useAuth } from '@/firebase';
@@ -425,3 +426,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
