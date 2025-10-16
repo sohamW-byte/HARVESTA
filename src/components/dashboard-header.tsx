@@ -21,6 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import Link from 'next/link';
+import { LanguageSwitcher } from './language-switcher';
 
 export function DashboardHeader() {
   const { userProfile, signOut } = useAuth();
@@ -42,6 +43,7 @@ export function DashboardHeader() {
         </div>
       </div>
       <div className="flex items-center gap-4">
+        <LanguageSwitcher />
         <div className="flex items-center gap-2 text-sm font-medium">
           <CloudSun className="h-5 w-5 text-accent" />
           <span>24°C, Sunny</span>

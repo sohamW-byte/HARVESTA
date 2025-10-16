@@ -5,6 +5,7 @@ import { AuthProvider } from '@/hooks/use-auth';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'Harvesta',
@@ -41,6 +42,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+       <head>
+        <Script
+          strategy="afterInteractive"
+          src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+        />
+        <Script strategy="afterInteractive" id="google-translate-init">
+          {`
+            function googleTranslateElementInit() {
+              new window.google.translate.TranslateElement({
+                pageLanguage: 'en',
+                layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+              }, 'google_translate_element');
+            }
+          `}
+        </Script>
+      </head>
       <body className={cn('font-body antialiased', inter.variable, sourceCodePro.variable)}>
         <RootProviders>
             {children}
