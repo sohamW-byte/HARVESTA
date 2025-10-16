@@ -333,8 +333,8 @@ export default function ProfilePage() {
 
                         <div className="space-y-2">
                             <Label>Role</Label>
-                            <div className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm capitalize text-muted-foreground">
-                                {userProfile?.role || 'Not set'}
+                            <div className="flex h-10 w-full items-center rounded-md border border-input bg-background/50 px-3 py-2 text-sm text-muted-foreground">
+                                {userProfile?.role === 'farmer' ? 'Farmer' : userProfile?.role === 'buyer' ? 'Businessman' : 'Not set'}
                             </div>
                         </div>
 
