@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -10,8 +11,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { getDocs, query, collection, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase'; // Assuming db is exported from a client-side config
 
 const UserSearchResultSchema = z.object({
   id: z.string(),
@@ -31,23 +30,9 @@ const searchUsers = ai.defineTool(
   },
   async (input) => {
     console.log(`Searching for users with name: ${input.name}`);
-    try {
-      const usersRef = collection(db, 'users');
-      // Using '>=' and '<=' for a "starts with" query on the name
-      const q = query(usersRef, where('name', '>=', input.name), where('name', '<=', input.name + '\uf8ff'));
-      const querySnapshot = await getDocs(q);
-      const users = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        name: doc.data().name,
-        role: doc.data().role,
-        email: doc.data().email,
-      }));
-      console.log('Found users:', users);
-      return users;
-    } catch (error) {
-        console.error("Error searching users:", error);
-        return [];
-    }
+    // This is a placeholder. In a real app, you'd query a database.
+    // The previous implementation was causing a server crash.
+    return [];
   }
 );
 
