@@ -123,7 +123,7 @@ export default function SignupPage() {
       <CardHeader>
         <CardTitle className="text-2xl">Create an Account</CardTitle>
         <CardDescription>
-          Join Harvestha to connect with the farming community.
+          Join Harvesta to connect with the farming community.
         </CardDescription>
       </CardHeader>
       <form onSubmit={form.handleSubmit(onSubmit)}>

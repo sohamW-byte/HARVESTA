@@ -54,7 +54,7 @@ export default function CommunityPage() {
     return (
         <div className="container mx-auto py-8">
             <h1 className="text-3xl font-bold tracking-tight">Community Forum</h1>
-            <p className="text-muted-foreground">Connect, discuss, and trade with the Harvestha community.</p>
+            <p className="text-muted-foreground">Connect, discuss, and trade with the Harvesta community.</p>
 
             <div className="mt-6 max-w-3xl mx-auto space-y-6">
                 {/* Create Post Card */}
