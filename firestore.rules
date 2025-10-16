@@ -1,37 +1,44 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces a strict user-ownership model for most data, with a public read for market prices.
+ * @fileoverview Firestore Security Rules for the application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for user-specific data,
+ * while allowing public read access to market price data.  It leverages
+ * path-based authorization and data denormalization to avoid costly `get()`
+ * calls and ensure efficient security checks.  Data validation is relaxed in
+ * this prototyping phase, focusing on relational integrity for authorization.
  *
  * Data Structure:
- * - User profiles are stored under `/users/{userId}`.
- * - User-owned data (fields, expenses, tasks, produce listings) are stored under their respective `/users/{userId}/...` subcollections.
- * - Growth data is nested under `/users/{userId}/fields/{fieldId}/growthData/{growthDataId}`.
- * - Market prices are stored in the top-level `/marketPrices/{marketPriceId}` collection.
+ * - /users/{userId}: Stores user profile information, owned by the user.
+ * - /users/{userId}/fields/{fieldId}: Stores field data, owned by the user.
+ * - /users/{userId}/expenses/{expenseId}: Stores expense data, owned by the user.
+ * - /users/{userId}/tasks/{taskId}: Stores task data, owned by the user.
+ * - /users/{userId}/fields/{fieldId}/growthData/{growthDataId}: Stores growth data, owned by the user and field.
+ * - /marketPrices/{marketPriceId}: Stores market price data, publicly readable.
+ * - /users/{userId}/produceListings/{produceListingId}: Stores produce listings, owned by the user.
  *
  * Key Security Decisions:
- * - User data is private and only accessible to the owning user.
+ * - User-specific data is strictly controlled by the owning user.
  * - Market price data is publicly readable.
- * - Listing of user documents in subcollections is allowed for the owner.
- * - All write operations (create, update, delete) require authentication and proper authorization.
+ * - Data validation is minimized to focus on authorization and relational integrity.
+ * - List operations are secured to prevent unauthorized data access.
  *
  * Denormalization for Authorization:
- * - User-owned documents include a `userId` field that must match the path's `userId` parameter. This avoids costly `get()` calls for ownership checks.
- *
- * Structural Segregation:
- * - Private user data is stored under `/users/{userId}`, while public market price data is stored in the top-level `/marketPrices` collection. This allows for clear and efficient access control.
+ * - The `userId` is included in the path for all user-owned data, allowing for
+ *   simple ownership checks without `get()` calls.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profile documents.
+     * @description Enforces access control for user profile documents.
      * @path /users/{userId}
-     * @allow (create) - Authenticated user can create their own profile if the userId matches their auth UID.
-     * @allow (get, list, update, delete) - Authenticated user can access their own profile if the userId matches their auth UID.
-     * @deny (create) - Unauthenticated user cannot create a profile.
-     * @deny (update, delete) - User cannot modify another user's profile.
-     * @principle Enforces document ownership and requires a verified identity.
+     * @allow (create) - Authenticated user can create their own profile.
+     * @allow (get, list, update, delete) - Authenticated user can only access their own profile.
+     * @deny (create) - If the user ID in the request does not match the authenticated user's ID.
+     * @deny (update, delete) - If the user is not the owner.
+     * @principle Enforces document ownership for writes, restricts access to a user's own data tree.
      */
     match /users/{userId} {
       function isSignedIn() {
@@ -43,22 +50,29 @@ service cloud.firestore {
       }
 
       function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+        return isOwner(userId) && exists(resource);
       }
 
+      // Allow the user to read their own profile data
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+
+      // Allow the user to create their own profile, enforcing that the userId in the document matches their auth.uid
+      allow create: if isSignedIn() && request.auth.uid == userId;
+
+      // Allow the user to update their own profile
+      allow update: if isExistingOwner(userId);
+
+      // Allow the user to delete their own profile
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to field documents under a user.
+     * @description Enforces access control for field documents under a user.
      * @path /users/{userId}/fields/{fieldId}
-     * @allow (create, get, list, update, delete) - Authenticated user can manage their own fields if the userId matches their auth UID.
-     * @deny (create, update, delete) - User cannot manage another user's fields.
-     * @principle Enforces document ownership and requires a verified identity.
+     * @allow (create, get, list, update, delete) - Authenticated user can only access their own fields.
+     * @deny (create, update, delete) - If the user is not the owner.
+     * @principle Enforces document ownership for writes, restricts access to a user's own data tree.
      */
     match /users/{userId}/fields/{fieldId} {
       function isSignedIn() {
@@ -70,22 +84,29 @@ service cloud.firestore {
       }
 
       function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+        return isOwner(userId) && exists(resource);
       }
 
+      // Allow the user to read their own field data
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+
+      // Allow the user to create their own field data
+      allow create: if isOwner(userId);
+
+      // Allow the user to update their own field data
+      allow update: if isExistingOwner(userId);
+
+      // Allow the user to delete their own field data
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to expense documents under a user.
+     * @description Enforces access control for expense documents under a user.
      * @path /users/{userId}/expenses/{expenseId}
-     * @allow (create, get, list, update, delete) - Authenticated user can manage their own expenses if the userId matches their auth UID.
-     * @deny (create, update, delete) - User cannot manage another user's expenses.
-     * @principle Enforces document ownership and requires a verified identity.
+     * @allow (create, get, list, update, delete) - Authenticated user can only access their own expenses.
+     * @deny (create, update, delete) - If the user is not the owner.
+     * @principle Enforces document ownership for writes, restricts access to a user's own data tree.
      */
     match /users/{userId}/expenses/{expenseId} {
       function isSignedIn() {
@@ -97,22 +118,29 @@ service cloud.firestore {
       }
 
       function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+        return isOwner(userId) && exists(resource);
       }
 
+      // Allow the user to read their own expense data
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+
+      // Allow the user to create their own expense data
+      allow create: if isOwner(userId);
+
+      // Allow the user to update their own expense data
+      allow update: if isExistingOwner(userId);
+
+      // Allow the user to delete their own expense data
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to task documents under a user.
+     * @description Enforces access control for task documents under a user.
      * @path /users/{userId}/tasks/{taskId}
-     * @allow (create, get, list, update, delete) - Authenticated user can manage their own tasks if the userId matches their auth UID.
-     * @deny (create, update, delete) - User cannot manage another user's tasks.
-     * @principle Enforces document ownership and requires a verified identity.
+     * @allow (create, get, list, update, delete) - Authenticated user can only access their own tasks.
+     * @deny (create, update, delete) - If the user is not the owner.
+     * @principle Enforces document ownership for writes, restricts access to a user's own data tree.
      */
     match /users/{userId}/tasks/{taskId} {
       function isSignedIn() {
@@ -124,22 +152,29 @@ service cloud.firestore {
       }
 
       function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+        return isOwner(userId) && exists(resource);
       }
 
+      // Allow the user to read their own task data
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+
+      // Allow the user to create their own task data
+      allow create: if isOwner(userId);
+
+      // Allow the user to update their own task data
+      allow update: if isExistingOwner(userId);
+
+      // Allow the user to delete their own task data
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to growth data documents under a field.
+     * @description Enforces access control for growth data documents under a field.
      * @path /users/{userId}/fields/{fieldId}/growthData/{growthDataId}
-     * @allow (create, get, list, update, delete) - Authenticated user can manage growth data for their fields if the userId matches their auth UID.
-     * @deny (create, update, delete) - User cannot manage growth data for another user's fields.
-     * @principle Enforces document ownership and requires a verified identity.
+     * @allow (create, get, list, update, delete) - Authenticated user can only access their own growth data.
+     * @deny (create, update, delete) - If the user is not the owner.
+     * @principle Enforces document ownership for writes, restricts access to a user's own data tree.
      */
     match /users/{userId}/fields/{fieldId}/growthData/{growthDataId} {
       function isSignedIn() {
@@ -150,40 +185,43 @@ service cloud.firestore {
         return request.auth.uid == userId;
       }
 
-        function isFieldOwner(userId, fieldId) {
-            return get(/databases/$(database)/documents/users/$(userId)/fields/$(fieldId)).data.userId == userId;
-        }
-
       function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+        return isOwner(userId) && exists(resource);
       }
 
-      allow get: if isOwner(userId) && isFieldOwner(userId, fieldId);
-      allow list: if isOwner(userId) && isFieldOwner(userId, fieldId);
-      allow create: if isSignedIn() && isOwner(userId) && isFieldOwner(userId, fieldId) && request.resource.data.fieldId == fieldId;
-      allow update: if isExistingOwner(userId) && isFieldOwner(userId, fieldId) && request.resource.data.fieldId == fieldId;
-      allow delete: if isExistingOwner(userId) && isFieldOwner(userId, fieldId);
+      // Allow the user to read their own growth data
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+
+      // Allow the user to create their own growth data
+      allow create: if isOwner(userId);
+
+      // Allow the user to update their own growth data
+      allow update: if isExistingOwner(userId);
+
+      // Allow the user to delete their own growth data
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to market price documents.
+     * @description Allows public read access to market price data, with no write access.
      * @path /marketPrices/{marketPriceId}
-     * @allow (get, list) - Public read access to market prices.
-     * @deny (create, update, delete) - Only authenticated users can manage market prices.
-     * // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @principle Allows public read access while restricting write access.
+     * @allow (get, list) - Any user can read market prices.
+     * @deny (create, update, delete) - No user can write market prices.
+     * @principle Provides public read access to a top-level collection.
      */
     match /marketPrices/{marketPriceId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      // Allow anyone to read market price data
+      allow get: if true;
+      allow list: if true;
     }
 
     /**
-     * @description Controls access to produce listing documents under a user.
+     * @description Enforces access control for produce listings under a user.
      * @path /users/{userId}/produceListings/{produceListingId}
-     * @allow (create, get, list, update, delete) - Authenticated user can manage their own produce listings if the userId matches their auth UID.
-     * @deny (create, update, delete) - User cannot manage another user's produce listings.
-     * @principle Enforces document ownership and requires a verified identity.
+     * @allow (create, get, list, update, delete) - Authenticated user can only access their own produce listings.
+     * @deny (create, update, delete) - If the user is not the owner.
+     * @principle Enforces document ownership for writes, restricts access to a user's own data tree.
      */
     match /users/{userId}/produceListings/{produceListingId} {
       function isSignedIn() {
@@ -195,13 +233,20 @@ service cloud.firestore {
       }
 
       function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+        return isOwner(userId) && exists(resource);
       }
 
+      // Allow the user to read their own produce listing data
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+
+      // Allow the user to create their own produce listing data
+      allow create: if isOwner(userId);
+
+      // Allow the user to update their own produce listing data
+      allow update: if isExistingOwner(userId);
+
+      // Allow the user to delete their own produce listing data
       allow delete: if isExistingOwner(userId);
     }
   }
