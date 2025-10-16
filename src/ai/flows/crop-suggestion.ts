@@ -13,7 +13,7 @@ import {z} from 'zod';
 
 const CropSuggestionInputSchema = z.object({
   location: z.string().describe('The geographical location (e.g., village, district, state) of the farm.'),
-  crop: z.string().optional().describe('A specific crop the user is interested in growing.'),
+  cropsGrown: z.array(z.string()).optional().describe('A list of crops the user is currently growing.'),
 });
 
 export type CropSuggestionInput = z.infer<typeof CropSuggestionInputSchema>;
@@ -21,7 +21,7 @@ export type CropSuggestionInput = z.infer<typeof CropSuggestionInputSchema>;
 const CropSuggestionOutputSchema = z.object({
   suggestions: z.array(
     z.string()
-  ).describe('A list of smart suggestions for the user.'),
+  ).describe('A list of smart, actionable suggestions for the user.'),
 });
 
 export type CropSuggestionOutput = z.infer<typeof CropSuggestionOutputSchema>;
@@ -36,17 +36,22 @@ const prompt = ai.definePrompt({
   output: {schema: CropSuggestionOutputSchema},
   prompt: `You are an expert agronomist providing smart crop suggestions for an Indian farmer.
 
-The user is in: {{{location}}}.
-They are considering growing: {{{crop}}}.
+The user's farm is located in: {{{location}}}.
+The user is currently growing the following crops: {{#if cropsGrown}}{{#each cropsGrown}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}none specified{{/if}}.
 
-Based on this, provide 3-4 concise, actionable suggestions as a list of strings. Consider factors like market trends, regional suitability, profitability, and crop diversification. If they mentioned a specific crop, provide advice related to it. If not, give general recommendations for their area.
+Based on this information, provide 3-4 concise, actionable suggestions as a list of strings. Your advice should be highly practical and consider factors like:
+- Profitability and current market trends for the given location.
+- Suitability for the local climate and soil (inferred from the location).
+- Crop diversification to reduce risk.
+- Potential for intercropping or succession planting with their existing crops.
+- Water requirements and sustainability.
 
-Example suggestions:
-- "Rice is trending in your region with good prices."
-- "Consider Sugarcane for higher profit this season."
-- "Diversify with Maize for stable returns."
+Example Suggestions:
+- "Given you're growing Onions in Nashik, consider intercropping with Coriander for a quick cash crop between onion cycles."
+- "Market prices for soybeans in Maharashtra are high. It could be a profitable alternative to one of your current crops."
+- "To improve soil health, rotate your wheat crop with a legume like Chickpea (Chana) in the next season."
 
-Keep the suggestions short and practical. Make sure the output is valid JSON, and the schema descriptions should inform the contents of the JSON.
+Keep the suggestions short, direct, and practical. Ensure the output is a valid JSON object adhering to the schema.
 `,
 });
 

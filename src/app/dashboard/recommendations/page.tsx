@@ -6,17 +6,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { suggestCrops, type CropSuggestionOutput } from '@/ai/flows/crop-suggestion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Lightbulb, Bot, ArrowUp, ArrowDown, Minus, MapPin } from 'lucide-react';
+import { Loader2, Lightbulb, Bot, ArrowUp, ArrowDown, Minus, MapPin, Sprout, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useLocation } from '@/hooks/use-location';
+import { useAuth } from '@/hooks/use-auth';
+import { Badge } from '@/components/ui/badge';
 
 const suggestionSchema = z.object({
   location: z.string().min(2, "Please enter a location."),
-  crop: z.string().optional(),
+  cropsGrown: z.string().optional(), // We'll handle this as a string from the form and convert to array
 });
 
 type SuggestionFormValues = z.infer<typeof suggestionSchema>;
@@ -38,28 +39,39 @@ export default function RecommendationsPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CropSuggestionOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { location: userLocation, loading: locationLoading } = useLocation();
+  
+  const { location: browserLocation, loading: locationLoading } = useLocation();
+  const { userProfile, loading: userLoading } = useAuth();
+  
+  const effectiveLocation = browserLocation?.address || userProfile?.region || '';
 
   const form = useForm<SuggestionFormValues>({
     resolver: zodResolver(suggestionSchema),
     defaultValues: {
       location: "",
-      crop: "",
+      cropsGrown: "",
     },
   });
 
   useEffect(() => {
-    if (userLocation?.address) {
-      form.setValue('location', userLocation.address);
+    if (effectiveLocation) {
+      form.setValue('location', effectiveLocation);
     }
-  }, [userLocation, form]);
+    if (userProfile?.cropsGrown) {
+      form.setValue('cropsGrown', userProfile.cropsGrown.join(', '));
+    }
+  }, [effectiveLocation, userProfile, form]);
 
   const onSubmit = async (data: SuggestionFormValues) => {
     setLoading(true);
     setResult(null);
     setError(null);
     try {
-      const recommendation = await suggestCrops(data);
+      const cropsArray = data.cropsGrown?.split(',').map(c => c.trim()).filter(Boolean) || [];
+      const recommendation = await suggestCrops({
+          location: data.location,
+          cropsGrown: cropsArray
+      });
       setResult(recommendation);
     } catch (e: any) {
       setError(e.message || "An unexpected error occurred.");
@@ -67,6 +79,8 @@ export default function RecommendationsPage() {
       setLoading(false);
     }
   };
+  
+  const isLoadingPage = locationLoading || userLoading;
 
   return (
     <div className="container mx-auto py-8 max-w-3xl">
@@ -75,7 +89,7 @@ export default function RecommendationsPage() {
             <Lightbulb className="text-accent" /> AI Suggestions
         </h1>
         <p className="text-muted-foreground">
-          Get crop ideas and trending prices for your area.
+          Get personalized crop ideas using your farm data and local market trends.
         </p>
       </div>
 
@@ -83,47 +97,46 @@ export default function RecommendationsPage() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <CardContent className="space-y-6 pt-6">
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Your Location</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Enter location or allow access..." {...field} className="pl-9" disabled={locationLoading} />
-                            {locationLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />}
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="crop"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Which crop do you want to grow?</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a crop (optional)" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            <SelectItem value="rice">Rice</SelectItem>
-                            <SelectItem value="wheat">Wheat</SelectItem>
-                            <SelectItem value="sugarcane">Sugarcane</SelectItem>
-                            <SelectItem value="maize">Maize</SelectItem>
-                            <SelectItem value="cotton">Cotton</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                
+                {isLoadingPage && <Loader2 className="animate-spin" />}
+
+                {!isLoadingPage && (
+                    <>
+                        <FormField
+                        control={form.control}
+                        name="location"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Your Location</FormLabel>
+                            <FormControl>
+                                <div className="relative">
+                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input placeholder="Enter location or allow access..." {...field} className="pl-9" />
+                                </div>
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="cropsGrown"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Your Current Crops</FormLabel>
+                             <FormControl>
+                                <div className="relative">
+                                    <Sprout className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input placeholder="e.g., Grapes, Onions, Tomatoes" {...field} className="pl-9" />
+                                </div>
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </>
+                )}
+
                  <div className="pt-4">
                     <h3 className="text-sm font-medium text-muted-foreground mb-2">Trending Crop Prices (₹/kg)</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -140,7 +153,7 @@ export default function RecommendationsPage() {
                 </div>
 
                 <div className="pt-4">
-                     <Button type="submit" disabled={loading} className="w-full md:w-auto">
+                     <Button type="submit" disabled={loading || isLoadingPage} className="w-full md:w-auto">
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Get Smart Suggestions
                     </Button>
@@ -149,7 +162,7 @@ export default function RecommendationsPage() {
                 {loading && (
                     <div className="flex flex-col items-center justify-center h-24 gap-4">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-muted-foreground">Generating suggestions...</p>
+                        <p className="text-muted-foreground">Analyzing your farm data...</p>
                     </div>
                 )}
 
@@ -158,7 +171,7 @@ export default function RecommendationsPage() {
                 {result && (
                     <Alert className="bg-green-50 border-green-200 text-green-900 dark:bg-green-900/20 dark:border-green-500/30 dark:text-green-200">
                         <Bot className="h-4 w-4 !text-green-500" />
-                        <AlertTitle className="font-semibold">Smart Suggestion</AlertTitle>
+                        <AlertTitle className="font-semibold">Your Personalized Suggestions</AlertTitle>
                         <AlertDescription>
                            <ul className="list-disc pl-5 space-y-1 mt-2">
                              {result.suggestions.map((suggestion, index) => (
