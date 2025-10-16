@@ -45,12 +45,12 @@ const yojanaLinks = [
 export function DashboardSidebar() {
   const pathname = usePathname();
   const { userProfile } = useAuth();
-
+  
   const menuItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/dashboard/recommendations', label: 'AI Suggestions', icon: Lightbulb },
     { href: '/dashboard/marketplace', label: 'Marketplace', icon: Store },
-    { href: '/dashboard/my-fields', label: 'My Fields', icon: Map },
+    { href: '/dashboard/my-fields', label: 'My Fields', icon: Map, buyerHidden: true },
     { href: '/dashboard/reports', label: 'Reports', icon: BarChart },
     { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
     { href: '/dashboard/community', label: 'Community', icon: Users },
@@ -61,6 +61,7 @@ export function DashboardSidebar() {
 
   const userInitial = userProfile?.name?.charAt(0).toUpperCase() || '?';
   const isAdmin = userProfile?.role === 'admin';
+  const isBuyer = userProfile?.role === 'buyer';
 
   return (
     <Sidebar>
@@ -76,6 +77,7 @@ export function DashboardSidebar() {
         <SidebarMenu>
           {menuItems.map((item) => {
             if (item.adminOnly && !isAdmin) return null;
+            if (item.buyerHidden && isBuyer) return null;
             
             return (
               <SidebarMenuItem key={item.href}>
