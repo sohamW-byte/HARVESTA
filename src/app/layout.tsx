@@ -1,3 +1,4 @@
+'use client';
 import type { Metadata } from 'next';
 import { Inter, Source_Code_Pro } from 'next/font/google';
 import './globals.css';
@@ -8,10 +9,12 @@ import { FirebaseClientProvider } from '@/firebase';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TranslationProvider } from '@/hooks/use-translation';
 
-export const metadata: Metadata = {
-  title: 'Harvesta',
-  description: 'A modern farming and analytics dashboard.',
-};
+// Metadata needs to be exported from a server component, so we can't define it here anymore.
+// This is a tradeoff to fix the runtime error.
+// export const metadata: Metadata = {
+//   title: 'Harvesta',
+//   description: 'A modern farming and analytics dashboard.',
+// };
 
 const inter = Inter({
   subsets: ['latin'],
@@ -42,7 +45,7 @@ function RootProviders({ children }: { children: React.ReactNode }) {
             </AuthProvider>
             </FirebaseClientProvider>
         </ThemeProvider>
-    )
+    );
 }
 
 export default function RootLayout({
