@@ -1,12 +1,12 @@
 'use client';
 
 import {
-  CloudSun,
   Search,
   User,
   LogOut,
   Loader2,
 } from 'lucide-react';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 import { Input } from '@/components/ui/input';
@@ -27,33 +27,12 @@ import { LanguageSwitcher } from './language-switcher';
 import { useLocation } from '@/hooks/use-location';
 
 interface WeatherData {
-    temperature: number;
-    condition: string;
+    temp_c: number;
+    condition: {
+        text: string;
+        icon: string;
+    };
 }
-
-// Map weather codes to readable conditions and icons
-// Codes from Open-Meteo documentation
-const weatherCodeToString: { [key: number]: string } = {
-    0: 'Clear sky',
-    1: 'Mainly clear',
-    2: 'Partly cloudy',
-    3: 'Overcast',
-    45: 'Fog',
-    48: 'Depositing rime fog',
-    51: 'Light drizzle',
-    53: 'Moderate drizzle',
-    55: 'Dense drizzle',
-    61: 'Slight rain',
-    63: 'Moderate rain',
-    65: 'Heavy rain',
-    71: 'Slight snow fall',
-    73: 'Moderate snow fall',
-    75: 'Heavy snow fall',
-    80: 'Slight rain showers',
-    81: 'Moderate rain showers',
-    82: 'Violent rain showers',
-    95: 'Thunderstorm',
-};
 
 
 export function DashboardHeader() {
@@ -71,30 +50,35 @@ export function DashboardHeader() {
         setIsWeatherLoading(true);
         setWeatherError(null);
         try {
-          const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current_weather=true`);
+          const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
+          if (!apiKey) {
+            throw new Error("Weather API key is not configured.");
+          }
+          const response = await fetch(`https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location.latitude},${location.longitude}`);
           if (!response.ok) {
             throw new Error('Failed to fetch weather data.');
           }
           const data = await response.json();
-          const weatherCode = data.current_weather.weathercode;
-          setWeather({
-            temperature: Math.round(data.current_weather.temperature),
-            condition: weatherCodeToString[weatherCode] || 'Unknown',
-          });
+          setWeather(data.current);
         } catch (error) {
           console.error("Weather fetch error:", error);
           setWeatherError('Could not fetch weather.');
         } finally {
           setIsWeatherLoading(false);
         }
-      } else if (locationError) {
-        setWeatherError('Location access denied.');
-        setIsWeatherLoading(false);
+      } else {
+         if (locationError) {
+            setWeatherError('Location access denied.');
+         }
+         setIsWeatherLoading(false);
       }
     }
-
-    fetchWeather();
-  }, [location, locationError]);
+    
+    // Only fetch weather when location loading is complete
+    if(!locationLoading){
+        fetchWeather();
+    }
+  }, [location, locationError, locationLoading]);
 
 
   return (
@@ -115,11 +99,14 @@ export function DashboardHeader() {
       <div className="flex items-center gap-4">
         <LanguageSwitcher />
         <div className="flex items-center gap-2 text-sm font-medium">
-          <CloudSun className="h-5 w-5 text-accent" />
            {isWeatherLoading || locationLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
            ) : weather ? (
-            <span>{weather.temperature}°C, {weather.condition}</span>
+            <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={weather.condition.icon} alt={weather.condition.text} className="h-6 w-6" />
+                <span>{weather.temp_c}°C, {weather.condition.text}</span>
+            </>
           ) : weatherError ? (
             <span className="text-muted-foreground text-xs">{weatherError}</span>
           ) : null}

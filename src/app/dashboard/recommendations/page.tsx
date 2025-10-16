@@ -9,31 +9,25 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Loader2, Lightbulb, Bot, ArrowUp, ArrowDown, Minus, MapPin, Sprout, Info } from 'lucide-react';
+import { Loader2, Lightbulb, Bot, MapPin, Sprout, Cloud, Thermometer } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useLocation } from '@/hooks/use-location';
 import { useAuth } from '@/hooks/use-auth';
-import { Badge } from '@/components/ui/badge';
+
+interface WeatherData {
+  temp_c: number;
+  condition: {
+    text: string;
+    icon: string;
+  };
+}
 
 const suggestionSchema = z.object({
   location: z.string().min(2, "Please enter a location."),
-  cropsGrown: z.string().optional(), // We'll handle this as a string from the form and convert to array
+  cropsGrown: z.string().optional(),
 });
 
 type SuggestionFormValues = z.infer<typeof suggestionSchema>;
-
-const trendingCrops = [
-    { name: 'Rice', price: 32, trend: 'up' },
-    { name: 'Wheat', price: 28, trend: 'down' },
-    { name: 'Sugarcane', price: 40, trend: 'up' },
-    { name: 'Maize', price: 22, trend: 'stable' },
-];
-
-const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'stable' }) => {
-    if (trend === 'up') return <ArrowUp className="h-4 w-4 text-green-500" />;
-    if (trend === 'down') return <ArrowDown className="h-4 w-4 text-red-500" />;
-    return <Minus className="h-4 w-4 text-gray-500" />;
-};
 
 export default function RecommendationsPage() {
   const [loading, setLoading] = useState(false);
@@ -43,6 +37,9 @@ export default function RecommendationsPage() {
   const { location: browserLocation, loading: locationLoading } = useLocation();
   const { userProfile, loading: userLoading } = useAuth();
   
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [isWeatherLoading, setIsWeatherLoading] = useState(true);
+
   const effectiveLocation = browserLocation?.address || userProfile?.region || '';
 
   const form = useForm<SuggestionFormValues>({
@@ -62,15 +59,47 @@ export default function RecommendationsPage() {
     }
   }, [effectiveLocation, userProfile, form]);
 
+  useEffect(() => {
+    async function fetchWeather() {
+      if (browserLocation) {
+        setIsWeatherLoading(true);
+        try {
+          const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
+          if (!apiKey) {
+            throw new Error("Weather API key is not configured.");
+          }
+          const response = await fetch(`https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${browserLocation.latitude},${browserLocation.longitude}`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch weather data.');
+          }
+          const data = await response.json();
+          setWeather(data.current);
+        } catch (error) {
+          console.error("Weather fetch error on recommendations page:", error);
+        } finally {
+          setIsWeatherLoading(false);
+        }
+      } else {
+        setIsWeatherLoading(false);
+      }
+    }
+
+    if (!locationLoading) {
+      fetchWeather();
+    }
+  }, [browserLocation, locationLoading]);
+
   const onSubmit = async (data: SuggestionFormValues) => {
     setLoading(true);
     setResult(null);
     setError(null);
     try {
       const cropsArray = data.cropsGrown?.split(',').map(c => c.trim()).filter(Boolean) || [];
+      const weatherString = weather ? `Current conditions are ${weather.temp_c}°C and ${weather.condition.text}.` : 'Weather data not available.';
       const recommendation = await suggestCrops({
           location: data.location,
-          cropsGrown: cropsArray
+          cropsGrown: cropsArray,
+          weather: weatherString,
       });
       setResult(recommendation);
     } catch (e: any) {
@@ -89,7 +118,7 @@ export default function RecommendationsPage() {
             <Lightbulb className="text-accent" /> AI Suggestions
         </h1>
         <p className="text-muted-foreground">
-          Get personalized crop ideas using your farm data and local market trends.
+          Get personalized crop ideas using your farm data, location, and local weather.
         </p>
       </div>
 
@@ -98,10 +127,10 @@ export default function RecommendationsPage() {
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <CardContent className="space-y-6 pt-6">
                 
-                {isLoadingPage && <Loader2 className="animate-spin" />}
+                {isLoadingPage && <div className="flex justify-center"><Loader2 className="animate-spin" /></div>}
 
                 {!isLoadingPage && (
-                    <>
+                    <div className="grid md:grid-cols-2 gap-6">
                         <FormField
                         control={form.control}
                         name="location"
@@ -134,23 +163,37 @@ export default function RecommendationsPage() {
                             </FormItem>
                         )}
                         />
-                    </>
-                )}
-
-                 <div className="pt-4">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Trending Crop Prices (₹/kg)</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {trendingCrops.map(crop => (
-                            <div key={crop.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                                <span className="font-medium">{crop.name}</span>
-                                <div className="flex items-center gap-2">
-                                    <span className="font-semibold">₹{crop.price}</span>
-                                    <TrendIcon trend={crop.trend as any} />
-                                </div>
-                            </div>
-                        ))}
                     </div>
+                )}
+                
+                <div className="pt-4">
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Live Weather Input</h3>
+                    {isWeatherLoading ? (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Fetching local weather...</span>
+                        </div>
+                    ) : weather ? (
+                        <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={weather.condition.icon} alt={weather.condition.text} className="h-10 w-10" />
+                            <div className="flex-1">
+                                <p className="font-semibold text-lg">{weather.condition.text}</p>
+                                <p className="text-sm text-muted-foreground">{browserLocation?.address?.split(',').slice(0, 2).join(', ')}</p>
+                            </div>
+                            <div className="flex items-center gap-2 text-lg font-semibold">
+                                <Thermometer className="h-5 w-5 text-red-500"/>
+                                {weather.temp_c}°C
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                            <Cloud className="h-4 w-4" />
+                            <span>Weather data could not be loaded. Suggestions will be based on location only.</span>
+                        </div>
+                    )}
                 </div>
+
 
                 <div className="pt-4">
                      <Button type="submit" disabled={loading || isLoadingPage} className="w-full md:w-auto">
@@ -162,7 +205,7 @@ export default function RecommendationsPage() {
                 {loading && (
                     <div className="flex flex-col items-center justify-center h-24 gap-4">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-muted-foreground">Analyzing your farm data...</p>
+                        <p className="text-muted-foreground">Analyzing your farm data and weather...</p>
                     </div>
                 )}
 
