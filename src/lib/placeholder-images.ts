@@ -1,5 +1,4 @@
 import data from './placeholder-images.json';
-import { useTranslation } from '@/hooks/use-translation';
 
 export type ImagePlaceholder = {
   id: string;
