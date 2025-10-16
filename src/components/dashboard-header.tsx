@@ -24,6 +24,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { LanguageSwitcher } from './language-switcher';
+import { useLocation } from '@/hooks/use-location';
 
 interface WeatherData {
     temperature: number;
@@ -57,40 +58,43 @@ const weatherCodeToString: { [key: number]: string } = {
 
 export function DashboardHeader() {
   const { userProfile, signOut } = useAuth();
+  const { location, error: locationError, loading: locationLoading } = useLocation();
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherError, setWeatherError] = useState<string | null>(null);
+  const [isWeatherLoading, setIsWeatherLoading] = useState(true);
+
   const userInitial = userProfile?.name?.charAt(0).toUpperCase() || '?';
 
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          try {
-            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
-            if (!response.ok) {
-              throw new Error('Failed to fetch weather data.');
-            }
-            const data = await response.json();
-            const weatherCode = data.current_weather.weathercode;
-            setWeather({
-              temperature: Math.round(data.current_weather.temperature),
-              condition: weatherCodeToString[weatherCode] || 'Unknown',
-            });
-          } catch (error) {
-            console.error("Weather fetch error:", error);
-            setWeatherError('Could not fetch weather.');
+    async function fetchWeather() {
+      if (location) {
+        setIsWeatherLoading(true);
+        setWeatherError(null);
+        try {
+          const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current_weather=true`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch weather data.');
           }
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
-          setWeatherError('Location access denied.');
+          const data = await response.json();
+          const weatherCode = data.current_weather.weathercode;
+          setWeather({
+            temperature: Math.round(data.current_weather.temperature),
+            condition: weatherCodeToString[weatherCode] || 'Unknown',
+          });
+        } catch (error) {
+          console.error("Weather fetch error:", error);
+          setWeatherError('Could not fetch weather.');
+        } finally {
+          setIsWeatherLoading(false);
         }
-      );
-    } else {
-      setWeatherError('Geolocation not supported.');
+      } else if (locationError) {
+        setWeatherError('Location access denied.');
+        setIsWeatherLoading(false);
+      }
     }
-  }, []);
+
+    fetchWeather();
+  }, [location, locationError]);
 
 
   return (
@@ -112,13 +116,13 @@ export function DashboardHeader() {
         <LanguageSwitcher />
         <div className="flex items-center gap-2 text-sm font-medium">
           <CloudSun className="h-5 w-5 text-accent" />
-           {weather ? (
+           {isWeatherLoading || locationLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+           ) : weather ? (
             <span>{weather.temperature}°C, {weather.condition}</span>
           ) : weatherError ? (
             <span className="text-muted-foreground text-xs">{weatherError}</span>
-          ) : (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          )}
+          ) : null}
         </div>
 
         <DropdownMenu>

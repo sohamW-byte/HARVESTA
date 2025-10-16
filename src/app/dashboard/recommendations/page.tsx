@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Lightbulb, Bot, ArrowUp, ArrowDown, Minus, MapPin } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useLocation } from '@/hooks/use-location';
 
 const suggestionSchema = z.object({
   location: z.string().min(2, "Please enter a location."),
@@ -37,6 +38,7 @@ export default function RecommendationsPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CropSuggestionOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { location: userLocation, loading: locationLoading } = useLocation();
 
   const form = useForm<SuggestionFormValues>({
     resolver: zodResolver(suggestionSchema),
@@ -45,6 +47,12 @@ export default function RecommendationsPage() {
       crop: "",
     },
   });
+
+  useEffect(() => {
+    if (userLocation?.address) {
+      form.setValue('location', userLocation.address);
+    }
+  }, [userLocation, form]);
 
   const onSubmit = async (data: SuggestionFormValues) => {
     setLoading(true);
@@ -84,7 +92,8 @@ export default function RecommendationsPage() {
                       <FormControl>
                         <div className="relative">
                             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Enter village or use GPS" {...field} className="pl-9"/>
+                            <Input placeholder="Enter location or allow access..." {...field} className="pl-9" disabled={locationLoading} />
+                            {locationLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />}
                         </div>
                       </FormControl>
                       <FormMessage />

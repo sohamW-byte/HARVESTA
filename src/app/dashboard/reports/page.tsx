@@ -2,22 +2,28 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { useLocation } from '@/hooks/use-location';
 import { generateReport, type ReportGenerationOutput } from '@/ai/flows/report-generation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, FileText, Leaf, TrendingUp, Award, Droplets, Info } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
 
 export default function ReportsPage() {
   const { userProfile, loading: userLoading } = useAuth();
+  const { location: browserLocation, loading: locationLoading } = useLocation();
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<ReportGenerationOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Use the browser's location if available, otherwise fall back to the saved profile region.
+  const effectiveLocation = browserLocation?.address || userProfile?.region;
 
   const handleGenerateReport = async () => {
-    if (!userProfile?.region) {
-      setError('Your location is not set. Please update your profile in the "My Fields" page.');
+    if (!effectiveLocation) {
+      setError('Your location is not set. Please update your profile in the "My Fields" page or allow location access.');
       return;
     }
 
@@ -26,7 +32,7 @@ export default function ReportsPage() {
     setError(null);
 
     try {
-      const result = await generateReport({ location: userProfile.region });
+      const result = await generateReport({ location: effectiveLocation });
       setReport(result);
     } catch (e: any) {
       setError(e.message || "An unexpected error occurred while generating the report.");
@@ -34,6 +40,8 @@ export default function ReportsPage() {
       setLoading(false);
     }
   };
+  
+  const isPageLoading = userLoading || locationLoading;
 
   return (
     <div>
@@ -42,7 +50,7 @@ export default function ReportsPage() {
           <h1 className="text-3xl font-bold tracking-tight">AI Farm Reports</h1>
           <p className="text-muted-foreground">Generate a detailed analysis and recommendation report for your farm.</p>
         </div>
-        <Button onClick={handleGenerateReport} disabled={loading || userLoading} className="w-full md:w-auto">
+        <Button onClick={handleGenerateReport} disabled={loading || isPageLoading} className="w-full md:w-auto">
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -57,9 +65,9 @@ export default function ReportsPage() {
         </Button>
       </div>
 
-      {userLoading && <Skeleton className="h-40 w-full" />}
+      {isPageLoading && <Skeleton className="h-40 w-full" />}
       
-      {!userLoading && !report && !loading && (
+      {!isPageLoading && !report && !loading && (
         <Card className="w-full max-w-2xl mx-auto text-center">
             <CardHeader>
                 <div className="mx-auto bg-muted rounded-full p-4 w-fit">
@@ -67,9 +75,9 @@ export default function ReportsPage() {
                 </div>
                 <CardTitle className="mt-4">Your Custom Report Awaits</CardTitle>
                 <CardDescription>
-                    {userProfile?.region 
-                        ? `Click "Generate Report" to get AI-powered insights for your location in ${userProfile.region}.`
-                        : 'Set your location in the "My Fields" page to enable report generation.'
+                    {effectiveLocation 
+                        ? `Click "Generate Report" to get AI-powered insights for your location in ${effectiveLocation}.`
+                        : <>Please <Link href="/dashboard/my-fields" className="underline">set your location</Link> or grant browser permissions to enable report generation.</>
                     }
                 </CardDescription>
             </CardHeader>
