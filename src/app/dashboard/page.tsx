@@ -5,14 +5,14 @@ import { SummaryCard } from '@/components/cards/summary-card';
 import { FieldMapCard } from '@/components/cards/field-map-card';
 import { TasksCard } from '@/components/cards/tasks-card';
 import { GrowthMonitorChart } from '@/components/charts/growth-monitor-chart';
-import { DollarSign, Droplets, CheckCircle, Plus } from 'lucide-react';
+import { DollarSign, CloudRain, CheckCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PriceBoard } from '@/components/cards/price-board';
 
 export default function DashboardPage() {
   const { userProfile } = useAuth();
   
-  const greeting = userProfile?.name ? `Hello, ${userProfile.name.split(' ')[0]} 👋` : 'Welcome to AgriTrack 👋';
+  const greeting = userProfile?.name ? `Hello, ${userProfile.name.split(' ')[0]} 👋` : 'Welcome to Harvesta 👋';
 
   // Mock data for demonstration
   const totalExpenses = 12530.50;
@@ -42,16 +42,16 @@ export default function DashboardPage() {
         />
         <SummaryCard
           title="Total Expenses"
-          value={`$${totalExpenses.toLocaleString()}`}
+          value={`₹${totalExpenses.toLocaleString()}`}
           description="This month so far"
           icon={<DollarSign className="text-primary" />}
           className="lg:col-span-1"
         />
         <SummaryCard
-          title="Water Usage"
-          value="1,200 m³"
-          description="+5% from last month"
-          icon={<Droplets className="text-blue-500" />}
+          title="Rainfall"
+          value="5 mm"
+          description="Expected today"
+          icon={<CloudRain className="text-blue-500" />}
           className="lg:col-span-1"
         />
          <TasksCard
