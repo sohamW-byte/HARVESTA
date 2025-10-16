@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { SummaryCard } from '@/components/cards/summary-card';
-import { FieldMapCard } from '@/components/cards/field-map-card';
+import { TestimonialsCard } from '@/components/cards/testimonials-card';
 import { TasksCard } from '@/components/cards/tasks-card';
 import { GrowthMonitorChart } from '@/components/charts/growth-monitor-chart';
 import { DollarSign, CloudRain, CheckCircle, Plus } from 'lucide-react';
@@ -67,7 +67,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <FieldMapCard />
+          <TestimonialsCard />
         </div>
         <div className="lg:col-span-2">
           <GrowthMonitorChart />
