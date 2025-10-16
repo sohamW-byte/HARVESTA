@@ -143,8 +143,8 @@ export default function MyFieldsPage() {
                             </h3>
                             {userProfile.cropsGrown && userProfile.cropsGrown.length > 0 ? (
                                 <div className="flex flex-wrap gap-2">
-                                    {userProfile.cropsGrown.map(crop => (
-                                        <Badge key={crop} variant="secondary" className="flex items-center gap-1">
+                                    {userProfile.cropsGrown.map((crop, index) => (
+                                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
                                             <Sprout className="h-3 w-3" />
                                             {crop}
                                         </Badge>
