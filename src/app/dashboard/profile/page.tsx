@@ -271,12 +271,11 @@ export default function ProfilePage() {
                         
                         <div className="space-y-2">
                             <Label>Email</Label>
-                            <div className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm text-muted-foreground">
-                                {userProfile?.email || 'No email found'}
+                             <div className="flex h-10 w-full items-center">
+                                <p className="text-sm text-muted-foreground">
+                                    Your email address cannot be changed.
+                                </p>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                                Your email address cannot be changed.
-                            </p>
                         </div>
 
                         <FormField
@@ -332,12 +331,12 @@ export default function ProfilePage() {
                             )}
                         />
 
-                        <FormItem>
-                            <FormLabel>Role</FormLabel>
-                            <FormControl>
-                                <Input value={userProfile?.role || ''} disabled className="capitalize" />
-                            </FormControl>
-                        </FormItem>
+                        <div className="space-y-2">
+                            <Label>Role</Label>
+                            <div className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm capitalize text-muted-foreground">
+                                {userProfile?.role || 'Not set'}
+                            </div>
+                        </div>
 
                         {watchedRole === 'farmer' && (
                         <FormField
@@ -426,5 +425,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
