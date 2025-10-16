@@ -49,7 +49,7 @@ const yojanaLinks = [
     { href: 'https://pmkisan.gov.in/', label: 'PM Kisan Samman Nidhi' },
     { href: 'https://www.enam.gov.in/web/', label: 'e-NAM' },
     { href: 'https://soilhealth.dac.gov.in/', label: 'Soil Health Card' },
-    { href: 'https://www.agriinsurancetg.gov.in/', label: 'Pradhan Mantri Fasal Bima Yojana' },
+    { href: 'https://pmfby.gov.in/', label: 'Pradhan Mantri Fasal Bima Yojana' },
     { href: 'https://mvk.iitd.ac.in/', label: 'Kisan Suvidha' },
 ];
 
