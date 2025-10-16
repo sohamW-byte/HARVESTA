@@ -16,8 +16,8 @@ export async function POST(req: Request) {
     const apiKey = process.env.SARVAM_API_KEY;
 
     if (!apiKey) {
-      console.error("Sarvam API key is not configured.");
-      return NextResponse.json({ error: 'Server configuration error: Translation service API key not found.' }, { status: 500 });
+      console.warn("Sarvam API key is not configured. Returning original text. Please add SARVAM_API_KEY to your .env file.");
+      return NextResponse.json({ translatedText: text });
     }
 
     const response = await fetch("https://api.sarvam.ai/v1/translate", {
@@ -36,7 +36,8 @@ export async function POST(req: Request) {
     if (!response.ok) {
       const errorBody = await response.text();
       console.error("Translation API Error:", errorBody);
-      return NextResponse.json({ error: `Translation API failed: ${response.statusText}`, details: errorBody }, { status: response.status });
+      // Return original text on API failure to avoid breaking UI
+      return NextResponse.json({ translatedText: text });
     }
 
     const data = await response.json();
@@ -47,6 +48,8 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error("Internal API Error:", error);
-    return NextResponse.json({ error: 'An internal error occurred.', details: error.message }, { status: 500 });
+    // On internal error, it's safer to return the original text
+    const { text } = await req.json().catch(() => ({ text: '' }));
+    return NextResponse.json({ translatedText: text });
   }
 }
