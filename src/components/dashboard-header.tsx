@@ -20,7 +20,6 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { LanguageSwitcher } from './language-switcher';
 
 export function DashboardHeader() {
   const { userProfile, signOut } = useAuth();
@@ -46,8 +45,6 @@ export function DashboardHeader() {
           <CloudSun className="h-5 w-5 text-accent" />
           <span>24°C, Sunny</span>
         </div>
-
-        <LanguageSwitcher />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
