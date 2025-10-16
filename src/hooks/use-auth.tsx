@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, signOut as firebaseSignOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useAuth as useFirebaseAuth, useFirestore, useUser } from '@/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 
 interface AuthContextType {
@@ -39,32 +39,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let unsubscribe: () => void = () => {};
+
     const handleAuthChange = async (user: User | null) => {
       setLoading(true);
       if (user) {
         try {
           const token = await user.getIdToken();
           setCookie('firebaseIdToken', token, 1);
+          
           const userDocRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists()) {
-            setUserProfile({ id: userDoc.id, ...userDoc.data() } as UserProfile);
-          } else {
+          // Subscribe to real-time updates
+          unsubscribe = onSnapshot(userDocRef, (doc) => {
+            if (doc.exists()) {
+              setUserProfile({ id: doc.id, ...doc.data() } as UserProfile);
+            } else {
+              setUserProfile(null);
+            }
+            setLoading(false);
+          }, (error) => {
+            console.error("Error listening to user profile:", error);
             setUserProfile(null);
-          }
+            setLoading(false);
+          });
+
         } catch (error) {
           console.error("Error handling auth change:", error);
           setUserProfile(null);
           eraseCookie('firebaseIdToken');
+          setLoading(false);
         }
       } else {
         setUserProfile(null);
         eraseCookie('firebaseIdToken');
+        setLoading(false);
+        if (unsubscribe) unsubscribe();
       }
-      setLoading(false);
     };
     
     handleAuthChange(user);
+
+    return () => unsubscribe(); // Cleanup the listener on component unmount
 
   }, [user, db]);
 
