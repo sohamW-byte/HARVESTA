@@ -8,6 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea';
 import { ThumbsUp, MessageSquare, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useTranslation } from '@/hooks/use-translation';
 
 const initialPosts = [
   {
@@ -63,6 +64,7 @@ const initialPosts = [
 
 export default function CommunityPage() {
     const { userProfile } = useAuth();
+    const { t } = useTranslation();
     const userInitial = userProfile?.name?.charAt(0).toUpperCase() || '?';
     const [posts, setPosts] = useState(initialPosts);
     const [newPostContent, setNewPostContent] = useState('');
@@ -89,8 +91,8 @@ export default function CommunityPage() {
 
     return (
         <div className="container mx-auto py-8">
-            <h1 className="text-3xl font-bold tracking-tight">Community Forum</h1>
-            <p className="text-muted-foreground">Connect, discuss, and trade with the Harvesta community.</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t('Community Forum')}</h1>
+            <p className="text-muted-foreground">{t('Connect, discuss, and trade with the Harvesta community.')}</p>
 
             <div className="mt-6 max-w-3xl mx-auto space-y-6">
                 {/* Create Post Card */}
@@ -102,7 +104,7 @@ export default function CommunityPage() {
                                 <AvatarFallback>{userInitial}</AvatarFallback>
                             </Avatar>
                             <Textarea 
-                                placeholder="Share an update or ask a question..." 
+                                placeholder={t('Share an update or ask a question...')}
                                 className="flex-1 bg-muted border-none focus-visible:ring-1 focus-visible:ring-primary"
                                 value={newPostContent}
                                 onChange={(e) => setNewPostContent(e.target.value)}
@@ -110,7 +112,7 @@ export default function CommunityPage() {
                         </div>
                     </CardHeader>
                     <CardFooter className="p-4 flex justify-end">
-                        <Button onClick={handlePostSubmit} disabled={!newPostContent.trim()}>Post</Button>
+                        <Button onClick={handlePostSubmit} disabled={!newPostContent.trim()}>{t('Post')}</Button>
                     </CardFooter>
                 </Card>
 
@@ -130,21 +132,21 @@ export default function CommunityPage() {
                                             <p className="font-semibold">{post.author.name}</p>
                                             {isQuestion && <HelpCircle className="h-4 w-4 text-accent" />}
                                         </div>
-                                        <p className="text-xs text-muted-foreground">{post.author.role} · {post.time}</p>
+                                        <p className="text-xs text-muted-foreground">{t(post.author.role)} · {t(post.time)}</p>
                                     </div>
                                 </div>
                             </CardHeader>
                             <CardContent className="p-4 pt-0">
-                                <p className="text-sm">{post.content}</p>
+                                <p className="text-sm">{t(post.content)}</p>
                             </CardContent>
                             <CardFooter className="p-4 pt-0 border-t flex justify-between">
                                 <Button variant="ghost" size="sm" className="text-muted-foreground">
                                     <ThumbsUp className="mr-2 h-4 w-4" />
-                                    {post.likes} Likes
+                                    {post.likes} {t('Likes')}
                                 </Button>
                                 <Button variant="ghost" size="sm" className="text-muted-foreground">
                                     <MessageSquare className="mr-2 h-4 w-4" />
-                                    {post.comments} Comments
+                                    {post.comments} {t('Comments')}
                                 </Button>
                             </CardFooter>
                         </Card>

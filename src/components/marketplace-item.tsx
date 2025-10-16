@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Package, IndianRupee, MessageSquare, MapPin, Phone } from "lucide-react";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface MarketplaceItemProps {
   name: string;
@@ -25,6 +26,7 @@ interface MarketplaceItemProps {
 
 export function MarketplaceItem({ name, quantity, price, location, imageId, seller, buyer, type, contactInfo }: MarketplaceItemProps) {
   const image = imageId ? PlaceHolderImages.find(img => img.id === imageId) : PlaceHolderImages.find(i => i.id.includes('produce'));
+  const { t } = useTranslation();
   
   return (
     <Card className="rounded-2xl overflow-hidden flex flex-col">
@@ -41,27 +43,27 @@ export function MarketplaceItem({ name, quantity, price, location, imageId, sell
       )}
       <CardHeader>
         <CardTitle>{name}</CardTitle>
-        <CardDescription>{type === 'sale' ? `Sold by ${seller}` : `Wanted by ${buyer}`}</CardDescription>
+        <CardDescription>{type === 'sale' ? `${t('Sold by')} ${seller}` : `${t('Wanted by')} ${buyer}`}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow space-y-2">
          <div className="flex items-center text-sm text-muted-foreground">
             <Package className="mr-2 h-4 w-4 flex-shrink-0" />
-            <span>Quantity: {quantity}</span>
+            <span>{t('Quantity')}: {quantity}</span>
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
             <IndianRupee className="mr-2 h-4 w-4 flex-shrink-0" />
-            <span>Price: {price}</span>
+            <span>{t('Price')}: {price}</span>
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
             <MapPin className="mr-2 h-4 w-4 flex-shrink-0" />
-            <span>Location: {location}</span>
+            <span>{t('Location')}: {location}</span>
         </div>
       </CardContent>
       <CardFooter>
         <Button className="w-full" asChild>
             <a href={`tel:${contactInfo}`}>
                 <Phone className="mr-2 h-4 w-4" />
-                {type === 'sale' ? 'Contact Seller' : 'Contact Buyer'}
+                {type === 'sale' ? t('Contact Seller') : t('Contact Buyer')}
             </a>
         </Button>
       </CardFooter>

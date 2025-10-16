@@ -65,6 +65,24 @@
       "description": "Darjeeling Tea",
       "imageUrl": "https://picsum.photos/seed/tea/400/300",
       "imageHint": "tea leaves"
+    },
+    {
+      "id": "produce-apples",
+      "description": "Shimla Apples",
+      "imageUrl": "https://picsum.photos/seed/apples/400/300",
+      "imageHint": "red apples"
+    },
+    {
+      "id": "produce-soybean",
+      "description": "Soybeans",
+      "imageUrl": "https://picsum.photos/seed/soybean/400/300",
+      "imageHint": "soybean field"
+    },
+    {
+      "id": "produce-cardamom",
+      "description": "Cardamom pods",
+      "imageUrl": "https://picsum.photos/seed/cardamom/400/300",
+      "imageHint": "green cardamom"
     }
   ]
 }
