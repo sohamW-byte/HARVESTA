@@ -17,7 +17,7 @@ const initialConversations = [
     id: 'assistant',
     name: 'Harvesta Assistant',
     avatar: <Bot className="h-6 w-6" />,
-    lastMessage: 'Ask me to find users for you!',
+    lastMessage: 'Ask me anything about farming!',
     lastMessageTime: 'AI',
   },
   {
@@ -41,7 +41,7 @@ const initialMessages: { [key: string]: any[] } = {
     {
       id: 'a1',
       sender: 'Harvesta Assistant',
-      text: "Hello! I'm your Harvesta Assistant. I can help you find other users. Try asking: 'Find a farmer named Ramesh'.",
+      text: "Hello! I'm your Harvesta Assistant. As an expert agronomist, I can help you with any farming questions. Ask me about crop diseases, market prices, or best practices!",
       isUser: false,
     },
   ],
@@ -58,7 +58,7 @@ interface Message {
   text: string;
   isUser: boolean;
   isThinking?: boolean;
-  usersFound?: ChatOutput['users'];
+  usersFound?: any[]; // Keep for potential future use if user search is re-added
 }
 
 
@@ -123,7 +123,6 @@ export default function MessagesPage() {
           sender: 'Harvesta Assistant',
           text: result.reply,
           isUser: false,
-          usersFound: result.users,
         };
         
         setMessages(prev => {
@@ -265,7 +264,7 @@ export default function MessagesPage() {
 
                       {msg.usersFound && msg.usersFound.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-primary-foreground/20 space-y-2">
-                            {msg.usersFound.map(user => (
+                            {msg.usersFound.map((user: any) => (
                                 <Link key={user.id} href={`/dashboard/profile/${user.id}`} passHref>
                                     <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-primary-foreground/10 transition-colors">
                                         <Avatar className="h-8 w-8">

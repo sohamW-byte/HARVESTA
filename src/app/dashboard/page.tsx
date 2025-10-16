@@ -5,10 +5,18 @@ import { SummaryCard } from '@/components/cards/summary-card';
 import { TestimonialsCard } from '@/components/cards/testimonials-card';
 import { TasksCard } from '@/components/cards/tasks-card';
 import { GrowthMonitorChart } from '@/components/charts/growth-monitor-chart';
-import { DollarSign, CheckCircle } from 'lucide-react';
+import { DollarSign, CheckCircle, Bot } from 'lucide-react';
 import { PriceBoard } from '@/components/cards/price-board';
 import { AddProduceDialog } from '@/components/add-produce-dialog';
 import { WeatherCard } from '@/components/cards/weather-card';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export default function DashboardPage() {
   const { userProfile } = useAuth();
@@ -60,6 +68,21 @@ export default function DashboardPage() {
         <GrowthMonitorChart />
         <TestimonialsCard />
       </div>
+
+      <TooltipProvider>
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <Link href="/dashboard/messages" passHref>
+                    <Button className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg" size="icon">
+                        <Bot className="h-8 w-8" />
+                    </Button>
+                </Link>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+                <p>Ask the AI Assistant</p>
+            </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }
