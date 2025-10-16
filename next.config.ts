@@ -24,16 +24,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  typescript: {
+      ignoreBuildErrors: true,
+  },
+  eslint: {
+      ignoreDuringBuilds: true,
+  },
 };
 
-const configWithAllFeatures = {
-    ...nextConfig,
-    typescript: {
-        ignoreBuildErrors: true,
-    },
-    eslint: {
-        ignoreDuringBuilds: true,
-    },
-};
-
-export default configWithAllFeatures;
+export default nextConfig;
