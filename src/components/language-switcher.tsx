@@ -17,6 +17,23 @@ const languages = [
   { code: 'gom', name: 'कोंकणी (Konkani)' },
 ];
 
+// A simple dictionary for mock translations
+const translations: Record<string, Record<string, string>> = {
+  'en': {
+    'Profile': 'Profile',
+    'Log out': 'Log out',
+  },
+  'hi': {
+    'Profile': 'प्रोफ़ाइल',
+    'Log out': 'लॉग आउट',
+  },
+  'gom': {
+    'Profile': 'प्रोफायल',
+    'Log out': 'लॉग आउट',
+  }
+};
+
+
 // Store for original texts to allow toggling back to English
 const originalTexts = new Map<HTMLElement, string>();
 let currentLanguage = 'en';
@@ -24,52 +41,86 @@ let currentLanguage = 'en';
 export function LanguageSwitcher() {
   const [isTranslating, setIsTranslating] = useState(false);
 
+  const translateNode = (node: Node, langCode: string) => {
+    if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
+      const parentElement = node.parentElement;
+      if (parentElement && window.getComputedStyle(parentElement).display !== 'none') {
+        const originalText = (originalTexts.get(parentElement) || node.textContent).trim();
+        
+        if (!originalTexts.has(parentElement)) {
+          originalTexts.set(parentElement, originalText);
+        }
+        
+        const translatedText = translations[langCode]?.[originalText];
+        if (translatedText) {
+          node.textContent = translatedText;
+        } else if (langCode === 'en' && originalTexts.has(parentElement)) {
+            node.textContent = originalTexts.get(parentElement) || '';
+        }
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as HTMLElement;
+       if (element.closest('[data-id="language-switcher"]') || element.tagName === 'SCRIPT' || element.tagName === 'STYLE') {
+        return;
+      }
+      // Check for elements specifically marked for translation
+      if(element.dataset.translate === 'true') {
+        // Store original text if not already stored
+        if (!originalTexts.has(element)) {
+            originalTexts.set(element, element.innerText);
+        }
+        
+        const originalText = originalTexts.get(element)?.trim();
+        if (originalText) {
+            const translatedText = translations[langCode]?.[originalText];
+            if (translatedText) {
+                element.innerText = translatedText;
+            } else if (langCode === 'en') {
+                element.innerText = originalText;
+            }
+        }
+      }
+    }
+  };
+
+
   const handleLanguageChange = async (langCode: string) => {
     if (langCode === currentLanguage) return;
 
     setIsTranslating(true);
     
-    // Allow the UI to update to show the loader
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    const elementsToTranslate: HTMLElement[] = Array.from(document.querySelectorAll('[data-translate="true"], h1, h2, h3, h4, h5, p, span, button, a, div.text-sm, div.text-xs, div.font-medium, label, CardTitle, CardDescription'));
+    const elementsToTranslate: NodeListOf<HTMLElement> = document.querySelectorAll('body *');
 
-    const uniqueElements = new Set(elementsToTranslate);
-    const visibleElements = Array.from(uniqueElements).filter(el => {
-        const style = window.getComputedStyle(el);
-        const hasText = el.textContent && el.textContent.trim().length > 0;
-        const isVisible = style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
-        // Exclude elements within the language switcher itself
-        return hasText && isVisible && !el.closest('[data-id="language-switcher"]');
-    });
-
-    if (langCode === 'en') {
-      // Revert to original English text
-      for (const element of visibleElements) {
-        if (originalTexts.has(element)) {
-          element.textContent = originalTexts.get(element) || '';
-        }
-      }
-    } else {
-      // Store original texts if we are translating from English for the first time
-      if (currentLanguage === 'en') {
-          originalTexts.clear();
-          visibleElements.forEach(el => {
-            if(el.textContent) {
-              originalTexts.set(el, el.textContent);
+    // Store originals on first translation away from English
+    if (currentLanguage === 'en' && langCode !== 'en') {
+        originalTexts.clear();
+        document.querySelectorAll('[data-translate="true"]').forEach(el => {
+            const htmlEl = el as HTMLElement;
+            if(htmlEl.innerText) {
+                originalTexts.set(htmlEl, htmlEl.innerText);
             }
-          });
-      }
-      
-      // Apply mock translation
-      for (const element of visibleElements) {
-        const originalText = originalTexts.get(element);
-        if (originalText) {
-            // Simple mock translation: [lang] Original Text
-            element.textContent = `[${langCode}] ${originalText}`;
+        });
+    }
+
+
+    elementsToTranslate.forEach(element => {
+      if (element.dataset.translate === 'true') {
+        const originalText = originalTexts.get(element)?.trim() || element.innerText.trim();
+        if (!originalTexts.has(element)) {
+            originalTexts.set(element, originalText);
+        }
+        
+        const translatedText = translations[langCode]?.[originalText];
+
+        if (langCode === 'en') {
+            element.innerText = originalTexts.get(element) || originalText;
+        } else if (translatedText) {
+            element.innerText = translatedText;
         }
       }
-    }
+    });
 
     currentLanguage = langCode;
     setIsTranslating(false);
@@ -95,3 +146,4 @@ export function LanguageSwitcher() {
     </div>
   );
 }
+
