@@ -46,89 +46,99 @@ export function VoiceAssistant() {
 
   useEffect(() => {
     setIsMounted(true);
+    // Check for SpeechRecognition API support first
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      setHasMicPermission(false);
+      console.error("Browser does not support the Web Speech API.");
+    }
+  }, []);
 
-    const checkAndRequestMicPermission = async () => {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            setHasMicPermission(false);
-            return;
-        }
-        try {
-            await navigator.mediaDevices.getUserMedia({ audio: true });
-            setHasMicPermission(true);
-        } catch (error) {
-            console.error("Microphone access denied:", error);
-            setHasMicPermission(false);
-            toast({
-                variant: 'destructive',
-                title: 'Microphone Access Denied',
-                description: 'Please enable microphone permissions in your browser settings to use the voice assistant.',
-                duration: 5000,
-            });
-        }
-    };
-
-    checkAndRequestMicPermission();
+  const initializeSpeechRecognition = useCallback(() => {
+    if (recognitionRef.current) return;
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
 
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.lang = 'en-IN';
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-IN';
 
-      recognition.onstart = () => {
-        setIsListening(true);
-        setTranscript('');
-        setSpokenResponse('');
-        setIsDialogOpen(true);
-      };
+    recognition.onstart = () => {
+      setIsListening(true);
+      setTranscript('');
+      setSpokenResponse('');
+      setIsDialogOpen(true);
+    };
 
-      recognition.onend = () => {
-        setIsListening(false);
-      };
+    recognition.onend = () => {
+      setIsListening(false);
+      // Let dialog close naturally or by user action
+    };
 
-      recognition.onresult = (event: any) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
-        for (let i = 0; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
+    recognition.onresult = (event: any) => {
+      let finalTranscript = '';
+      for (let i = 0; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
         }
-        setTranscript(interimTranscript || finalTranscript);
-        if (finalTranscript) {
-          handleProcessCommand(finalTranscript);
-        }
-      };
+      }
+      if (finalTranscript) {
+        setTranscript(finalTranscript);
+        handleProcessCommand(finalTranscript);
+      } else {
+        const interim = event.results[0]?.[0]?.transcript || '';
+        setTranscript(interim);
+      }
+    };
 
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error', event.error);
-        if(event.error === 'not-allowed' || event.error === 'audio-capture') {
-            setHasMicPermission(false);
-             toast({
-                variant: 'destructive',
-                title: 'Voice Assistant Error',
-                description: 'Microphone access was denied. Please enable it in your browser settings.',
-                duration: 5000,
-            });
-        }
-        setIsListening(false);
-      };
-      
-      recognitionRef.current = recognition;
-    } else {
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         setHasMicPermission(false);
-    }
+        toast({
+          variant: 'destructive',
+          title: 'Voice Assistant Error',
+          description: 'Microphone access was denied. Please enable it in your browser settings.',
+        });
+      }
+      setIsListening(false);
+      // setIsDialogOpen(false);
+    };
+    
+    recognitionRef.current = recognition;
   }, [toast]);
+
+
+  const handleMicPermission = async () => {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setHasMicPermission(false);
+        toast({ variant: 'destructive', title: 'Unsupported Browser', description: 'Your browser does not support microphone access.'});
+        return false;
+      }
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        setHasMicPermission(true);
+        initializeSpeechRecognition();
+        return true;
+      } catch (error) {
+        console.error("Microphone access denied:", error);
+        setHasMicPermission(false);
+        toast({
+            variant: 'destructive',
+            title: 'Microphone Access Denied',
+            description: 'Please enable microphone permissions in your browser settings to use the voice assistant.',
+            duration: 5000,
+        });
+        return false;
+      }
+  };
+
 
   const handleProcessCommand = async (command: string) => {
     if (!command || isProcessing) return;
 
     setIsProcessing(true);
-    setTranscript(command); // Show the final command
     try {
       const result = await processVoiceCommand({ command });
       setSpokenResponse(result.response);
@@ -159,20 +169,27 @@ export function VoiceAssistant() {
     }
   }, []);
 
-  const handleToggleListen = () => {
-    if (!recognitionRef.current || !hasMicPermission) {
-        toast({
-            variant: 'destructive',
-            title: 'Microphone Not Available',
-            description: 'Please grant microphone access to use this feature.',
-        });
+  const handleToggleListen = async () => {
+    let permissionGranted = hasMicPermission;
+
+    // If permission status is unknown, request it now.
+    if (permissionGranted === null) {
+        permissionGranted = await handleMicPermission();
+    }
+    
+    // If permission is false after checking, do nothing.
+    if (!permissionGranted) {
+        setIsDialogOpen(true); // Open dialog to show the error
         return;
-    };
+    }
     
     if (isListening) {
-      recognitionRef.current.stop();
+      recognitionRef.current?.stop();
     } else {
-      recognitionRef.current.start();
+      if (!recognitionRef.current) {
+        initializeSpeechRecognition();
+      }
+      recognitionRef.current?.start();
     }
   };
   
@@ -186,11 +203,10 @@ export function VoiceAssistant() {
         <TooltipTrigger asChild>
           <Button
             onClick={handleToggleListen}
-            disabled={!hasMicPermission && hasMicPermission !== null}
             className={cn(
               "fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-50 transition-colors duration-300",
               isListening ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90",
-              !hasMicPermission && hasMicPermission !== null && "bg-muted-foreground hover:bg-muted-foreground/90 cursor-not-allowed"
+              hasMicPermission === false && "bg-muted-foreground hover:bg-muted-foreground/90 cursor-not-allowed"
             )}
             size="icon"
           >
