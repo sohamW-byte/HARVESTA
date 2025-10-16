@@ -42,14 +42,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const handleAuthChange = async (user: User | null) => {
       setLoading(true);
       if (user) {
-        const token = await user.getIdToken();
-        setCookie('firebaseIdToken', token, 1);
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setUserProfile({ id: userDoc.id, ...userDoc.data() } as UserProfile);
-        } else {
+        try {
+          const token = await user.getIdToken();
+          setCookie('firebaseIdToken', token, 1);
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setUserProfile({ id: userDoc.id, ...userDoc.data() } as UserProfile);
+          } else {
+            setUserProfile(null);
+          }
+        } catch (error) {
+          console.error("Error handling auth change:", error);
           setUserProfile(null);
+          eraseCookie('firebaseIdToken');
         }
       } else {
         setUserProfile(null);
