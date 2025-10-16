@@ -23,6 +23,17 @@ const sourceCodePro = Source_Code_Pro({
   variable: '--font-source-code-pro',
 });
 
+function RootProviders({ children }: { children: React.ReactNode }) {
+    return (
+        <FirebaseClientProvider>
+          <AuthProvider>
+            {children}
+            <Toaster />
+          </AuthProvider>
+        </FirebaseClientProvider>
+    )
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,12 +42,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn('font-body antialiased', inter.variable, sourceCodePro.variable)}>
-        <FirebaseClientProvider>
-          <AuthProvider>
+        <RootProviders>
             {children}
-            <Toaster />
-          </AuthProvider>
-        </FirebaseClientProvider>
+        </RootProviders>
       </body>
     </html>
   );
