@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -22,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/hooks/use-translation';
 
 interface MarketDataRecord {
   state: string;
@@ -62,6 +64,7 @@ export function PriceBoard() {
   const [sortBy, setSortBy] = useState('commodity_asc');
   const [filterState, setFilterState] = useState('all');
   const [showAll, setShowAll] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     setLoading(true);
@@ -116,9 +119,9 @@ export function PriceBoard() {
   return (
     <Card className="rounded-2xl">
       <CardHeader>
-        <CardTitle>Live Market Prices</CardTitle>
+        <CardTitle>{t('Live Market Prices')}</CardTitle>
         <CardDescription>
-          Real-time commodity prices from various markets across India.
+          {t('Real-time commodity prices from various markets across India.')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -126,7 +129,7 @@ export function PriceBoard() {
             <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
-                    placeholder="Search by commodity, market..."
+                    placeholder={t('Search by commodity, market...')}
                     className="pl-9"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -135,25 +138,25 @@ export function PriceBoard() {
             <div className="flex gap-4">
                  <Select value={filterState} onValueChange={setFilterState}>
                     <SelectTrigger className="w-full md:w-[180px]">
-                        <SelectValue placeholder="Filter by State" />
+                        <SelectValue placeholder={t('Filter by State')} />
                     </SelectTrigger>
                     <SelectContent>
                         {uniqueStates.map(state => (
                             <SelectItem key={state} value={state}>
-                                {state === 'all' ? 'All States' : state}
+                                {state === 'all' ? t('All States') : state}
                             </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
                 <Select value={sortBy} onValueChange={setSortBy}>
                     <SelectTrigger className="w-full md:w-[180px]">
-                        <SelectValue placeholder="Sort by" />
+                        <SelectValue placeholder={t('Sort by')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="commodity_asc">Commodity (A-Z)</SelectItem>
-                        <SelectItem value="commodity_desc">Commodity (Z-A)</SelectItem>
-                        <SelectItem value="price_asc">Price (Low-High)</SelectItem>
-                        <SelectItem value="price_desc">Price (High-Low)</SelectItem>
+                        <SelectItem value="commodity_asc">{t('Commodity (A-Z)')}</SelectItem>
+                        <SelectItem value="commodity_desc">{t('Commodity (Z-A)')}</SelectItem>
+                        <SelectItem value="price_asc">{t('Price (Low-High)')}</SelectItem>
+                        <SelectItem value="price_desc">{t('Price (High-Low)')}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -162,10 +165,10 @@ export function PriceBoard() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Commodity 🌾</TableHead>
-              <TableHead>Market 📍</TableHead>
-              <TableHead>Price (Modal/Kg) 💰</TableHead>
-              <TableHead className="text-right">Arrival Date 🗓️</TableHead>
+              <TableHead>{t('Commodity')} 🌾</TableHead>
+              <TableHead>{t('Market')} 📍</TableHead>
+              <TableHead>{t('Price (Modal/Kg)')} 💰</TableHead>
+              <TableHead className="text-right">{t('Arrival Date')} 🗓️</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -199,7 +202,7 @@ export function PriceBoard() {
              !loading && (
                 <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
-                        No results found for your query.
+                        {t('No results found for your query.')}
                     </TableCell>
                 </TableRow>
              )
@@ -216,12 +219,12 @@ export function PriceBoard() {
             {showAll ? (
               <>
                 <ChevronUp className="mr-2 h-4 w-4" />
-                Show Less
+                {t('Show Less')}
               </>
             ) : (
               <>
                 <ChevronDown className="mr-2 h-4 w-4" />
-                Show More
+                {t('Show More')}
               </>
             )}
           </Button>

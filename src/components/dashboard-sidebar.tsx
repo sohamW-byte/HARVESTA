@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -33,18 +34,20 @@ import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { useTranslation } from '@/hooks/use-translation';
 
 const yojanaLinks = [
-    { href: 'https://pmkisan.gov.in/', label: 'PM Kisan Samman Nidhi' },
-    { href: 'https://www.enam.gov.in/web/', label: 'e-NAM' },
-    { href: 'https://soilhealth.dac.gov.in/', label: 'Soil Health Card' },
-    { href: 'https://pmfby.gov.in/', label: 'Pradhan Mantri Fasal Bima Yojana' },
-    { href: 'https://mvk.iitd.ac.in/', label: 'Kisan Suvidha' },
+    { key: 'PM Kisan Samman Nidhi', href: 'https://pmkisan.gov.in/', label: 'PM Kisan Samman Nidhi' },
+    { key: 'e-NAM', href: 'https://www.enam.gov.in/web/', label: 'e-NAM' },
+    { key: 'Soil Health Card', href: 'https://soilhealth.dac.gov.in/', label: 'Soil Health Card' },
+    { key: 'Pradhan Mantri Fasal Bima Yojana', href: 'https://pmfby.gov.in/', label: 'Pradhan Mantri Fasal Bima Yojana' },
+    { key: 'Kisan Suvidha', href: 'https://mvk.iitd.ac.in/', label: 'Kisan Suvidha' },
 ];
 
 export function DashboardSidebar() {
   const pathname = usePathname();
   const { userProfile } = useAuth();
+  const { t } = useTranslation();
   
   const menuItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -85,10 +88,10 @@ export function DashboardSidebar() {
                   <SidebarMenuButton
                     isActive={pathname === item.href}
                     variant="ghost"
-                    tooltip={item.label}
+                    tooltip={t(item.label)}
                   >
                     <item.icon />
-                    <span>{item.label}</span>
+                    <span>{t(item.label)}</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -98,7 +101,7 @@ export function DashboardSidebar() {
               <CollapsibleTrigger asChild>
                   <SidebarMenuButton variant='ghost' className='w-full justify-start group'>
                       <ScrollText />
-                      <span>Yojanas & Schemes</span>
+                      <span>{t('Yojanas & Schemes')}</span>
                       <ChevronDown className='ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180' />
                   </SidebarMenuButton>
               </CollapsibleTrigger>
@@ -112,7 +115,7 @@ export function DashboardSidebar() {
                             rel="noopener noreferrer" 
                             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                         >
-                            {link.label}
+                            {t(link.key)}
                         </a>
                     ))}
                 </div>

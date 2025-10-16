@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -17,11 +18,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useTranslation } from '@/hooks/use-translation';
 
 export default function DashboardPage() {
   const { userProfile } = useAuth();
+  const { t } = useTranslation();
   
-  const greeting = userProfile?.name ? `Hello, ${userProfile.name.split(' ')[0]} 👋` : 'Welcome to Harvesta 👋';
+  const greeting = userProfile?.name ? `${t('Hello')}, ${userProfile.name.split(' ')[0]} 👋` : `${t('Welcome to Harvesta')} 👋`;
 
   // Mock data for demonstration
   const totalExpenses = 12530.50;
@@ -32,7 +35,7 @@ export default function DashboardPage() {
         <div>
           {/* Add an ID to the greeting for easy targeting */}
           <h1 id="dashboard-greeting" className="text-3xl font-bold tracking-tight">{greeting}</h1>
-          <p className="text-muted-foreground">Here's a summary of your farm's performance.</p>
+          <p className="text-muted-foreground">{t("Here's a summary of your farm's performance.")}</p>
         </div>
         {userProfile?.role === 'farmer' && (
            <AddProduceDialog />
@@ -41,15 +44,15 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <SummaryCard
-          title="Fields Overview"
-          value="Good"
-          description="Overall health is positive"
+          title={t("Fields Overview")}
+          value={t("Good")}
+          description={t("Overall health is positive")}
           icon={<CheckCircle className="text-green-500" />}
         />
         <SummaryCard
-          title="Total Expenses"
+          title={t("Total Expenses")}
           value={`₹${totalExpenses.toLocaleString()}`}
-          description="This month so far"
+          description={t("This month so far")}
           icon={<DollarSign className="text-primary" />}
         />
         <WeatherCard />
@@ -79,7 +82,7 @@ export default function DashboardPage() {
                 </Link>
             </TooltipTrigger>
             <TooltipContent side="left">
-                <p>Ask the AI Assistant</p>
+                <p>{t('Ask the AI Assistant')}</p>
             </TooltipContent>
         </Tooltip>
       </TooltipProvider>

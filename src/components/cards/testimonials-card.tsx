@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/carousel';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Quote } from 'lucide-react';
+import { useTranslation } from '@/hooks/use-translation';
 
 const testimonials = [
   {
@@ -37,12 +39,13 @@ const testimonials = [
 ];
 
 export function TestimonialsCard() {
+  const { t } = useTranslation();
   return (
     <Card className="rounded-2xl h-full flex flex-col">
       <CardHeader>
-        <CardTitle>Voices from the Field</CardTitle>
+        <CardTitle>{t('Voices from the Field')}</CardTitle>
         <CardDescription>
-          Hear what our community of farmers has to say.
+          {t('Hear what our community of farmers has to say.')}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow flex items-center justify-center">
@@ -60,7 +63,7 @@ export function TestimonialsCard() {
                     <div className="flex flex-col items-center text-center gap-4 p-6">
                         <Quote className="h-8 w-8 text-primary" />
                         <p className="text-lg font-medium italic">
-                            "{testimonial.quote}"
+                            "{t(testimonial.quote)}"
                         </p>
                         <div className="flex items-center gap-3 mt-4">
                             <Avatar>

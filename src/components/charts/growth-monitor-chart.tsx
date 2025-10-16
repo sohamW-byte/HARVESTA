@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo } from 'react';
@@ -25,10 +26,12 @@ import type { Field, GrowthData } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { Activity } from 'lucide-react';
 import { format } from 'date-fns';
+import { useTranslation } from '@/hooks/use-translation';
 
 export function GrowthMonitorChart() {
   const { user } = useAuth();
   const db = useFirestore();
+  const { t } = useTranslation();
 
   // Memoize the query for the user's fields, limit to 1 for simplicity
   const fieldsQuery = useMemoFirebase(() => 
@@ -55,12 +58,16 @@ export function GrowthMonitorChart() {
 
   const isLoading = isLoadingFields || isLoadingGrowthData;
 
+  const cardDescription = firstField 
+    ? t("Weekly progress for {field}.", { field: firstField.name })
+    : t('Weekly progress of key growth metrics.');
+
   return (
     <Card className="rounded-2xl h-full">
       <CardHeader>
-        <CardTitle>Crop Growth Monitor</CardTitle>
+        <CardTitle>{t('Crop Growth Monitor')}</CardTitle>
         <CardDescription>
-          {firstField ? `Weekly progress for ${firstField.name}.` : 'Weekly progress of key growth metrics.'}
+          {cardDescription}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -79,9 +86,7 @@ export function GrowthMonitorChart() {
               <div className="p-4 bg-muted rounded-full">
                 <Activity className="h-8 w-8 text-muted-foreground" />
               </div>
-              <p className="text-muted-foreground text-sm">
-                No growth data available for your fields yet. <br/> Add some data to see your chart!
-              </p>
+              <p className="text-muted-foreground text-sm" dangerouslySetInnerHTML={{ __html: t('No growth data available for your fields yet. Add some data to see your chart!') }} />
             </div>
           )}
 

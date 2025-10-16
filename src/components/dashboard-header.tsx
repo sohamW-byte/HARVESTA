@@ -49,7 +49,7 @@ export function DashboardHeader() {
         <Link href="/dashboard/marketplace" passHref>
           <Button>
             <Store className="mr-2 h-4 w-4" />
-            Marketplace
+            {t('Marketplace')}
           </Button>
         </Link>
 
