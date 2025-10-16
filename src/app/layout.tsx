@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TranslationProvider } from '@/hooks/use-translation';
-import { AccessibilityProvider } from '@/hooks/use-accessibility';
 
 export const metadata: Metadata = {
   title: 'Harvesta',
@@ -28,23 +27,21 @@ const sourceCodePro = Source_Code_Pro({
 
 function RootProviders({ children }: { children: React.ReactNode }) {
     return (
-        <AccessibilityProvider>
-            <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-            >
-                <FirebaseClientProvider>
-                <AuthProvider>
-                    <TranslationProvider>
-                        {children}
-                        <Toaster />
-                    </TranslationProvider>
-                </AuthProvider>
-                </FirebaseClientProvider>
-            </ThemeProvider>
-        </AccessibilityProvider>
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+            <FirebaseClientProvider>
+            <AuthProvider>
+                <TranslationProvider>
+                    {children}
+                    <Toaster />
+                </TranslationProvider>
+            </AuthProvider>
+            </FirebaseClientProvider>
+        </ThemeProvider>
     )
 }
 

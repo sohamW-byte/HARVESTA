@@ -5,6 +5,7 @@ import {
   User,
   LogOut,
   Store,
+  Type,
 } from 'lucide-react';
 
 import {
@@ -14,6 +15,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,13 +28,33 @@ import { LanguageSwitcher } from './language-switcher';
 import { HeaderSearch } from './header-search';
 import { ThemeToggle } from './theme-toggle';
 import { useTranslation } from '@/hooks/use-translation';
-import { AccessibilityMenu } from './accessibility-menu';
+import { useEffect, useState } from 'react';
+
+type FontSize = 'sm' | 'base' | 'lg';
 
 export function DashboardHeader() {
   const { userProfile, signOut } = useAuth();
   const { t } = useTranslation();
+  const [fontSize, setFontSize] = useState<FontSize>('base');
   
   const userInitial = userProfile?.name?.charAt(0).toUpperCase() || '?';
+
+  useEffect(() => {
+    const savedSize = localStorage.getItem('harvesta-font-size') as FontSize;
+    if (savedSize) {
+      setFontSize(savedSize);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.body.classList.remove('font-sm', 'font-lg');
+    if (fontSize === 'sm') {
+      document.body.classList.add('font-sm');
+    } else if (fontSize === 'lg') {
+      document.body.classList.add('font-lg');
+    }
+    localStorage.setItem('harvesta-font-size', fontSize);
+  }, [fontSize]);
 
   return (
     <header className="flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 sticky top-0 z-30">
@@ -55,7 +79,6 @@ export function DashboardHeader() {
         </Link>
 
         <LanguageSwitcher />
-        <AccessibilityMenu />
         <ThemeToggle />
 
         <DropdownMenu>
@@ -83,6 +106,17 @@ export function DashboardHeader() {
                 <span>{t('Profile')}</span>
               </DropdownMenuItem>
             </Link>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Type className="mr-2 h-4 w-4" />
+                <span>Font Size</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onSelect={() => setFontSize('sm')}>Small</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setFontSize('base')}>Default</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setFontSize('lg')}>Large</DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut}>
               <LogOut className="mr-2 h-4 w-4" />
