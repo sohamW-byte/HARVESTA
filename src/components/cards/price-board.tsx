@@ -5,6 +5,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -19,7 +20,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface MarketDataRecord {
   state: string;
@@ -46,8 +48,12 @@ const demoPrices: MarketDataRecord[] = [
     { state: "Rajasthan", district: "Jaipur", market: "Jaipur (F&V)", commodity: "Mustard", variety: "Hybrid", modal_price: "5400", arrival_date: "2023-10-26", min_price: "5200", max_price: "5600" },
     { state: "Maharashtra", district: "Ratnagiri", market: "Ratnagiri", commodity: "Mango", variety: "Alphonso", modal_price: "45000", arrival_date: "2023-05-20", min_price: "40000", max_price: "50000" },
     { state: "Kerala", district: "Idukki", market: "Nedumkandam", commodity: "Black Pepper", variety: "Un-Garbled", modal_price: "51000", arrival_date: "2023-10-25", min_price: "50500", max_price: "51500" },
+    { state: "Assam", district: "Guwahati", market: "Pamohi", commodity: "Ginger", variety: "Nadia", modal_price: "6500", arrival_date: "2023-10-26", min_price: "6000", max_price: "7000" },
+    { state: "Bihar", district: "Patna", market: "Meethapur", commodity: "Lentil (Masur)", variety: "Small", modal_price: "6300", arrival_date: "2023-10-25", min_price: "6200", max_price: "6400" },
+    { state: "Haryana", district: "Karnal", market: "Karnal", commodity: "Paddy (Basmati)", variety: "1121", modal_price: "4200", arrival_date: "2023-10-26", min_price: "4000", max_price: "4400" }
 ];
 
+const INITIAL_VISIBLE_ROWS = 5;
 
 export function PriceBoard() {
   const [prices, setPrices] = useState<MarketDataRecord[]>([]);
@@ -55,6 +61,7 @@ export function PriceBoard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('commodity_asc');
   const [filterState, setFilterState] = useState('all');
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -94,6 +101,8 @@ export function PriceBoard() {
         }
       });
   }, [prices, searchQuery, sortBy, filterState]);
+
+  const itemsToDisplay = showAll ? filteredAndSortedPrices : filteredAndSortedPrices.slice(0, INITIAL_VISIBLE_ROWS);
 
   const formatDate = (dateString: string) => {
     try {
@@ -177,8 +186,8 @@ export function PriceBoard() {
                   </TableCell>
                 </TableRow>
               ))
-            ) : filteredAndSortedPrices.length > 0 ? (
-              filteredAndSortedPrices.map((item, index) => (
+            ) : itemsToDisplay.length > 0 ? (
+              itemsToDisplay.map((item, index) => (
                 <TableRow key={index}>
                   <TableCell className="font-medium">{item.commodity}</TableCell>
                   <TableCell>{item.market}, {item.district}</TableCell>
@@ -198,8 +207,26 @@ export function PriceBoard() {
           </TableBody>
         </Table>
       </CardContent>
+      {filteredAndSortedPrices.length > INITIAL_VISIBLE_ROWS && (
+        <CardFooter className="justify-center border-t pt-4">
+          <Button
+            variant="ghost"
+            onClick={() => setShowAll(!showAll)}
+          >
+            {showAll ? (
+              <>
+                <ChevronUp className="mr-2 h-4 w-4" />
+                Show Less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="mr-2 h-4 w-4" />
+                Show More
+              </>
+            )}
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }
-
-    
