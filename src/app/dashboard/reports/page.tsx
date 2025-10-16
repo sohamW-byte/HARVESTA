@@ -3,13 +3,31 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from '@/hooks/use-location';
-import { generateReport, type ReportGenerationOutput } from '@/ai/flows/report-generation';
+import type { ReportGenerationOutput } from '@/ai/flows/report-generation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, FileText, Leaf, TrendingUp, Award, Droplets, Info } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
+
+const mockReportData: ReportGenerationOutput = {
+  soilQuality: "The black soil in the Nashik region is rich in humus and well-suited for horticulture. It has good moisture retention, which is ideal for grape and onion cultivation, but may require improved drainage for certain other crops.",
+  trendingCrops: [
+    "Table Grapes: Consistently high demand for export markets.",
+    "Onions (Red): A staple crop with strong local and national demand, though prices can be volatile.",
+    "Tomatoes: Suitable for the climate, with a steady market for both fresh and processing varieties.",
+    "Pomegranates: Increasing popularity and good returns for quality produce."
+  ],
+  bestCrop: "Table Grapes",
+  recommendation: "Given the soil profile and strong export market link, focusing on high-quality table grapes is the most profitable recommendation. Consider varieties like Thompson Seedless or Flame Seedless for best results.",
+  otherFeatures: [
+    "Utilize drip irrigation to manage water efficiently, especially for grape cultivation.",
+    "Explore government subsidies available for setting up polyhouses for tomato cultivation to extend the growing season.",
+    "Practice crop rotation with legumes like soybean or chickpea to naturally improve soil nitrogen levels after an onion harvest."
+  ]
+};
+
 
 export default function ReportsPage() {
   const { userProfile, loading: userLoading } = useAuth();
@@ -18,7 +36,6 @@ export default function ReportsPage() {
   const [report, setReport] = useState<ReportGenerationOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
   
-  // Use the browser's location if available, otherwise fall back to the saved profile region.
   const effectiveLocation = browserLocation?.address || userProfile?.region;
 
   const handleGenerateReport = async () => {
@@ -31,14 +48,11 @@ export default function ReportsPage() {
     setReport(null);
     setError(null);
 
-    try {
-      const result = await generateReport({ location: effectiveLocation });
-      setReport(result);
-    } catch (e: any) {
-      setError(e.message || "An unexpected error occurred while generating the report.");
-    } finally {
-      setLoading(false);
-    }
+    // Simulate AI generation with a delay
+    setTimeout(() => {
+        setReport(mockReportData);
+        setLoading(false);
+    }, 2000); // 2-second delay to mimic processing
   };
   
   const isPageLoading = userLoading || locationLoading;
