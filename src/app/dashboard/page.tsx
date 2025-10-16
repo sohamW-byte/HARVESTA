@@ -58,13 +58,9 @@ export default function DashboardPage() {
         <PriceBoard />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <TestimonialsCard />
-        </div>
-        <div className="lg:col-span-2">
-          <GrowthMonitorChart />
-        </div>
+      <div className="grid gap-6">
+        <GrowthMonitorChart />
+        <TestimonialsCard />
       </div>
     </div>
   );
