@@ -43,8 +43,8 @@ export function PriceBoard() {
       setError(null);
       
       const apiKey = process.env.NEXT_PUBLIC_AGMARKNET_API_KEY;
-      if (!apiKey || apiKey === 'your-api-key') {
-        setError('API key for Agmarknet is not configured. Please add it to your .env file.');
+      if (!apiKey || apiKey === 'your-api-key' || apiKey === '579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b') {
+        setError('API key for Agmarknet is not configured. Please add your own key to the .env file.');
         setLoading(false);
         setPrices([]);
         return;
@@ -63,7 +63,7 @@ export function PriceBoard() {
         if (data.records) {
           setPrices(data.records);
         } else {
-          throw new Error('No records found in the API response.');
+          setPrices([]);
         }
       } catch (e: any) {
         console.error("Failed to fetch market data:", e);
