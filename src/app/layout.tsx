@@ -1,20 +1,14 @@
-'use client';
 import type { Metadata } from 'next';
 import { Inter, Source_Code_Pro } from 'next/font/google';
 import './globals.css';
-import { AuthProvider } from '@/hooks/use-auth';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
-import { FirebaseClientProvider } from '@/firebase';
-import { ThemeProvider } from '@/components/theme-provider';
-import { TranslationProvider } from '@/hooks/use-translation';
+import { Providers } from './providers';
 
-// Metadata needs to be exported from a server component, so we can't define it here anymore.
-// This is a tradeoff to fix the runtime error.
-// export const metadata: Metadata = {
-//   title: 'Harvesta',
-//   description: 'A modern farming and analytics dashboard.',
-// };
+export const metadata: Metadata = {
+  title: 'Harvesta',
+  description: 'A modern farming and analytics dashboard.',
+};
 
 const inter = Inter({
   subsets: ['latin'],
@@ -28,26 +22,6 @@ const sourceCodePro = Source_Code_Pro({
   variable: '--font-source-code-pro',
 });
 
-function RootProviders({ children }: { children: React.ReactNode }) {
-    return (
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-        >
-            <FirebaseClientProvider>
-            <AuthProvider>
-                <TranslationProvider>
-                    {children}
-                    <Toaster />
-                </TranslationProvider>
-            </AuthProvider>
-            </FirebaseClientProvider>
-        </ThemeProvider>
-    );
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -56,9 +30,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn('font-body antialiased', inter.variable, sourceCodePro.variable)}>
-        <RootProviders>
-            {children}
-        </RootProviders>
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );
