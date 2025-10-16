@@ -13,22 +13,13 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth as useAppAuth } from '@/hooks/use-auth';
-import { doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
+import { doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { useFirestore, useAuth } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import type { UserProfile } from '@/lib/types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -41,19 +32,11 @@ const fieldSchema = z.object({
 
 type FieldFormValues = z.infer<typeof fieldSchema>;
 
-interface SubmissionHistoryEntry {
-    date: string;
-    region: string;
-    crops: string;
-    availability: string;
-}
-
 export default function MyFieldsPage() {
   const { userProfile } = useAppAuth();
   const auth = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [submissionHistory, setSubmissionHistory] = useState<SubmissionHistoryEntry[]>([]);
   const db = useFirestore();
 
   const form = useForm<FieldFormValues>({
@@ -72,17 +55,6 @@ export default function MyFieldsPage() {
         cropsGrown: userProfile.cropsGrown?.join(', ') || '',
         produceAvailability: '',
       });
-
-      if (userProfile.updateHistory) {
-        const history = userProfile.updateHistory.map(entry => ({
-            date: entry.date.toDate().toLocaleDateString('en-IN'),
-            region: entry.region,
-            crops: entry.cropsGrown.join(', '),
-            // The availability is a one-time message, not part of the historical record view
-            availability: entry.produceAvailability || 'N/A', 
-        })).reverse();
-        setSubmissionHistory(history);
-      }
     }
   }, [userProfile, form]);
   
@@ -102,18 +74,9 @@ export default function MyFieldsPage() {
       const userDocRef = doc(db, 'users', currentUser.uid);
       const cropsArray = data.cropsGrown.split(',').map(crop => crop.trim()).filter(Boolean);
 
-      const historyEntry = {
-        date: Timestamp.now(),
-        region: data.region,
-        cropsGrown: cropsArray,
-        // The one-time availability message is part of the history entry
-        produceAvailability: data.produceAvailability 
-      };
-
       const updateData = {
         region: data.region,
         cropsGrown: cropsArray,
-        updateHistory: arrayUnion(historyEntry)
       };
 
       await updateDoc(userDocRef, updateData)
@@ -130,18 +93,7 @@ export default function MyFieldsPage() {
         title: 'Success!',
         description: 'Your farm details have been updated.',
       });
-
-      setSubmissionHistory(prev => [
-          {
-            date: historyEntry.date.toDate().toLocaleDateString('en-IN'),
-            region: historyEntry.region,
-            crops: historyEntry.cropsGrown.join(', '),
-            availability: historyEntry.produceAvailability,
-          },
-          ...prev
-      ]);
-
-
+      
       form.reset({
         ...data,
         produceAvailability: '', 
@@ -207,10 +159,10 @@ export default function MyFieldsPage() {
                   name="produceAvailability"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Current Produce Availability</FormLabel>
+                      <FormLabel>Current Produce Availability (One-time Message)</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="E.g., 500 kg of Thompson Seedless grapes available for immediate sale."
+                          placeholder="E.g., 500 kg of Thompson Seedless grapes available for immediate sale. This message is not saved."
                           {...field}
                         />
                       </FormControl>
@@ -224,41 +176,6 @@ export default function MyFieldsPage() {
                 </Button>
               </form>
             </Form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Submission History</CardTitle>
-            <CardDescription>A log of your previous farm detail updates.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Region</TableHead>
-                  <TableHead>Crops Grown</TableHead>
-                  <TableHead>Produce Availability</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {submissionHistory.length > 0 ? (
-                    submissionHistory.map((entry, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{entry.date}</TableCell>
-                        <TableCell>{entry.region}</TableCell>
-                        <TableCell>{entry.crops}</TableCell>
-                        <TableCell>{entry.availability}</TableCell>
-                      </TableRow>
-                    ))
-                ) : (
-                    <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground">No history yet.</TableCell>
-                    </TableRow>
-                )}
-              </TableBody>
-            </Table>
           </CardContent>
         </Card>
       </div>

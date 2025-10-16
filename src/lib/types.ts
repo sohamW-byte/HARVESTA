@@ -9,12 +9,6 @@ export interface UserProfile {
   gstNumber?: string;
   region?: string;
   cropsGrown?: string[];
-  updateHistory?: {
-    date: Timestamp;
-    region: string;
-    cropsGrown: string[];
-    produceAvailability: string;
-  }[];
 }
 
 export interface Field {
@@ -94,4 +88,3 @@ export interface CommunityComment {
     content: string;
     timestamp: Timestamp;
 }
-
