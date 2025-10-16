@@ -68,35 +68,7 @@ export function DashboardSidebar() {
           {menuItems.map((item) => {
             if (item.adminOnly && !isAdmin) return null;
             
-            return item.isCollapsible ? (
-              <Collapsible key={item.label} className="w-full">
-                <div className="group/menu-item relative flex w-full items-center">
-                   <CollapsibleTrigger asChild>
-                     <Button variant="ghost" className="w-full justify-start gap-2 px-2 text-sm">
-                        <item.icon className="h-4 w-4" />
-                        <span className="truncate">{item.label}</span>
-                        <ChevronDown className="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                     </Button>
-                   </CollapsibleTrigger>
-                </div>
-                <CollapsibleContent>
-                   <div className="pl-8 py-1">
-                     {item.subItems?.map(subItem => (
-                         <Link href={subItem.href} key={subItem.href} passHref>
-                           <SidebarMenuButton
-                             className="w-full justify-start"
-                             variant="ghost"
-                             size="sm"
-                             isActive={pathname === subItem.href}
-                           >
-                             {subItem.label}
-                           </SidebarMenuButton>
-                         </Link>
-                     ))}
-                   </div>
-                </CollapsibleContent>
-              </Collapsible>
-            ) : (
+            return (
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href} passHref>
                   <SidebarMenuButton
