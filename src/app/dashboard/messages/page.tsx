@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Send, Bot, Loader2, User } from 'lucide-react';
+import { Search, Send, Bot, Loader2, User, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { chat, type ChatOutput } from '@/ai/flows/chat-flow';
@@ -65,7 +65,7 @@ interface Message {
 export default function MessagesPage() {
   const { userProfile } = useAuth();
   const [conversations, setConversations] = useState(initialConversations);
-  const [selectedConversation, setSelectedConversation] = useState(initialConversations[0]);
+  const [selectedConversation, setSelectedConversation] = useState<typeof initialConversations[0] | null>(null);
   const [messages, setMessages] = useState<{[key: string]: Message[]}>(initialMessages);
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -74,6 +74,14 @@ export default function MessagesPage() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+  
+  useEffect(() => {
+    if (window.innerWidth >= 768) {
+        if (!selectedConversation) {
+            setSelectedConversation(initialConversations[0]);
+        }
+    }
+  }, [selectedConversation]);
 
   useEffect(() => {
     scrollToBottom();
@@ -160,9 +168,13 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh_-_theme(spacing.16)_-_theme(spacing.16))]">
+    <div className="flex h-[calc(100vh_-_theme(spacing.16)_-_theme(spacing.16))] relative">
       {/* Sidebar with conversations */}
-      <div className="w-1/3 border-r flex flex-col">
+      <div className={cn(
+        "w-full md:w-1/3 border-r flex flex-col transition-transform duration-300 ease-in-out",
+        "md:translate-x-0",
+        selectedConversation ? "-translate-x-full" : "translate-x-0"
+      )}>
         <div className="p-4 border-b">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -175,7 +187,7 @@ export default function MessagesPage() {
               key={convo.id}
               className={cn(
                 'flex items-center gap-3 p-4 cursor-pointer hover:bg-muted',
-                selectedConversation.id === convo.id && 'bg-muted'
+                selectedConversation?.id === convo.id && 'bg-muted'
               )}
               onClick={() => setSelectedConversation(convo)}
             >
@@ -202,10 +214,17 @@ export default function MessagesPage() {
       </div>
 
       {/* Main chat window */}
-      <div className="w-2/3 flex flex-col">
+      <div className={cn(
+        "w-full md:w-2/3 flex flex-col absolute md:static top-0 h-full transition-transform duration-300 ease-in-out",
+         "md:translate-x-0",
+         selectedConversation ? "translate-x-0" : "translate-x-full"
+      )}>
         {selectedConversation ? (
           <>
             <div className="p-4 border-b flex items-center gap-3">
+              <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSelectedConversation(null)}>
+                <ArrowLeft className="h-6 w-6" />
+              </Button>
               <Avatar className="h-10 w-10">
                 {typeof selectedConversation.avatar === 'string' ? (
                   <>
@@ -314,7 +333,7 @@ export default function MessagesPage() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
+          <div className="hidden md:flex flex-1 items-center justify-center text-muted-foreground">
             <p>Select a conversation to start chatting</p>
           </div>
         )}
