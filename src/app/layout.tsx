@@ -41,7 +41,6 @@ function RootProviders({ children }: { children: React.ReactNode }) {
                 </TranslationProvider>
             </AuthProvider>
             </FirebaseClientProvider>
-        </ThemeProvider>
     )
 }
 
