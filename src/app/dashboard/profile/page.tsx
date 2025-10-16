@@ -183,155 +183,157 @@ export default function ProfilePage() {
       <h1 className="text-3xl font-bold tracking-tight">My Profile</h1>
       <p className="text-muted-foreground">View and manage your account details.</p>
       
-      <div className="mt-8 grid gap-12 lg:grid-cols-3 lg:gap-8">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Your Information</CardTitle>
-            <CardDescription>
-              Update your personal and role-specific details here. Your role and email cannot be changed.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-             {userLoading ? (
-                <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="ml-4">Loading profile...</p>
-                </div>
-            ) : (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <div className="flex flex-col items-center gap-4">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleImageChange}
-                    className="hidden"
-                    accept="image/*"
-                  />
-                  <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                    <Avatar className="h-24 w-24">
-                      <AvatarImage src={previewImage || undefined} alt={userProfile?.name} />
-                      <AvatarFallback className="text-4xl">{userInitial}</AvatarFallback>
-                    </Avatar>
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Camera className="h-8 w-8 text-white" />
+      <div className="mt-8 grid gap-8 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+            <Card>
+            <CardHeader>
+                <CardTitle>Your Information</CardTitle>
+                <CardDescription>
+                Update your personal and role-specific details here. Your role and email cannot be changed.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                {userLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="ml-4">Loading profile...</p>
                     </div>
-                  </div>
-                   <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                    Change Photo
-                  </Button>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Full Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Your full name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                ) : (
+                <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                    <div className="flex flex-col items-center gap-4">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImageChange}
+                        className="hidden"
+                        accept="image/*"
                     />
-                     <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input placeholder="your@email.com" {...field} disabled />
-                          </FormControl>
-                           <FormDescription>
-                            Your email address cannot be changed.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                        <Avatar className="h-24 w-24">
+                        <AvatarImage src={previewImage || undefined} alt={userProfile?.name} />
+                        <AvatarFallback className="text-4xl">{userInitial}</AvatarFallback>
+                        </Avatar>
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera className="h-8 w-8 text-white" />
+                        </div>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                        Change Photo
+                    </Button>
+                    </div>
 
-                    <FormItem>
-                      <FormLabel>Role</FormLabel>
-                      <FormControl>
-                        <Input value={userProfile?.role || ''} disabled className="capitalize" />
-                      </FormControl>
-                      <FormDescription>
-                        Your role is fixed upon registration.
-                      </FormDescription>
-                    </FormItem>
-
-                    {watchedRole === 'farmer' && (
-                      <FormField
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <FormField
                         control={form.control}
-                        name="farmerId"
+                        name="name"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Farmer ID</FormLabel>
+                            <FormItem>
+                            <FormLabel>Full Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter your government-issued Farmer ID" {...field} />
+                                <Input placeholder="Your full name" {...field} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
+                            </FormItem>
                         )}
-                      />
-                    )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                                <Input placeholder="your@email.com" {...field} disabled />
+                            </FormControl>
+                            <FormDescription>
+                                Your email address cannot be changed.
+                            </FormDescription>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+
+                        <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        <FormControl>
+                            <Input value={userProfile?.role || ''} disabled className="capitalize" />
+                        </FormControl>
+                        <FormDescription>
+                            Your role is fixed upon registration.
+                        </FormDescription>
+                        </FormItem>
+
+                        {watchedRole === 'farmer' && (
+                        <FormField
+                            control={form.control}
+                            name="farmerId"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Farmer ID</FormLabel>
+                                <FormControl>
+                                <Input placeholder="Enter your government-issued Farmer ID" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        )}
+                        
+                        {watchedRole === 'buyer' && (
+                        <FormField
+                            control={form.control}
+                            name="gstNumber"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>GST Number</FormLabel>
+                                <FormControl>
+                                <Input placeholder="Enter your GST Number" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        )}
+
+                        <FormField
+                        control={form.control}
+                        name="region"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Region</FormLabel>
+                            <FormControl>
+                                <Input placeholder="E.g., Nashik, Maharashtra" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="cropsGrown"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Main Crops Grown (comma-separated)</FormLabel>
+                            <FormControl>
+                                <Input placeholder="E.g., Grapes, Onions, Tomatoes" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
                     
-                    {watchedRole === 'buyer' && (
-                      <FormField
-                        control={form.control}
-                        name="gstNumber"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>GST Number</FormLabel>
-                            <FormControl>
-                               <Input placeholder="Enter your GST Number" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-
-                    <FormField
-                      control={form.control}
-                      name="region"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Region</FormLabel>
-                          <FormControl>
-                            <Input placeholder="E.g., Nashik, Maharashtra" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="cropsGrown"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Main Crops Grown (comma-separated)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="E.g., Grapes, Onions, Tomatoes" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                </div>
-                
-                 <Button type="submit" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Changes
-                </Button>
-              </form>
-            </Form>
-            )}
-          </CardContent>
-        </Card>
+                    <Button type="submit" disabled={isLoading}>
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Save Changes
+                    </Button>
+                </form>
+                </Form>
+                )}
+            </CardContent>
+            </Card>
+        </div>
         
         <div className="space-y-8">
             <Card>

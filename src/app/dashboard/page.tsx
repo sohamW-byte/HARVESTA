@@ -37,14 +37,12 @@ export default function DashboardPage() {
           value="Good"
           description="Overall health is positive"
           icon={<CheckCircle className="text-green-500" />}
-          className="lg:col-span-1"
         />
         <SummaryCard
           title="Total Expenses"
           value={`₹${totalExpenses.toLocaleString()}`}
           description="This month so far"
           icon={<DollarSign className="text-primary" />}
-          className="lg:col-span-1"
         />
         <WeatherCard />
         <TasksCard
@@ -58,7 +56,7 @@ export default function DashboardPage() {
         <PriceBoard />
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <GrowthMonitorChart />
         <TestimonialsCard />
       </div>

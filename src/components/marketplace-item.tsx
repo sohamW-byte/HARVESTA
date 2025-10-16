@@ -27,7 +27,7 @@ export function MarketplaceItem({ name, quantity, price, location, imageId, sell
   const image = imageId ? PlaceHolderImages.find(img => img.id === imageId) : PlaceHolderImages.find(i => i.id.includes('produce'));
   
   return (
-    <Card className="rounded-2xl transition-shadow duration-300 bg-card/60 backdrop-blur-sm overflow-hidden flex flex-col">
+    <Card className="rounded-2xl overflow-hidden flex flex-col">
       {image && (
         <div className="relative aspect-video">
           <Image
@@ -45,15 +45,15 @@ export function MarketplaceItem({ name, quantity, price, location, imageId, sell
       </CardHeader>
       <CardContent className="flex-grow space-y-2">
          <div className="flex items-center text-sm text-muted-foreground">
-            <Package className="mr-2 h-4 w-4" />
+            <Package className="mr-2 h-4 w-4 flex-shrink-0" />
             <span>Quantity: {quantity}</span>
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
-            <IndianRupee className="mr-2 h-4 w-4" />
+            <IndianRupee className="mr-2 h-4 w-4 flex-shrink-0" />
             <span>Price: {price}</span>
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
-            <MapPin className="mr-2 h-4 w-4" />
+            <MapPin className="mr-2 h-4 w-4 flex-shrink-0" />
             <span>Location: {location}</span>
         </div>
       </CardContent>

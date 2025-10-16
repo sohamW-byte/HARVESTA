@@ -114,7 +114,7 @@ export function PriceBoard() {
   }
 
   return (
-    <Card className="rounded-2xl transition-shadow duration-300 bg-card/60 backdrop-blur-sm">
+    <Card className="rounded-2xl">
       <CardHeader>
         <CardTitle>Live Market Prices</CardTitle>
         <CardDescription>
