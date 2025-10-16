@@ -18,9 +18,11 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MapPin, Sprout, List } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 const fieldSchema = z.object({
   region: z.string().min(2, { message: 'Region is required.' }),
@@ -111,6 +113,54 @@ export default function MyFieldsPage() {
       <p className="text-muted-foreground">Manage your farm's information and track your produce.</p>
       
       <div className="mt-8 grid gap-12">
+        <Card>
+            <CardHeader>
+                <CardTitle>Current Farm Information</CardTitle>
+                <CardDescription>
+                    This is the current information saved to your profile.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {isUserLoading ? (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Loading your details...</span>
+                    </div>
+                ) : userProfile ? (
+                    <>
+                        <div>
+                            <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
+                                <MapPin className="h-4 w-4"/>
+                                Region
+                            </h3>
+                            <p>{userProfile.region || 'Not set'}</p>
+                        </div>
+                        <Separator />
+                        <div>
+                            <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
+                                <List className="h-4 w-4"/>
+                                Crops Grown
+                            </h3>
+                            {userProfile.cropsGrown && userProfile.cropsGrown.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                    {userProfile.cropsGrown.map(crop => (
+                                        <Badge key={crop} variant="secondary" className="flex items-center gap-1">
+                                            <Sprout className="h-3 w-3" />
+                                            {crop}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p>No crops listed yet.</p>
+                            )}
+                        </div>
+                    </>
+                ) : (
+                    <p>Could not load farm details.</p>
+                )}
+            </CardContent>
+        </Card>
+        
         <Card>
           <CardHeader>
             <CardTitle>Update Farm Details</CardTitle>
