@@ -1,3 +1,52 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "auth-background",
+      "description": "A beautiful illustration of a farm landscape.",
+      "imageUrl": "https://picsum.photos/seed/authbg/1920/1080",
+      "imageHint": "farm landscape"
+    },
+    {
+      "id": "field-map",
+      "description": "A satellite view of a farm field.",
+      "imageUrl": "https://picsum.photos/seed/fieldmap/800/600",
+      "imageHint": "satellite farm"
+    },
+    {
+      "id": "user-avatar-1",
+      "description": "Avatar for a sample user.",
+      "imageUrl": "https://picsum.photos/seed/avatar1/100/100",
+      "imageHint": "person portrait"
+    },
+    {
+      "id": "user-avatar-2",
+      "description": "Avatar for another sample user.",
+      "imageUrl": "https://picsum.photos/seed/avatar2/100/100",
+      "imageHint": "woman portrait"
+    },
+    {
+      "id": "user-avatar-3",
+      "description": "Avatar for a third sample user.",
+      "imageUrl": "https://picsum.photos/seed/avatar3/100/100",
+      "imageHint": "man portrait"
+    },
+    {
+      "id": "produce-tomato",
+      "description": "Fresh red tomatoes.",
+      "imageUrl": "https://picsum.photos/seed/tomato/400/300",
+      "imageHint": "tomatoes bunch"
+    },
+    {
+      "id": "produce-corn",
+      "description": "Golden sweet corn.",
+      "imageUrl": "https://picsum.photos/seed/corn/400/300",
+      "imageHint": "corn cob"
+    },
+    {
+      "id": "produce-wheat",
+      "description": "Ears of golden wheat.",
+      "imageUrl": "https://picsum.photos/seed/wheat/400/300",
+      "imageHint": "wheat field"
+    }
+  ]
 }
