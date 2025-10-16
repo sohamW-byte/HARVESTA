@@ -9,6 +9,7 @@ import { DollarSign, CheckCircle } from 'lucide-react';
 import { PriceBoard } from '@/components/cards/price-board';
 import { AddProduceDialog } from '@/components/add-produce-dialog';
 import { WeatherCard } from '@/components/cards/weather-card';
+import { FieldMapCard } from '@/components/cards/field-map-card';
 
 export default function DashboardPage() {
   const { userProfile } = useAuth();
@@ -17,9 +18,7 @@ export default function DashboardPage() {
 
   // Mock data for demonstration
   const totalExpenses = 12530.50;
-  const nextTask = { title: 'Irrigate Field A', due: 'Tomorrow' };
-  const tasksCompletion = 75;
-
+  
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -49,11 +48,7 @@ export default function DashboardPage() {
           className="lg:col-span-1"
         />
         <WeatherCard />
-         <TasksCard
-          completionPercentage={tasksCompletion}
-          nextTaskTitle={nextTask.title}
-          nextTaskDue={nextTask.due}
-        />
+        <FieldMapCard />
       </div>
 
       <div className="grid gap-6">
