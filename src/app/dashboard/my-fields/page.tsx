@@ -12,7 +12,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
@@ -23,6 +22,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useAuth } from '@/hooks/use-auth';
+import { doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import type { UserProfile } from '@/lib/types';
+
 
 const fieldSchema = z.object({
   region: z.string().min(2, { message: 'Region is required.' }),
@@ -32,29 +39,19 @@ const fieldSchema = z.object({
 
 type FieldFormValues = z.infer<typeof fieldSchema>;
 
-const submissionHistory = [
-  {
-    date: '2023-10-15',
-    region: 'Nashik, Maharashtra',
-    crops: 'Grapes, Onions',
-    availability: '500 kg of Thompson Seedless grapes available for immediate sale.',
-  },
-  {
-    date: '2023-06-02',
-    region: 'Anantapur, Andhra Pradesh',
-    crops: 'Groundnut, Sweet Orange',
-    availability: '2 tonnes of Groundnut (K-6 variety) ready by next week.',
-  },
-  {
-    date: '2023-03-20',
-    region: 'Moga, Punjab',
-    crops: 'Wheat, Rice',
-    availability: '10 quintals of high-quality Sharbati wheat harvested.',
-  },
-];
-
+interface SubmissionHistoryEntry {
+    date: string;
+    region: string;
+    crops: string;
+    availability: string;
+}
 
 export default function MyFieldsPage() {
+  const { user, userProfile } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [submissionHistory, setSubmissionHistory] = useState<SubmissionHistoryEntry[]>([]);
+
   const form = useForm<FieldFormValues>({
     resolver: zodResolver(fieldSchema),
     defaultValues: {
@@ -63,12 +60,89 @@ export default function MyFieldsPage() {
       produceAvailability: '',
     },
   });
+
+  useEffect(() => {
+    if (userProfile) {
+      form.reset({
+        region: userProfile.region || '',
+        // Assuming cropsGrown is an array of strings in the profile
+        cropsGrown: userProfile.cropsGrown?.join(', ') || '',
+        produceAvailability: '', // This is likely transactional, so not pre-filled
+      });
+
+      // Populate history from profile if available
+      if (userProfile.updateHistory) {
+        const history = userProfile.updateHistory.map(entry => ({
+            date: entry.date.toDate().toLocaleDateString('en-IN'),
+            region: entry.region,
+            crops: entry.cropsGrown.join(', '),
+            availability: entry.produceAvailability,
+        })).reverse(); // show most recent first
+        setSubmissionHistory(history);
+      }
+    }
+  }, [userProfile, form]);
   
-  function onSubmit(data: FieldFormValues) {
-    console.log(data);
-    // Here you would typically send the data to your backend
-    alert('Data submitted! Check the console for the values.');
-    form.reset();
+  async function onSubmit(data: FieldFormValues) {
+    if (!user) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to update your fields.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      const cropsArray = data.cropsGrown.split(',').map(crop => crop.trim()).filter(Boolean);
+
+      const historyEntry = {
+        date: Timestamp.now(),
+        region: data.region,
+        cropsGrown: cropsArray,
+        produceAvailability: data.produceAvailability
+      };
+
+      await updateDoc(userDocRef, {
+        region: data.region,
+        cropsGrown: cropsArray,
+        updateHistory: arrayUnion(historyEntry)
+      });
+      
+      toast({
+        title: 'Success!',
+        description: 'Your farm details have been updated.',
+      });
+
+      // Manually update history state to reflect new submission instantly
+      setSubmissionHistory(prev => [
+          {
+            date: historyEntry.date.toDate().toLocaleDateString('en-IN'),
+            region: historyEntry.region,
+            crops: historyEntry.cropsGrown.join(', '),
+            availability: historyEntry.produceAvailability,
+          },
+          ...prev
+      ]);
+
+
+      form.reset({
+        ...data,
+        produceAvailability: '', // Clear availability for next entry
+      });
+
+    } catch (error: any) {
+      console.error("Error updating document: ", error);
+      toast({
+        title: 'Update failed',
+        description: error.message || 'Could not save your farm details.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -105,7 +179,7 @@ export default function MyFieldsPage() {
                   name="cropsGrown"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Main Crops Grown</FormLabel>
+                      <FormLabel>Main Crops Grown (comma-separated)</FormLabel>
                       <FormControl>
                         <Input placeholder="E.g., Grapes, Onions, Tomatoes" {...field} />
                       </FormControl>
@@ -129,7 +203,10 @@ export default function MyFieldsPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit">Save Changes</Button>
+                 <Button type="submit" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save Changes
+                </Button>
               </form>
             </Form>
           </CardContent>
@@ -151,14 +228,20 @@ export default function MyFieldsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {submissionHistory.map((entry, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{entry.date}</TableCell>
-                    <TableCell>{entry.region}</TableCell>
-                    <TableCell>{entry.crops}</TableCell>
-                    <TableCell>{entry.availability}</TableCell>
-                  </TableRow>
-                ))}
+                {submissionHistory.length > 0 ? (
+                    submissionHistory.map((entry, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{entry.date}</TableCell>
+                        <TableCell>{entry.region}</TableCell>
+                        <TableCell>{entry.crops}</TableCell>
+                        <TableCell>{entry.availability}</TableCell>
+                      </TableRow>
+                    ))
+                ) : (
+                    <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground">No history yet.</TableCell>
+                    </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>

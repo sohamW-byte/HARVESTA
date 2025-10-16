@@ -4,11 +4,17 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  role: 'farmer' | 'buyer';
+  role: 'farmer' | 'buyer' | 'admin';
   farmerId?: string;
   gstNumber?: string;
   region: string;
   cropsGrown: string[];
+  updateHistory?: {
+    date: Timestamp;
+    region: string;
+    cropsGrown: string[];
+    produceAvailability: string;
+  }[];
 }
 
 export interface Field {
@@ -79,7 +85,7 @@ export interface CommunityPost {
 }
 
 export interface CommunityComment {
-    id: string;
+    id:string;
     author: {
         id: string;
         name: string;
