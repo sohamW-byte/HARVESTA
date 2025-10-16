@@ -5,6 +5,7 @@ export interface UserProfile {
   name: string;
   email: string;
   role: 'farmer' | 'buyer' | 'admin';
+  photoURL?: string;
   farmerId?: string;
   gstNumber?: string;
   region?: string;

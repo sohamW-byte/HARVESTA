@@ -120,7 +120,7 @@ export function DashboardSidebar() {
         <SidebarGroup>
           <div className="flex items-center gap-3">
              <Avatar className="h-9 w-9">
-                <AvatarImage src={userProfile?.id ? `https://i.pravatar.cc/150?u=${userProfile.id}` : ''} alt={userProfile?.name} />
+                <AvatarImage src={userProfile?.photoURL || undefined} alt={userProfile?.name} />
                 <AvatarFallback>{userInitial}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col overflow-hidden">
