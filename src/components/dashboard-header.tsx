@@ -45,7 +45,7 @@ export function DashboardHeader() {
         </div>
         
         <Link href="/dashboard/marketplace" passHref>
-          <Button variant="outline">
+          <Button>
             <Store className="mr-2 h-4 w-4" />
             Marketplace
           </Button>
