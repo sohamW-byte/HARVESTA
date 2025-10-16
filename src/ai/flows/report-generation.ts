@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -28,14 +29,11 @@ const ReportGenerationOutputSchema = z.object({
 export type ReportGenerationOutput = z.infer<typeof ReportGenerationOutputSchema>;
 
 export async function generateReport(input: ReportGenerationInput): Promise<ReportGenerationOutput> {
-  return reportGenerationFlow(input);
-}
-
-const prompt = ai.definePrompt({
-  name: 'reportGenerationPrompt',
-  input: { schema: ReportGenerationInputSchema },
-  output: { schema: ReportGenerationOutputSchema },
-  prompt: `You are an expert agricultural analyst for Indian farmers. The user has requested a detailed report for their location: {{{location}}}.
+  const prompt = ai.definePrompt({
+    name: 'reportGenerationPrompt',
+    input: { schema: ReportGenerationInputSchema },
+    output: { schema: ReportGenerationOutputSchema },
+    prompt: `You are an expert agricultural analyst for Indian farmers. The user has requested a detailed report for their location: {{{location}}}.
 
 Generate a comprehensive report with the following sections:
 
@@ -50,16 +48,18 @@ Generate a comprehensive report with the following sections:
 5.  **Other Features**: Include 2-3 additional tips relevant to the location, such as water management techniques, potential government schemes, or pest control advice for common crops in the area.
 
 Your entire output must be a single, valid JSON object that strictly adheres to the provided output schema.`,
-});
+  });
 
-const reportGenerationFlow = ai.defineFlow(
-  {
-    name: 'reportGenerationFlow',
-    inputSchema: ReportGenerationInputSchema,
-    outputSchema: ReportGenerationOutputSchema,
-  },
-  async input => {
-    const { output } = await prompt(input);
-    return output!;
-  }
-);
+  const reportGenerationFlow = ai.defineFlow(
+    {
+      name: 'reportGenerationFlow',
+      inputSchema: ReportGenerationInputSchema,
+      outputSchema: ReportGenerationOutputSchema,
+    },
+    async input => {
+      const { output } = await prompt(input);
+      return output!;
+    }
+  );
+  return reportGenerationFlow(input);
+}

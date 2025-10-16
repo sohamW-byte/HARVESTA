@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -34,14 +35,11 @@ const CropSuggestionOutputSchema = z.object({
 export type CropSuggestionOutput = z.infer<typeof CropSuggestionOutputSchema>;
 
 export async function suggestCrops(input: CropSuggestionInput): Promise<CropSuggestionOutput> {
-  return cropSuggestionFlow(input);
-}
-
-const prompt = ai.definePrompt({
-  name: 'cropSuggestionPrompt',
-  input: {schema: CropSuggestionInputSchema},
-  output: {schema: CropSuggestionOutputSchema},
-  prompt: `You are an expert agronomist and data analyst for Indian agriculture, providing smart farming advice.
+  const prompt = ai.definePrompt({
+    name: 'cropSuggestionPrompt',
+    input: {schema: CropSuggestionInputSchema},
+    output: {schema: CropSuggestionOutputSchema},
+    prompt: `You are an expert agronomist and data analyst for Indian agriculture, providing smart farming advice.
 
 The user's farm is located in: {{{location}}}.
 The user is currently growing the following crops: {{#if cropsGrown}}{{#each cropsGrown}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}none specified{{/if}}.
@@ -59,16 +57,18 @@ Based on all this information, generate a structured report with the following d
 
 Your entire output must be a single, valid JSON object that strictly adheres to the provided output schema. Do not add any extra commentary outside the JSON structure.
 `,
-});
+  });
 
-const cropSuggestionFlow = ai.defineFlow(
-  {
-    name: 'cropSuggestionFlow',
-    inputSchema: CropSuggestionInputSchema,
-    outputSchema: CropSuggestionOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
+  const cropSuggestionFlow = ai.defineFlow(
+    {
+      name: 'cropSuggestionFlow',
+      inputSchema: CropSuggestionInputSchema,
+      outputSchema: CropSuggestionOutputSchema,
+    },
+    async input => {
+      const {output} = await prompt(input);
+      return output!;
+    }
+  );
+  return cropSuggestionFlow(input);
+}
