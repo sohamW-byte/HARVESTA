@@ -38,7 +38,6 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
-  role: z.enum(['farmer', 'buyer', 'admin']),
   farmerId: z.string().optional(),
   gstNumber: z.string().optional(),
   region: z.string().optional(),
@@ -66,7 +65,6 @@ export default function ProfilePage() {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: '',
-      role: 'farmer',
       farmerId: '',
       gstNumber: '',
       region: '',
@@ -83,7 +81,6 @@ export default function ProfilePage() {
     if (userProfile) {
       form.reset({
         name: userProfile.name || '',
-        role: userProfile.role || 'farmer',
         farmerId: userProfile.farmerId || '',
         gstNumber: userProfile.gstNumber || '',
         region: userProfile.region || '',
@@ -99,8 +96,6 @@ export default function ProfilePage() {
     }
   }, [userProfile, user, form]);
   
-  const watchedRole = form.watch('role');
-
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -336,7 +331,7 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        {watchedRole === 'farmer' && (
+                        {userProfile?.role === 'farmer' && (
                         <FormField
                             control={form.control}
                             name="farmerId"
@@ -352,7 +347,7 @@ export default function ProfilePage() {
                         />
                         )}
                         
-                        {watchedRole === 'buyer' && (
+                        {userProfile?.role === 'buyer' && (
                         <FormField
                             control={form.control}
                             name="gstNumber"
