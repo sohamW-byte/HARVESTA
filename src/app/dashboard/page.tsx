@@ -2,7 +2,6 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { SummaryCard } from '@/components/cards/summary-card';
-import { TestimonialsCard } from '@/components/cards/testimonials-card';
 import { TasksCard } from '@/components/cards/tasks-card';
 import { GrowthMonitorChart } from '@/components/charts/growth-monitor-chart';
 import { DollarSign, CheckCircle } from 'lucide-react';
@@ -94,7 +93,6 @@ export default function DashboardPage() {
 
       <motion.div className="grid grid-cols-1 gap-6" variants={itemVariants}>
         <GrowthMonitorChart />
-        <TestimonialsCard />
       </motion.div>
 
     </motion.div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -59,11 +58,9 @@ export function DashboardSidebar() {
     { href: '/dashboard/community', label: 'Community', icon: Users },
     { href: '/dashboard/profile', label: 'Profile', icon: UserIcon },
     { href: '/dashboard/feedback', label: 'Feedback & Help', icon: LifeBuoy },
-    { href: '/dashboard/admin', label: 'Admin', icon: UserCog, adminOnly: true },
   ];
 
   const userInitial = userProfile?.name?.charAt(0).toUpperCase() || '?';
-  const isAdmin = userProfile?.role === 'admin';
   const isBuyer = userProfile?.role === 'buyer';
 
   return (
@@ -79,7 +76,6 @@ export function DashboardSidebar() {
       <SidebarContent>
         <SidebarMenu>
           {menuItems.map((item) => {
-            if (item.adminOnly && !isAdmin) return null;
             if (item.buyerHidden && isBuyer) return null;
             
             return (
