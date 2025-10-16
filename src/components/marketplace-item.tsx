@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { Package, IndianRupee, MessageSquare, MapPin } from "lucide-react";
+import { Package, IndianRupee, MessageSquare, MapPin, Phone } from "lucide-react";
 
 interface MarketplaceItemProps {
   name: string;
@@ -20,10 +20,11 @@ interface MarketplaceItemProps {
   seller?: string;
   buyer?: string;
   type: 'sale' | 'wanted';
+  contactInfo?: string;
 }
 
-export function MarketplaceItem({ name, quantity, price, location, imageId, seller, buyer, type }: MarketplaceItemProps) {
-  const image = imageId ? PlaceHolderImages.find(img => img.id === imageId) : null;
+export function MarketplaceItem({ name, quantity, price, location, imageId, seller, buyer, type, contactInfo }: MarketplaceItemProps) {
+  const image = imageId ? PlaceHolderImages.find(img => img.id === imageId) : PlaceHolderImages.find(i => i.id.includes('produce'));
   
   return (
     <Card className="rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 bg-card/60 backdrop-blur-sm overflow-hidden flex flex-col">
@@ -57,9 +58,11 @@ export function MarketplaceItem({ name, quantity, price, location, imageId, sell
         </div>
       </CardContent>
       <CardFooter>
-        <Button className="w-full">
-            <MessageSquare className="mr-2 h-4 w-4" />
-            {type === 'sale' ? 'Contact Seller' : 'Contact Buyer'}
+        <Button className="w-full" asChild>
+            <a href={`tel:${contactInfo}`}>
+                <Phone className="mr-2 h-4 w-4" />
+                {type === 'sale' ? 'Contact Seller' : 'Contact Buyer'}
+            </a>
         </Button>
       </CardFooter>
     </Card>

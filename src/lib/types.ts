@@ -10,6 +10,7 @@ export interface UserProfile {
   gstNumber?: string;
   region?: string;
   cropsGrown?: string[];
+  phoneNumber?: string;
 }
 
 export interface Field {
@@ -46,6 +47,15 @@ export interface GrowthData {
   height: number;
   biomass: number;
   leafArea: number;
+}
+
+export interface ProduceListing {
+  id: string;
+  cropName: string;
+  quantity: number;
+  price: number;
+  contactInfo: string;
+  userId: string;
 }
 
 export interface Chat {

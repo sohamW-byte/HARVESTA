@@ -5,9 +5,9 @@ import { SummaryCard } from '@/components/cards/summary-card';
 import { TestimonialsCard } from '@/components/cards/testimonials-card';
 import { TasksCard } from '@/components/cards/tasks-card';
 import { GrowthMonitorChart } from '@/components/charts/growth-monitor-chart';
-import { DollarSign, CloudRain, CheckCircle, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { DollarSign, CloudRain, CheckCircle } from 'lucide-react';
 import { PriceBoard } from '@/components/cards/price-board';
+import { AddProduceDialog } from '@/components/add-produce-dialog';
 
 export default function DashboardPage() {
   const { userProfile } = useAuth();
@@ -27,10 +27,9 @@ export default function DashboardPage() {
           <h1 id="dashboard-greeting" className="text-3xl font-bold tracking-tight">{greeting}</h1>
           <p className="text-muted-foreground">Here's a summary of your farm's performance.</p>
         </div>
-        <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Produce
-        </Button>
+        {userProfile?.role === 'farmer' && (
+           <AddProduceDialog />
+        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
