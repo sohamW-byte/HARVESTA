@@ -15,6 +15,7 @@ import {
   ScrollText,
   ChevronDown,
   User as UserIcon,
+  LifeBuoy,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -42,6 +43,7 @@ const menuItems = [
   { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
   { href: '/dashboard/community', label: 'Community', icon: Users },
   { href: '/dashboard/reports', label: 'Reports', icon: BarChart },
+  { href: '/dashboard/feedback', label: 'Feedback & Help', icon: LifeBuoy },
   { href: '/dashboard/admin', label: 'Admin', icon: UserCog, adminOnly: true },
 ];
 
@@ -133,3 +135,5 @@ export function DashboardSidebar() {
     </Sidebar>
   );
 }
+
+    
