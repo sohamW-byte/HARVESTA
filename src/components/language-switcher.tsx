@@ -23,6 +23,10 @@ const languages = [
  * @returns The translated text, or the original text on failure.
  */
 async function translateText(text: string, targetLang: string): Promise<string> {
+  // If target is English, no need to call the API
+  if (targetLang === 'en') {
+    return text;
+  }
   try {
     const response = await fetch("/api/translate", {
       method: "POST",
@@ -31,8 +35,7 @@ async function translateText(text: string, targetLang: string): Promise<string> 
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Translation failed:", errorData.details || errorData.error);
+      console.error("Translation API failed:", await response.text());
       return text; // Return original text on failure
     }
 
@@ -64,9 +67,9 @@ export function LanguageSwitcher() {
     
     const originalText = greetingElement.dataset.originalText;
 
-    if (langCode === 'en' && originalText) {
+    if (langCode === 'en') {
       greetingElement.textContent = originalText;
-    } else if (originalText) {
+    } else {
         const translatedText = await translateText(originalText, langCode);
         greetingElement.textContent = translatedText;
     }
@@ -75,22 +78,20 @@ export function LanguageSwitcher() {
   };
 
   return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" disabled={isTranslating}>
-            <Globe className="h-5 w-5" />
-            <span className="sr-only">Change language</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {languages.map((lang) => (
-            <DropdownMenuItem key={lang.code} onSelect={() => handleLanguageChange(lang.code)}>
-              {lang.name}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" disabled={isTranslating}>
+          <Globe className="h-5 w-5" />
+          <span className="sr-only">Change language</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {languages.map((lang) => (
+          <DropdownMenuItem key={lang.code} onSelect={() => handleLanguageChange(lang.code)}>
+            {lang.name}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
