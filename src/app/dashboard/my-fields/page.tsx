@@ -12,11 +12,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth as useAppAuth } from '@/hooks/use-auth';
 import { doc, updateDoc } from 'firebase/firestore';
-import { useFirestore, useAuth } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
@@ -32,8 +31,7 @@ const fieldSchema = z.object({
 type FieldFormValues = z.infer<typeof fieldSchema>;
 
 export default function MyFieldsPage() {
-  const { userProfile } = useAppAuth();
-  const auth = useAuth();
+  const { user, userProfile } = useAppAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const db = useFirestore();
@@ -56,8 +54,7 @@ export default function MyFieldsPage() {
   }, [userProfile, form]);
   
   async function onSubmit(data: FieldFormValues) {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
+    if (!user) {
       toast({
         title: 'Error',
         description: 'You must be logged in to update your fields.',
@@ -68,7 +65,7 @@ export default function MyFieldsPage() {
 
     setLoading(true);
     try {
-      const userDocRef = doc(db, 'users', currentUser.uid);
+      const userDocRef = doc(db, 'users', user.uid);
       const cropsArray = data.cropsGrown.split(',').map(crop => crop.trim()).filter(Boolean);
 
       const updateData = {
