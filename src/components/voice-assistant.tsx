@@ -30,6 +30,8 @@ export function VoiceAssistant() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [spokenResponse, setSpokenResponse] = useState('');
   const [lastCommand, setLastCommand] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
+
 
   const {
     transcript,
@@ -37,6 +39,10 @@ export function VoiceAssistant() {
     resetTranscript,
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const speak = useCallback((text: string) => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -92,8 +98,8 @@ export function VoiceAssistant() {
     }
   }, [listening, transcript, resetTranscript, router, speak]);
 
-  if (!browserSupportsSpeechRecognition) {
-    return null; // Or return a message that the browser is not supported
+  if (!isMounted || !browserSupportsSpeechRecognition) {
+    return null;
   }
 
   return (
