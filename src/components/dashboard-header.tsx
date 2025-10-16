@@ -5,7 +5,6 @@ import {
   Search,
   User,
   LogOut,
-  Globe,
 } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
@@ -16,15 +15,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuPortal
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { LanguageSwitcher } from './language-switcher';
 
 export function DashboardHeader() {
   const { userProfile, signOut } = useAuth();
@@ -51,19 +47,7 @@ export function DashboardHeader() {
           <span>24°C, Sunny</span>
         </div>
 
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                    <Globe className="h-5 w-5" />
-                    <span className="sr-only">Change language</span>
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuItem>English</DropdownMenuItem>
-                <DropdownMenuItem>हिन्दी (Hindi)</DropdownMenuItem>
-                <DropdownMenuItem>कोंकणी (Konkani)</DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+        <LanguageSwitcher />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
