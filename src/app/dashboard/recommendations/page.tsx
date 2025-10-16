@@ -6,13 +6,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { suggestCrops, type CropSuggestionOutput } from '@/ai/flows/crop-suggestion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Loader2, Lightbulb, Bot, MapPin, Sprout, Cloud, Thermometer } from 'lucide-react';
+import { Loader2, Lightbulb, Bot, MapPin, Sprout, Cloud, Thermometer, CalendarClock, Zap, BookCheck, TrendingUp } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useLocation } from '@/hooks/use-location';
 import { useAuth } from '@/hooks/use-auth';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface WeatherData {
   temp_c: number;
@@ -112,7 +114,7 @@ export default function RecommendationsPage() {
   const isLoadingPage = locationLoading || userLoading;
 
   return (
-    <div className="container mx-auto py-8 max-w-3xl">
+    <div className="container mx-auto py-8 max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Lightbulb className="text-accent" /> AI Suggestions
@@ -166,7 +168,7 @@ export default function RecommendationsPage() {
                     </div>
                 )}
                 
-                <div className="pt-4">
+                <div className="pt-2">
                   <h3 className="text-sm font-medium text-muted-foreground mb-2">Live Weather Input</h3>
                     {isWeatherLoading ? (
                         <div className="flex items-center gap-2 text-muted-foreground">
@@ -194,41 +196,79 @@ export default function RecommendationsPage() {
                     )}
                 </div>
 
-
                 <div className="pt-4">
                      <Button type="submit" disabled={loading || isLoadingPage} className="w-full md:w-auto">
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Get Smart Suggestions
                     </Button>
                 </div>
-
-                {loading && (
-                    <div className="flex flex-col items-center justify-center h-24 gap-4">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-muted-foreground">Analyzing your farm data and weather...</p>
-                    </div>
-                )}
-
-                {error && <p className="text-destructive">{error}</p>}
-                
-                {result && (
-                    <Alert className="bg-green-50 border-green-200 text-green-900 dark:bg-green-900/20 dark:border-green-500/30 dark:text-green-200">
-                        <Bot className="h-4 w-4 !text-green-500" />
-                        <AlertTitle className="font-semibold">Your Personalized Suggestions</AlertTitle>
-                        <AlertDescription>
-                           <ul className="list-disc pl-5 space-y-1 mt-2">
-                             {result.suggestions.map((suggestion, index) => (
-                                <li key={index}>{suggestion}</li>
-                             ))}
-                           </ul>
-                        </AlertDescription>
-                    </Alert>
-                )}
-
               </CardContent>
             </form>
           </Form>
-        </Card>
+      </Card>
+
+      {loading && (
+          <div className="mt-8 flex flex-col items-center justify-center h-48 gap-4">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <p className="text-muted-foreground text-lg">Our AI is analyzing your farm data...</p>
+              <p className="text-sm text-muted-foreground">This may take a moment.</p>
+          </div>
+      )}
+
+      {error && <p className="mt-8 text-destructive">{error}</p>}
+      
+      {result && (
+          <div className="mt-8 space-y-6 animate-in fade-in-50">
+              <Alert className="bg-green-50 border-green-200 text-green-900 dark:bg-green-900/20 dark:border-green-500/30 dark:text-green-200">
+                  <Bot className="h-4 w-4 !text-green-500" />
+                  <AlertTitle className="font-semibold">AI Analysis Summary</AlertTitle>
+                  <AlertDescription>
+                     {result.summary}
+                  </AlertDescription>
+              </Alert>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg"><Zap className="text-accent h-5 w-5"/> Short-Term Advice</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ul className="list-disc pl-5 space-y-2 text-sm text-muted-foreground">
+                            {result.shortTerm.map((item, i) => <li key={i}>{item}</li>)}
+                        </ul>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg"><CalendarClock className="text-blue-500 h-5 w-5"/> Long-Term Outlook</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ul className="list-disc pl-5 space-y-2 text-sm text-muted-foreground">
+                             {result.longTerm.map((item, i) => <li key={i}>{item}</li>)}
+                        </ul>
+                    </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg"><TrendingUp className="text-primary h-5 w-5"/> Upcoming Monthly Crop Trends</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {result.monthlyTrends.map((trend, i) => (
+                        <div key={i}>
+                            <div className="flex items-center gap-4">
+                                <Badge className="text-sm py-1 px-3">{trend.month}</Badge>
+                                <p className="font-semibold">{trend.crop}</p>
+                            </div>
+                            <p className="pl-4 mt-1 text-sm text-muted-foreground border-l-2 ml-4 border-primary/50">{trend.reason}</p>
+                        </div>
+                    ))}
+                </CardContent>
+              </Card>
+
+          </div>
+      )}
 
     </div>
   );
