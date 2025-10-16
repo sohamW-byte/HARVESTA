@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -13,23 +13,22 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { useAuth as useAppAuth } from '@/hooks/use-auth';
-import { doc, updateDoc } from 'firebase/firestore';
-import { useFirestore, useAuth } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { Label } from '@/components/ui/label';
-
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -44,10 +43,9 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
-  const { userProfile, loading: userLoading } = useAppAuth();
-  const auth = useAuth();
+  const { user, userProfile, loading: userLoading } = useAppAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const db = useFirestore();
 
   const form = useForm<ProfileFormValues>({
@@ -80,8 +78,7 @@ export default function ProfilePage() {
   const watchedRole = form.watch('role');
 
   async function onSubmit(data: ProfileFormValues) {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
+    if (!user || !userProfile) {
       toast({
         title: 'Error',
         description: 'You must be logged in to update your profile.',
@@ -90,30 +87,27 @@ export default function ProfilePage() {
       return;
     }
 
-    setLoading(true);
+    setIsSubmitting(true);
     try {
-      const userDocRef = doc(db, 'users', currentUser.uid);
+      const userDocRef = doc(db, 'users', user.uid);
 
-      const updateData: any = {
+      // Create a full updated profile object, preserving existing data
+      const updatedProfile = {
+        ...userProfile,
         name: data.name,
+        farmerId: data.farmerId,
+        gstNumber: data.gstNumber,
+        region: data.region,
+        cropsGrown: data.cropsGrown ? data.cropsGrown.split(',').map(s => s.trim()).filter(Boolean) : [],
       };
-
-      if (data.region) updateData.region = data.region;
-      if (data.cropsGrown) updateData.cropsGrown = data.cropsGrown.split(',').map(s => s.trim()).filter(Boolean);
-
-      // Role-specific fields. Note that role itself cannot be changed.
-      if (userProfile?.role === 'farmer') {
-        updateData.farmerId = data.farmerId;
-      } else if (userProfile?.role === 'buyer') {
-        updateData.gstNumber = data.gstNumber;
-      }
-
-      await updateDoc(userDocRef, updateData)
+      
+      // Use setDoc with merge: true to safely update the document
+      await setDoc(userDocRef, updatedProfile, { merge: true })
         .catch((error) => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: userDocRef.path,
                 operation: 'update',
-                requestResourceData: updateData
+                requestResourceData: updatedProfile
             }));
             throw error;
         });
@@ -132,9 +126,11 @@ export default function ProfilePage() {
         });
       }
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   }
+
+  const isLoading = userLoading || isSubmitting;
 
   return (
     <div>
@@ -257,8 +253,8 @@ export default function ProfilePage() {
                   )}
                 />
                 
-                 <Button type="submit" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                 <Button type="submit" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Save Changes
                 </Button>
               </form>

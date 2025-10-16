@@ -14,14 +14,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth as useAppAuth } from '@/hooks/use-auth';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-
 
 const fieldSchema = z.object({
   region: z.string().min(2, { message: 'Region is required.' }),
@@ -33,7 +32,7 @@ type FieldFormValues = z.infer<typeof fieldSchema>;
 export default function MyFieldsPage() {
   const { user, userProfile, loading: isUserLoading } = useAppAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const db = useFirestore();
 
   const form = useForm<FieldFormValues>({
@@ -54,7 +53,7 @@ export default function MyFieldsPage() {
   }, [userProfile, form]);
   
   async function onSubmit(data: FieldFormValues) {
-    if (!user) {
+    if (!user || !userProfile) {
       toast({
         title: 'Error',
         description: 'You must be logged in to update your fields.',
@@ -63,22 +62,25 @@ export default function MyFieldsPage() {
       return;
     }
 
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       const userDocRef = doc(db, 'users', user.uid);
       const cropsArray = data.cropsGrown.split(',').map(crop => crop.trim()).filter(Boolean);
 
-      const updateData = {
+      // Create a full updated profile object
+      const updatedProfile = {
+        ...userProfile, // Start with existing data
         region: data.region,
         cropsGrown: cropsArray,
       };
 
-      await updateDoc(userDocRef, updateData)
+      // Use setDoc with merge to update or create fields
+      await setDoc(userDocRef, updatedProfile, { merge: true })
         .catch((error) => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: userDocRef.path,
                 operation: 'update',
-                requestResourceData: updateData
+                requestResourceData: updatedProfile
             }));
             throw error; // Re-throw to be caught by the outer catch block
         });
@@ -97,9 +99,11 @@ export default function MyFieldsPage() {
         });
       }
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   }
+
+  const isLoading = isUserLoading || isSubmitting;
 
   return (
     <div>
@@ -143,8 +147,8 @@ export default function MyFieldsPage() {
                     </FormItem>
                   )}
                 />
-                 <Button type="submit" disabled={loading || isUserLoading}>
-                    {(loading || isUserLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                 <Button type="submit" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Save Changes
                 </Button>
               </form>

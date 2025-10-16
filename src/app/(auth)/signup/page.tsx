@@ -108,6 +108,8 @@ export default function SignupPage() {
         name: data.name,
         email: data.email,
         role: data.role,
+        cropsGrown: [],
+        region: '',
       };
 
       if (data.role === 'farmer' && data.farmerId) {
