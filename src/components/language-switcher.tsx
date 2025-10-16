@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,21 +17,13 @@ const languages = [
 
 export function LanguageSwitcher() {
   const handleLanguageChange = (langCode: string) => {
-    const cookieName = 'googtrans';
-    // The value needs to be in the format /source_lang/target_lang
-    // We use an empty source_lang to let Google auto-detect
-    const value = `/${langCode}`;
-    
-    // Set the cookie for Google Translate
-    document.cookie = `${cookieName}=${value}; path=/; domain=${window.location.hostname}`;
-    
-    // Reload the page to apply the translation
-    window.location.reload();
+    // This is a placeholder. A secure, server-side implementation
+    // is required to use an API key for translation.
+    console.log(`Language selection changed to: ${langCode}. Translation not implemented.`);
   };
 
   return (
     <>
-      <div id="google_translate_element" style={{ display: 'none' }}></div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">
