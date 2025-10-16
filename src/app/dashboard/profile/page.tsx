@@ -162,14 +162,12 @@ export default function ProfilePage() {
     try {
       const userDocRef = doc(db, 'users', user.uid);
 
-      // We only want to update fields that are actually editable
       const updatedData: Partial<UserProfile> = {
         name: data.name,
         region: data.region,
         address: data.address,
         photoURL: data.photoURL,
         cropsGrown: data.cropsGrown ? data.cropsGrown.split(',').map(s => s.trim()).filter(Boolean) : [],
-        // Only include role-specific IDs if they are part of the form for that role
         ...(data.role === 'farmer' && { farmerId: data.farmerId }),
         ...(data.role === 'buyer' && { gstNumber: data.gstNumber }),
       };
@@ -266,9 +264,9 @@ export default function ProfilePage() {
                         
                         <div className="space-y-2">
                             <FormLabel>Email</FormLabel>
-                            <p className="text-sm text-muted-foreground p-2 h-10 flex items-center">
-                              {userProfile?.email || 'No email found'}
-                            </p>
+                            <div className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm text-muted-foreground">
+                                {userProfile?.email ? userProfile.email : "Loading..."}
+                            </div>
                             <FormDescription>
                                 Your email address cannot be changed.
                             </FormDescription>
@@ -421,3 +419,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
