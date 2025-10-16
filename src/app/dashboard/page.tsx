@@ -23,7 +23,8 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{greeting}</h1>
+          {/* Add an ID to the greeting for easy targeting */}
+          <h1 id="dashboard-greeting" className="text-3xl font-bold tracking-tight">{greeting}</h1>
           <p className="text-muted-foreground">Here's a summary of your farm's performance.</p>
         </div>
         <Button>

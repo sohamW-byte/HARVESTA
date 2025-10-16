@@ -15,8 +15,6 @@ const languages = [
   { code: 'gom', name: 'कोंकणी (Konkani)' },
 ];
 
-// This is a placeholder function. You will need to replace this with the
-// actual API call to your translation service.
 async function translateText(text: string, targetLang: string): Promise<string> {
   const apiKey = process.env.NEXT_PUBLIC_TRANSLATE_API_KEY;
 
@@ -24,54 +22,72 @@ async function translateText(text: string, targetLang: string): Promise<string> 
     console.error("Translation API key is not configured.");
     return text; // Return original text if key is missing
   }
-
+  
   // =================================================================
-  // TODO: Replace with your actual API endpoint and request format.
-  // Example using fetch:
-  /*
-  const response = await fetch('https://api.your-translation-service.com/translate', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      text: text,
-      target_lang: targetLang,
-    }),
-  });
+  // IMPORTANT: Replace with your actual API endpoint.
+  // This is a placeholder and will not work.
+  // =================================================================
+  const apiEndpoint = 'https://api.your-translation-service.com/translate';
 
-  if (!response.ok) {
-    console.error('Translation failed:', await response.text());
-    return text; // Return original text on failure
+  try {
+    const response = await fetch(apiEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // IMPORTANT: The header name 'Authorization' and the 'Bearer' prefix
+        // may be different for your specific API. Check your API's documentation.
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        text: text,
+        target_lang: targetLang,
+        // Your API might require other parameters here.
+      }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error('Translation API request failed:', response.status, errorBody);
+      return text; // Return original text on failure
+    }
+
+    const result = await response.json();
+
+    // IMPORTANT: The structure of the response will depend on your API.
+    // You might need to adjust `result.translated_text` to match the actual response.
+    return result.translated_text || text;
+
+  } catch (error) {
+    console.error('An error occurred during translation:', error);
+    return text;
   }
-
-  const result = await response.json();
-  return result.translated_text || text;
-  */
-  // =================================================================
-
-  // For now, we'll just log to the console and return the original text.
-  console.log(`(Placeholder) Translating "${text}" to ${targetLang} using key ${apiKey.substring(0, 8)}...`);
-  return text;
 }
 
 
 export function LanguageSwitcher() {
-  const handleLanguageChange = (langCode: string) => {
+  const handleLanguageChange = async (langCode: string) => {
+    const greetingElement = document.getElementById('dashboard-greeting');
+    
+    if (!greetingElement) {
+        console.error('Could not find the element to translate.');
+        return;
+    }
+
+    // Store original text if not already stored
+    if (!greetingElement.dataset.originalText) {
+        greetingElement.dataset.originalText = greetingElement.textContent || '';
+    }
+    
     if (langCode === 'en') {
-      // Logic to revert to original text might be needed,
-      // for now we just reload the page.
-      window.location.reload();
+      greetingElement.textContent = greetingElement.dataset.originalText || '';
       return;
     }
     
-    // In a real implementation, you would traverse the document's text nodes
-    // and call translateText() on them. This is a complex and fragile process.
-    // For this example, we'll just log the intent.
-    console.log(`User selected language: ${langCode}. A full implementation would now
-    find all text on the page and call the 'translateText' function for each piece.
-    This is not implemented due to complexity and security risks.`);
+    const originalText = greetingElement.dataset.originalText;
+    if (originalText) {
+        const translatedText = await translateText(originalText, langCode);
+        greetingElement.textContent = translatedText;
+    }
   };
 
   return (
