@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TranslationProvider } from '@/hooks/use-translation';
+import { AccessibilityProvider } from '@/hooks/use-accessibility';
 
 export const metadata: Metadata = {
   title: 'Harvesta',
@@ -34,6 +35,7 @@ function RootProviders({ children }: { children: React.ReactNode }) {
                 enableSystem
                 disableTransitionOnChange
             >
+              <AccessibilityProvider>
                 <FirebaseClientProvider>
                 <AuthProvider>
                     <TranslationProvider>
@@ -42,6 +44,7 @@ function RootProviders({ children }: { children: React.ReactNode }) {
                     </TranslationProvider>
                 </AuthProvider>
                 </FirebaseClientProvider>
+              </AccessibilityProvider>
             </ThemeProvider>
         </>
     )
