@@ -35,6 +35,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { UserProfile } from '@/lib/types';
 import { useLocation } from '@/hooks/use-location';
 import { sendPasswordResetEmail } from 'firebase/auth';
+import { Textarea } from '@/components/ui/textarea';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -143,6 +144,30 @@ export default function ProfilePage() {
       });
     }
   };
+  
+  const handleAutofillLocation = () => {
+    if (location?.address) {
+      const parts = location.address.split(',');
+      const city = parts.length > 2 ? parts[parts.length - 3]?.trim() : '';
+      const state = parts.length > 1 ? parts[parts.length - 2]?.trim() : '';
+      const region = city && state ? `${city}, ${state}` : state;
+
+      form.setValue('address', location.address);
+      if (region) {
+        form.setValue('region', region);
+      }
+      toast({
+        title: 'Location Filled',
+        description: 'Address and region have been updated.',
+      });
+    } else {
+       toast({
+        title: 'Location Not Available',
+        description: 'Could not retrieve your current location. Please ensure location services are enabled.',
+        variant: 'destructive'
+      });
+    }
+  };
 
   async function onSubmit(data: ProfileFormValues) {
     if (!user) {
@@ -166,7 +191,6 @@ export default function ProfilePage() {
         cropsGrown: data.cropsGrown ? data.cropsGrown.split(',').map(s => s.trim()).filter(Boolean) : [],
       };
       
-      // Only include role-specific fields if they are relevant
       if (userProfile?.role === 'farmer') {
         updatedData.farmerId = data.farmerId;
       }
@@ -265,38 +289,49 @@ export default function ProfilePage() {
                         />
                         
                         <div className="space-y-2">
-                             <Label>Email</Label>
-                            <p className="text-sm text-muted-foreground pt-2">
+                            <Label>Email</Label>
+                             <p className="text-sm text-muted-foreground pt-2">
                                 Your email address cannot be changed.
                             </p>
                         </div>
+                        
+                        <div className="md:col-span-2">
+                            <FormField
+                            control={form.control}
+                            name="address"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Address</FormLabel>
+                                    <FormControl>
+                                    <div className="relative">
+                                        <Textarea
+                                        placeholder="Your full mailing address"
+                                        rows={3}
+                                        {...field}
+                                        />
+                                        <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute right-2 top-2 h-7 w-7"
+                                        onClick={handleAutofillLocation}
+                                        disabled={locationLoading}
+                                        title="Use current location"
+                                        >
+                                        {locationLoading ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <MapPin className="h-4 w-4" />
+                                        )}
+                                        </Button>
+                                    </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        </div>
 
-                        <FormField
-                          control={form.control}
-                          name="address"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Address</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Input placeholder="Your full address" {...field} />
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                                    onClick={() => location?.address && form.setValue('address', location.address)}
-                                    disabled={locationLoading || !location}
-                                    title="Use current location"
-                                  >
-                                    <MapPin className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
                          <FormField
                             control={form.control}
                             name="region"
@@ -418,5 +453,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
