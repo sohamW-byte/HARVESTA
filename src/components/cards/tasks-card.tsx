@@ -16,7 +16,7 @@ export function TasksCard({ completionPercentage, nextTaskTitle, nextTaskDue }: 
   return (
     <Card className="rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 bg-card/60 backdrop-blur-sm">
       <CardHeader className="pb-4">
-        <CardTitle className="text-base font-medium">Tasks</CardTitle>
+        <CardTitle className="text-base font-medium">Field Progress</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div>
