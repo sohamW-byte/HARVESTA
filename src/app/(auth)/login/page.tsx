@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -21,7 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sprout } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
@@ -60,56 +61,61 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="w-full max-w-sm bg-card/80 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="text-2xl">Login</CardTitle>
-        <CardDescription>
-          Enter your email below to login to your account.
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="m@example.com"
-              {...register('email')}
-            />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
-          </div>
-          <div className="grid gap-2">
-            <div className="flex items-center">
-              <Label htmlFor="password">Password</Label>
-              <Link
-                href="/forgot-password"
-                className="ml-auto inline-block text-sm underline"
-              >
-                Forgot your password?
-              </Link>
+    <div className="w-full max-w-sm animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+        <Card className="bg-card/80 backdrop-blur-sm">
+        <CardHeader>
+            <div className="flex flex-col items-center text-center">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
+                    <Sprout className="h-8 w-8 text-primary-foreground" />
+                </div>
+                <CardTitle className="text-2xl">Welcome back</CardTitle>
+                <CardDescription>Enter your email to sign in to your account.</CardDescription>
             </div>
-            <Input id="password" type="password" {...register('password')} />
-            {errors.password && (
-              <p className="text-sm text-destructive">{errors.password.message}</p>
-            )}
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col">
-          <Button className="w-full" type="submit" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign in
-          </Button>
-          <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <Link href="/signup" className="underline">
-              Sign up
-            </Link>
-          </div>
-        </CardFooter>
-      </form>
-    </Card>
+        </CardHeader>
+        <form onSubmit={handleSubmit(onSubmit)}>
+            <CardContent className="grid gap-4">
+            <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                {...register('email')}
+                />
+                {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message}</p>
+                )}
+            </div>
+            <div className="grid gap-2">
+                <div className="flex items-center">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                    href="/forgot-password"
+                    className="ml-auto inline-block text-sm underline"
+                >
+                    Forgot your password?
+                </Link>
+                </div>
+                <Input id="password" type="password" {...register('password')} />
+                {errors.password && (
+                <p className="text-sm text-destructive">{errors.password.message}</p>
+                )}
+            </div>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4">
+            <Button className="w-full" type="submit" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Sign in
+            </Button>
+            <div className="text-center text-sm">
+                Don&apos;t have an account?{' '}
+                <Link href="/signup" className="underline">
+                Sign up
+                </Link>
+            </div>
+            </CardFooter>
+        </form>
+        </Card>
+    </div>
   );
 }
