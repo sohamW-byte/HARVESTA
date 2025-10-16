@@ -17,7 +17,7 @@ interface TasksCardProps {
 export function TasksCard({ completionPercentage, nextTaskTitle, nextTaskDue }: TasksCardProps) {
   const { t } = useTranslation();
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-2xl h-full">
       <CardHeader className="pb-4">
         <CardTitle className="text-base font-medium">{t('Field Progress')}</CardTitle>
       </CardHeader>

@@ -29,12 +29,16 @@ export function MarketplaceItem({ name, quantity, price, location, imageId, sell
   const image = imageId ? PlaceHolderImages.find(img => img.id === imageId) : PlaceHolderImages.find(i => i.id.includes('produce'));
   const { t } = useTranslation();
   
+  const itemVariants = {
+      hidden: { opacity: 0, y: 10 },
+      visible: { opacity: 1, y: 0 }
+  };
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      whileHover={{ y: -5, scale: 1.02 }}
+      variants={itemVariants}
+      whileHover={{ y: -3, scale: 1.01 }}
+      transition={{ type: 'spring', stiffness: 300 }}
       className="h-full"
     >
       <Card className="rounded-2xl overflow-hidden flex flex-col h-full">

@@ -19,8 +19,9 @@ interface SummaryCardProps {
 export function SummaryCard({ title, value, description, icon, className }: SummaryCardProps) {
   return (
     <motion.div
-      whileHover={{ y: -5, scale: 1.02 }}
+      whileHover={{ y: -3, scale: 1.01 }}
       transition={{ type: 'spring', stiffness: 300 }}
+      className="h-full"
     >
       <Card className={cn("rounded-2xl h-full", className)}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
