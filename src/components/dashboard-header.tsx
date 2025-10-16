@@ -91,11 +91,10 @@ export function DashboardHeader() {
                 <HeaderSearch />
             </div>
         </div>
-      <div className="flex-1 flex justify-end items-center gap-4">
+      <div className="flex-1 flex justify-end items-center gap-2 md:gap-4">
         <div className="md:hidden flex-1">
             <HeaderSearch />
         </div>
-        <LanguageSwitcher />
         <div className="hidden sm:flex items-center gap-2 text-sm font-medium">
            {isWeatherLoading || locationLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -109,6 +108,9 @@ export function DashboardHeader() {
             <span className="text-muted-foreground text-xs">{weatherError}</span>
           ) : null}
         </div>
+
+        <LanguageSwitcher />
+        <ThemeToggle />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -135,8 +137,6 @@ export function DashboardHeader() {
                 <span>Profile</span>
               </DropdownMenuItem>
             </Link>
-             <DropdownMenuSeparator />
-             <ThemeToggle />
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut}>
               <LogOut className="mr-2 h-4 w-4" />

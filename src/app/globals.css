@@ -72,6 +72,40 @@
     --sidebar-border: 12 6.5% 15.1%;
     --sidebar-ring: 142 76% 36%;
   }
+  .theme-green-forest {
+    --background: 150 25% 10%;
+    --foreground: 150 15% 95%;
+    --card: 150 25% 12%;
+    --card-foreground: 150 15% 95%;
+    --popover: 150 25% 10%;
+    --popover-foreground: 150 15% 95%;
+    --primary: 140 60% 40%;
+    --primary-foreground: 140 50% 96%;
+    --secondary: 150 20% 20%;
+    --secondary-foreground: 150 15% 95%;
+    --muted: 150 20% 15%;
+    --muted-foreground: 150 10% 60%;
+    --accent: 50 80% 60%;
+    --accent-foreground: 50 50% 15%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 150 20% 25%;
+    --input: 150 20% 22%;
+    --ring: 140 60% 40%;
+    --chart-1: 140 60% 40%;
+    --chart-2: 50 80% 60%;
+    --chart-3: 160 50% 50%;
+    --chart-4: 130 55% 65%;
+    --chart-5: 40 70% 70%;
+    --sidebar-background: 150 25% 12%;
+    --sidebar-foreground: 150 15% 95%;
+    --sidebar-primary: 140 60% 40%;
+    --sidebar-primary-foreground: 140 50% 96%;
+    --sidebar-accent: 150 20% 20%;
+    --sidebar-accent-foreground: 150 15% 95%;
+    --sidebar-border: 150 20% 25%;
+    --sidebar-ring: 140 60% 40%;
+  }
 }
 
 @layer base {
