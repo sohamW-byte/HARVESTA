@@ -46,7 +46,7 @@ export function PriceBoard() {
       if (!apiKey || apiKey === 'your-api-key') {
         setError('API key for Agmarknet is not configured. Please add it to your .env file.');
         setLoading(false);
-        setPrices([]); // Clear mock data if API key is missing
+        setPrices([]);
         return;
       }
 
@@ -55,6 +55,8 @@ export function PriceBoard() {
       try {
         const response = await fetch(apiUrl);
         if (!response.ok) {
+          const errorBody = await response.text();
+          console.error("API Error Body:", errorBody);
           throw new Error(`API request failed with status: ${response.status}`);
         }
         const data = await response.json();
@@ -66,7 +68,7 @@ export function PriceBoard() {
       } catch (e: any) {
         console.error("Failed to fetch market data:", e);
         setError(e.message || 'An unknown error occurred while fetching data.');
-        setPrices([]); // Clear any existing data on error
+        setPrices([]);
       } finally {
         setLoading(false);
       }
