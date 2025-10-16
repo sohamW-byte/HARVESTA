@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -26,7 +27,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { ChangeEvent, useEffect, useState, useRef } from 'react';
-import { Loader2, User as UserIcon, Camera } from 'lucide-react';
+import { Loader2, User as UserIcon, Camera, Gift, Copy, Check } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -51,6 +52,10 @@ export default function ProfilePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const db = useFirestore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [referralLink, setReferralLink] = useState('');
+  const [copied, setCopied] = useState(false);
+
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -83,7 +88,11 @@ export default function ProfilePage() {
       });
       setPreviewImage(userProfile.photoURL || null);
     }
-  }, [userProfile, form]);
+     if (user?.uid) {
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      setReferralLink(`${origin}/signup?ref=${user.uid}`);
+    }
+  }, [userProfile, user, form]);
   
   const watchedRole = form.watch('role');
 
@@ -98,6 +107,17 @@ export default function ProfilePage() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(referralLink).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+        toast({
+            title: "Copied to clipboard!",
+            description: "You can now share your referral link.",
+        });
+    });
   };
 
   async function onSubmit(data: ProfileFormValues) {
@@ -163,8 +183,8 @@ export default function ProfilePage() {
       <h1 className="text-3xl font-bold tracking-tight">My Profile</h1>
       <p className="text-muted-foreground">View and manage your account details.</p>
       
-      <div className="mt-8 grid gap-12">
-        <Card>
+      <div className="mt-8 grid gap-12 lg:grid-cols-3 lg:gap-8">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Your Information</CardTitle>
             <CardDescription>
@@ -312,9 +332,29 @@ export default function ProfilePage() {
             )}
           </CardContent>
         </Card>
+        
+        <div className="space-y-8">
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center gap-2">
+                        <Gift className="h-5 w-5 text-accent"/>
+                        <CardTitle>Refer a Friend</CardTitle>
+                    </div>
+                    <CardDescription>
+                        Share your unique link and earn credits when your friends sign up!
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center space-x-2">
+                        <Input value={referralLink} readOnly />
+                        <Button variant="outline" size="icon" onClick={copyToClipboard}>
+                           {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
       </div>
     </div>
   );
 }
-
-    
