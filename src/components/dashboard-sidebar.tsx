@@ -13,6 +13,8 @@ import {
   Users,
   Sprout,
   Lightbulb,
+  MessageSquare,
+  UserCog,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -36,15 +38,12 @@ const menuItems = [
   { href: '/dashboard/my-fields', label: 'My Fields', icon: Map },
   { href: '/dashboard/tasks', label: 'Tasks', icon: ClipboardList },
   { href: '/dashboard/recommendations', label: 'AI Recommendations', icon: Lightbulb },
-  {
-    label: 'Reports',
-    icon: BarChart,
-    isCollapsible: true,
-    subItems: [{ href: '/dashboard/reports', label: 'View Reports' }],
-  },
-  { href: '/dashboard/automation', label: 'Automation', icon: Atom },
   { href: '/dashboard/marketplace', label: 'Marketplace', icon: Store },
+  { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
   { href: '/dashboard/community', label: 'Community', icon: Users },
+  { href: '/dashboard/automation', label: 'Automation', icon: Atom },
+  { href: '/dashboard/reports', label: 'Reports', icon: BarChart },
+  { href: '/dashboard/admin', label: 'Admin', icon: UserCog, adminOnly: true },
 ];
 
 export function DashboardSidebar() {
@@ -52,6 +51,7 @@ export function DashboardSidebar() {
   const { userProfile } = useAuth();
 
   const userInitial = userProfile?.name?.charAt(0).toUpperCase() || '?';
+  const isAdmin = userProfile?.role === 'admin';
 
   return (
     <Sidebar>
@@ -60,13 +60,15 @@ export function DashboardSidebar() {
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
             <Sprout className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-semibold text-foreground">AgriTrack</h1>
+          <h1 className="text-xl font-semibold text-foreground">Harvestha</h1>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {menuItems.map((item) =>
-            item.isCollapsible ? (
+          {menuItems.map((item) => {
+            if (item.adminOnly && !isAdmin) return null;
+            
+            return item.isCollapsible ? (
               <Collapsible key={item.label} className="w-full">
                 <div className="group/menu-item relative flex w-full items-center">
                    <CollapsibleTrigger asChild>
@@ -108,7 +110,7 @@ export function DashboardSidebar() {
                 </Link>
               </SidebarMenuItem>
             )
-          )}
+          })}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>

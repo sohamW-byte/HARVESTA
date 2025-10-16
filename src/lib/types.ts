@@ -4,6 +4,9 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  role: 'farmer' | 'buyer';
+  farmerId?: string;
+  gstNumber?: string;
   region: string;
   cropsGrown: string[];
 }
@@ -32,7 +35,7 @@ export interface Task {
   description: string;
   status: 'To Do' | 'In Progress' | 'Done';
   date: Timestamp;
-  userId: string;
+  userId:string;
 }
 
 export interface GrowthData {
@@ -42,4 +45,46 @@ export interface GrowthData {
   height: number;
   biomass: number;
   leafArea: number;
+}
+
+export interface Chat {
+  id: string;
+  participants: string[]; // array of user IDs
+  lastMessage: {
+    text: string;
+    timestamp: Timestamp;
+    senderId: string;
+  };
+}
+
+export interface Message {
+  id: string;
+  chatId: string;
+  senderId: string;
+  text: string;
+  timestamp: Timestamp;
+}
+
+export interface CommunityPost {
+    id: string;
+    author: {
+        id: string;
+        name: string;
+        avatarUrl: string;
+    };
+    content: string;
+    timestamp: Timestamp;
+    likes: number;
+    comments: CommunityComment[];
+}
+
+export interface CommunityComment {
+    id: string;
+    author: {
+        id: string;
+        name: string;
+        avatarUrl: string;
+    };
+    content: string;
+    timestamp: Timestamp;
 }

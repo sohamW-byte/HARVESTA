@@ -9,19 +9,20 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { Package, IndianRupee, Phone } from "lucide-react";
+import { Package, IndianRupee, MessageSquare, MapPin } from "lucide-react";
 
 interface MarketplaceItemProps {
   name: string;
   quantity: string;
   price: string;
+  location: string;
   imageId?: string;
   seller?: string;
   buyer?: string;
   type: 'sale' | 'wanted';
 }
 
-export function MarketplaceItem({ name, quantity, price, imageId, seller, buyer, type }: MarketplaceItemProps) {
+export function MarketplaceItem({ name, quantity, price, location, imageId, seller, buyer, type }: MarketplaceItemProps) {
   const image = imageId ? PlaceHolderImages.find(img => img.id === imageId) : null;
   
   return (
@@ -50,10 +51,14 @@ export function MarketplaceItem({ name, quantity, price, imageId, seller, buyer,
             <IndianRupee className="mr-2 h-4 w-4" />
             <span>Price: {price}</span>
         </div>
+        <div className="flex items-center text-sm text-muted-foreground">
+            <MapPin className="mr-2 h-4 w-4" />
+            <span>Location: {location}</span>
+        </div>
       </CardContent>
       <CardFooter>
         <Button className="w-full">
-            <Phone className="mr-2 h-4 w-4" />
+            <MessageSquare className="mr-2 h-4 w-4" />
             {type === 'sale' ? 'Contact Seller' : 'Contact Buyer'}
         </Button>
       </CardFooter>

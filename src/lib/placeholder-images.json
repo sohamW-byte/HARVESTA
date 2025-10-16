@@ -31,22 +31,40 @@
       "imageHint": "man portrait"
     },
     {
-      "id": "produce-tomato",
-      "description": "Fresh red tomatoes.",
-      "imageUrl": "https://picsum.photos/seed/tomato/400/300",
-      "imageHint": "tomatoes bunch"
+      "id": "produce-rice",
+      "description": "Sona Masoori Rice",
+      "imageUrl": "https://picsum.photos/seed/rice/400/300",
+      "imageHint": "rice grains"
     },
     {
-      "id": "produce-corn",
-      "description": "Golden sweet corn.",
-      "imageUrl": "https://picsum.photos/seed/corn/400/300",
-      "imageHint": "corn cob"
+      "id": "produce-oranges",
+      "description": "Nagpur Oranges",
+      "imageUrl": "https://picsum.photos/seed/oranges/400/300",
+      "imageHint": "fresh oranges"
     },
     {
       "id": "produce-wheat",
       "description": "Ears of golden wheat.",
       "imageUrl": "https://picsum.photos/seed/wheat/400/300",
       "imageHint": "wheat field"
+    },
+    {
+      "id": "produce-onions",
+      "description": "Bangalore Rose Onions",
+      "imageUrl": "https://picsum.photos/seed/onions/400/300",
+      "imageHint": "red onions"
+    },
+    {
+      "id": "produce-mangoes",
+      "description": "Alphonso Mangoes",
+      "imageUrl": "https://picsum.photos/seed/mangoes/400/300",
+      "imageHint": "ripe mangoes"
+    },
+    {
+      "id": "produce-tea",
+      "description": "Darjeeling Tea",
+      "imageUrl": "https://picsum.photos/seed/tea/400/300",
+      "imageHint": "tea leaves"
     }
   ]
 }

@@ -22,12 +22,49 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
-const signupSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
-  email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-});
+const signupSchema = z
+  .object({
+    name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+    email: z.string().email({ message: 'Invalid email address' }),
+    password: z
+      .string()
+      .min(6, { message: 'Password must be at least 6 characters' }),
+    role: z.enum(['farmer', 'buyer'], { required_error: 'Please select a role' }),
+    farmerId: z.string().optional(),
+    gstNumber: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.role === 'farmer') {
+        return !!data.farmerId && data.farmerId.length > 0;
+      }
+      return true;
+    },
+    {
+      message: 'Farmer ID is required for farmers',
+      path: ['farmerId'],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.role === 'buyer') {
+        return !!data.gstNumber && data.gstNumber.length > 0;
+      }
+      return true;
+    },
+    {
+      message: 'GST Number is required for buyers',
+      path: ['gstNumber'],
+    }
+  );
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 
@@ -36,13 +73,18 @@ export default function SignupPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<SignupFormValues>({
+  const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      farmerId: '',
+      gstNumber: '',
+    },
   });
+
+  const role = form.watch('role');
 
   const onSubmit = async (data: SignupFormValues) => {
     setLoading(true);
@@ -57,6 +99,9 @@ export default function SignupPage() {
       await setDoc(doc(db, 'users', user.uid), {
         name: data.name,
         email: data.email,
+        role: data.role,
+        farmerId: data.farmerId || '',
+        gstNumber: data.gstNumber || '',
         region: '',
         cropsGrown: [],
       });
@@ -74,20 +119,22 @@ export default function SignupPage() {
   };
 
   return (
-    <Card className="w-full max-w-sm bg-card/80 backdrop-blur-sm">
+    <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-2xl">Sign Up</CardTitle>
+        <CardTitle className="text-2xl">Create an Account</CardTitle>
         <CardDescription>
-          Enter your information to create an account
+          Join Harvestha to connect with the farming community.
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
         <CardContent className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" placeholder="John Doe" {...register('name')} />
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
+            <Input id="name" placeholder="John Doe" {...form.register('name')} />
+            {form.formState.errors.name && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.name.message}
+              </p>
             )}
           </div>
           <div className="grid gap-2">
@@ -96,21 +143,76 @@ export default function SignupPage() {
               id="email"
               type="email"
               placeholder="m@example.com"
-              {...register('email')}
+              {...form.register('email')}
             />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
+            {form.formState.errors.email && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.email.message}
+              </p>
             )}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" {...register('password')} />
-            {errors.password && (
+            <Input
+              id="password"
+              type="password"
+              {...form.register('password')}
+            />
+            {form.formState.errors.password && (
               <p className="text-sm text-destructive">
-                {errors.password.message}
+                {form.formState.errors.password.message}
               </p>
             )}
           </div>
+          <div className="grid gap-2">
+            <Label>I am a...</Label>
+            <Select onValueChange={(value) => form.setValue('role', value as 'farmer' | 'buyer')} defaultValue={form.getValues('role')}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select your role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="farmer">Farmer / Seller</SelectItem>
+                <SelectItem value="buyer">Buyer / Businessman</SelectItem>
+              </SelectContent>
+            </Select>
+             {form.formState.errors.role && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.role.message}
+              </p>
+            )}
+          </div>
+
+          {role === 'farmer' && (
+            <div className="grid gap-2">
+              <Label htmlFor="farmerId">Farmer ID</Label>
+              <Input
+                id="farmerId"
+                placeholder="Enter your government-issued Farmer ID"
+                {...form.register('farmerId')}
+              />
+              {form.formState.errors.farmerId && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.farmerId.message}
+                </p>
+              )}
+            </div>
+          )}
+
+          {role === 'buyer' && (
+            <div className="grid gap-2">
+              <Label htmlFor="gstNumber">GST Number</Label>
+              <Input
+                id="gstNumber"
+                placeholder="Enter your GST Number"
+                {...form.register('gstNumber')}
+              />
+              {form.formState.errors.gstNumber && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.gstNumber.message}
+                </p>
+              )}
+            </div>
+          )}
         </CardContent>
         <CardFooter className="flex flex-col">
           <Button className="w-full" type="submit" disabled={loading}>

@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'AgriTrack Dashboard',
+  title: 'Harvestha',
   description: 'A modern farming and analytics dashboard.',
 };
 

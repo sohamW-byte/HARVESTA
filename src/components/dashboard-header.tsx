@@ -5,6 +5,7 @@ import {
   Search,
   User,
   LogOut,
+  Globe,
 } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -35,7 +40,7 @@ export function DashboardHeader() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search..."
+            placeholder="Search products, farmers, buyers..."
             className="w-full appearance-none bg-background pl-8 shadow-none md:w-2/3 lg:w-1/3"
           />
         </div>
@@ -45,6 +50,21 @@ export function DashboardHeader() {
           <CloudSun className="h-5 w-5 text-accent" />
           <span>24°C, Sunny</span>
         </div>
+
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                    <Globe className="h-5 w-5" />
+                    <span className="sr-only">Change language</span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem>English</DropdownMenuItem>
+                <DropdownMenuItem>हिन्दी (Hindi)</DropdownMenuItem>
+                <DropdownMenuItem>कोंकणी (Konkani)</DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
