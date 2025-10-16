@@ -37,7 +37,7 @@ const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/my-fields', label: 'My Fields', icon: Map },
   { href: '/dashboard/tasks', label: 'Tasks', icon: ClipboardList },
-  { href: '/dashboard/recommendations', label: 'AI Recommendations', icon: Lightbulb },
+  { href: '/dashboard/recommendations', label: 'Crop Suggestions', icon: Lightbulb },
   { href: '/dashboard/marketplace', label: 'Marketplace', icon: Store },
   { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
   { href: '/dashboard/community', label: 'Community', icon: Users },

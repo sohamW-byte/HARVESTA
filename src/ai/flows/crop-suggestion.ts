@@ -9,7 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 
 const CropSuggestionInputSchema = z.object({
   location: z.string().describe('The geographical location (e.g., village, district, state) of the farm.'),
@@ -20,8 +20,8 @@ export type CropSuggestionInput = z.infer<typeof CropSuggestionInputSchema>;
 
 const CropSuggestionOutputSchema = z.object({
   suggestions: z.array(
-    z.string().describe('A bulleted list of smart suggestions for the user.')
-  ),
+    z.string()
+  ).describe('A list of smart suggestions for the user.'),
 });
 
 export type CropSuggestionOutput = z.infer<typeof CropSuggestionOutputSchema>;
@@ -39,7 +39,7 @@ const prompt = ai.definePrompt({
 The user is in: {{{location}}}.
 They are considering growing: {{{crop}}}.
 
-Based on this, provide 3-4 concise, actionable suggestions. Consider factors like market trends, regional suitability, profitability, and crop diversification. If they mentioned a specific crop, provide advice related to it. If not, give general recommendations for their area.
+Based on this, provide 3-4 concise, actionable suggestions as a list of strings. Consider factors like market trends, regional suitability, profitability, and crop diversification. If they mentioned a specific crop, provide advice related to it. If not, give general recommendations for their area.
 
 Example suggestions:
 - "Rice is trending in your region with good prices."

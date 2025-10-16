@@ -4,43 +4,54 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { recommendCrops, type CropRecommendationOutput } from '@/ai/flows/crop-recommendation';
+import { suggestCrops, type CropSuggestionOutput } from '@/ai/flows/crop-suggestion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Lightbulb, Bot, Check, Leaf } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, Lightbulb, Bot, ArrowUp, ArrowDown, Minus, MapPin } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-const recommendationSchema = z.object({
-  soilData: z.string().min(10, "Please provide detailed soil data."),
-  weatherConditions: z.string().min(10, "Please provide detailed weather conditions."),
-  region: z.string().min(2, "Please provide the region."),
+const suggestionSchema = z.object({
+  location: z.string().min(2, "Please enter a location."),
+  crop: z.string().optional(),
 });
 
-type RecommendationFormValues = z.infer<typeof recommendationSchema>;
+type SuggestionFormValues = z.infer<typeof suggestionSchema>;
+
+const trendingCrops = [
+    { name: 'Rice', price: 32, trend: 'up' },
+    { name: 'Wheat', price: 28, trend: 'down' },
+    { name: 'Sugarcane', price: 40, trend: 'up' },
+    { name: 'Maize', price: 22, trend: 'stable' },
+];
+
+const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'stable' }) => {
+    if (trend === 'up') return <ArrowUp className="h-4 w-4 text-green-500" />;
+    if (trend === 'down') return <ArrowDown className="h-4 w-4 text-red-500" />;
+    return <Minus className="h-4 w-4 text-gray-500" />;
+};
 
 export default function RecommendationsPage() {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<CropRecommendationOutput | null>(null);
+  const [result, setResult] = useState<CropSuggestionOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const form = useForm<RecommendationFormValues>({
-    resolver: zodResolver(recommendationSchema),
+  const form = useForm<SuggestionFormValues>({
+    resolver: zodResolver(suggestionSchema),
     defaultValues: {
-      soilData: "pH: 6.5, Nitrogen: 50 ppm, Phosphorus: 20 ppm, Potassium: 100 ppm",
-      weatherConditions: "Temperature: 25°C, Rainfall: 500mm annually, Humidity: 60%",
-      region: "Central Plains",
+      location: "",
+      crop: "",
     },
   });
 
-  const onSubmit = async (data: RecommendationFormValues) => {
+  const onSubmit = async (data: SuggestionFormValues) => {
     setLoading(true);
     setResult(null);
     setError(null);
     try {
-      const recommendation = await recommendCrops(data);
+      const recommendation = await suggestCrops(data);
       setResult(recommendation);
     } catch (e: any) {
       setError(e.message || "An unexpected error occurred.");
@@ -50,33 +61,31 @@ export default function RecommendationsPage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 max-w-3xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Lightbulb className="text-accent" /> AI Recommendations
+            <Lightbulb className="text-accent" /> Smart Crop Suggestions
         </h1>
         <p className="text-muted-foreground">
-          Leverage AI to find the best crops for your specific field conditions.
+          Get crop ideas and trending prices for your area.
         </p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <CardTitle>Field Data</CardTitle>
-            <CardDescription>Enter the details about your field below.</CardDescription>
-          </CardHeader>
+      <Card className="rounded-2xl">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 pt-6">
                 <FormField
                   control={form.control}
-                  name="soilData"
+                  name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Soil Data</FormLabel>
+                      <FormLabel>Your Location</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="e.g., pH: 6.5, Nitrogen: high, ..." {...field} />
+                        <div className="relative">
+                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="Enter village or use GPS" {...field} className="pl-9"/>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -84,82 +93,78 @@ export default function RecommendationsPage() {
                 />
                 <FormField
                   control={form.control}
-                  name="weatherConditions"
+                  name="crop"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Weather Conditions</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="e.g., Avg. Temp: 25°C, Rainfall: 500mm, ..." {...field} />
-                      </FormControl>
+                      <FormLabel>Which crop do you want to grow?</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a crop (optional)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="rice">Rice</SelectItem>
+                            <SelectItem value="wheat">Wheat</SelectItem>
+                            <SelectItem value="sugarcane">Sugarcane</SelectItem>
+                            <SelectItem value="maize">Maize</SelectItem>
+                            <SelectItem value="cotton">Cotton</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="region"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Geographical Region</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Central Valley, California" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                 <div className="pt-4">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Trending Crop Prices (₹/kg)</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {trendingCrops.map(crop => (
+                            <div key={crop.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                                <span className="font-medium">{crop.name}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-semibold">₹{crop.price}</span>
+                                    <TrendIcon trend={crop.trend as any} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="pt-4">
+                     <Button type="submit" disabled={loading} className="w-full md:w-auto">
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Get Smart Suggestions
+                    </Button>
+                </div>
+
+                {loading && (
+                    <div className="flex flex-col items-center justify-center h-24 gap-4">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="text-muted-foreground">Generating suggestions...</p>
+                    </div>
+                )}
+
+                {error && <p className="text-destructive">{error}</p>}
+                
+                {result && (
+                    <Alert className="bg-green-50 border-green-200 text-green-900 dark:bg-green-900/20 dark:border-green-500/30 dark:text-green-200">
+                        <Bot className="h-4 w-4 !text-green-500" />
+                        <AlertTitle className="font-semibold">Smart Suggestion</AlertTitle>
+                        <AlertDescription>
+                           <ul className="list-disc pl-5 space-y-1 mt-2">
+                             {result.suggestions.map((suggestion, index) => (
+                                <li key={index}>{suggestion}</li>
+                             ))}
+                           </ul>
+                        </AlertDescription>
+                    </Alert>
+                )}
+
               </CardContent>
-              <CardFooter>
-                <Button type="submit" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Get Recommendations
-                </Button>
-              </CardFooter>
             </form>
           </Form>
         </Card>
 
-        <Card className="rounded-2xl bg-card/60 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Bot className="text-primary"/> AI Recommendations</CardTitle>
-            <CardDescription>Our AI agronomist will provide suggestions here.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading && (
-              <div className="flex flex-col items-center justify-center h-64 gap-4">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-muted-foreground">Analyzing your data...</p>
-              </div>
-            )}
-            {error && <p className="text-destructive">{error}</p>}
-            {result && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Recommended Crops</h3>
-                  <ul className="space-y-2">
-                    {result.recommendedCrops.map((crop, index) => (
-                      <li key={index} className="flex items-center gap-2 text-foreground">
-                        <Leaf className="h-5 w-5 text-green-500" />
-                        <span className="font-medium">{crop}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <Separator />
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Reasoning</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{result.reasoning}</p>
-                </div>
-              </div>
-            )}
-            {!loading && !result && !error && (
-              <div className="flex flex-col items-center justify-center h-64 text-center">
-                 <p className="text-muted-foreground">Your crop recommendations will appear here.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }
