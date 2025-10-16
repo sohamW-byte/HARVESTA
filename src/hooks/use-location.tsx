@@ -23,15 +23,22 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   const [location, setLocation] = useState<Location | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<GeolocationPositionError | Error | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
+
     if (!navigator.geolocation) {
       setError(new Error('Geolocation is not supported by your browser.'));
       setLoading(false);
       return;
     }
 
-    const handleSuccess = async (position: GeolocationPositionError) => {
+    const handleSuccess = async (position: GeolocationPosition) => {
       const { latitude, longitude } = position.coords;
       try {
         const response = await fetch(`${REVERSE_GEOCODING_API}?format=json&lat=${latitude}&lon=${longitude}`);
@@ -61,7 +68,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         maximumAge: 60000,
     });
 
-  }, []);
+  }, [isMounted]);
 
   const value = { location, loading, error };
 

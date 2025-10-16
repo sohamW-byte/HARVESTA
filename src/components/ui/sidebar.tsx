@@ -67,10 +67,12 @@ const SidebarProvider = React.forwardRef<
     },
     ref
   ) => {
+    const [isMounted, setIsMounted] = React.useState(false)
     const [isMobile, setIsMobile] = React.useState(false);
     const [openMobile, setOpenMobile] = React.useState(false)
 
     React.useEffect(() => {
+      setIsMounted(true)
       const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
       const onChange = () => {
         setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
@@ -138,6 +140,10 @@ const SidebarProvider = React.forwardRef<
       }),
       [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
     )
+
+    if (!isMounted) {
+      return null
+    }
 
     return (
       <SidebarContext.Provider value={contextValue}>
