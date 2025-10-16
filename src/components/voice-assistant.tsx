@@ -31,13 +31,53 @@ export function VoiceAssistant() {
   const [lastCommand, setLastCommand] = useState('');
   const [isMounted, setIsMounted] = useState(false);
 
+  const handleProcessCommand = async (command: string) => {
+      if (!command || isProcessing) return;
+
+      setIsProcessing(true);
+      setLastCommand(command);
+      try {
+        const result = await processVoiceCommand({ command });
+        setSpokenResponse(result.response);
+        speak(result.response);
+
+        if (result.intent === 'navigate' && result.target) {
+          setTimeout(() => {
+            router.push(`/dashboard/${result.target}`);
+            setIsDialogOpen(false);
+          }, 1500);
+        }
+      } catch (err) {
+        console.error(err);
+        const errorMsg = "Sorry, I had trouble understanding that.";
+        setSpokenResponse(errorMsg);
+        speak(errorMsg);
+      } finally {
+        setIsProcessing(false);
+        resetTranscript();
+      }
+  };
 
   const {
     transcript,
     listening,
     resetTranscript,
     browserSupportsSpeechRecognition,
-  } = useSpeechRecognition();
+    finalTranscript
+  } = useSpeechRecognition({
+      onResult: (result) => {
+        // This is not standard, but a common pattern to get final result
+        // The library's `finalTranscript` state is more reliable
+      }
+  });
+
+  useEffect(() => {
+    if (finalTranscript) {
+      handleProcessCommand(finalTranscript);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finalTranscript]);
+
 
   useEffect(() => {
     setIsMounted(true);
@@ -45,7 +85,6 @@ export function VoiceAssistant() {
 
   const speak = useCallback((text: string) => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
-      // Cancel any ongoing speech to prevent overlap
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-US';
@@ -64,37 +103,6 @@ export function VoiceAssistant() {
       setIsDialogOpen(true);
     }
   };
-
-  useEffect(() => {
-    if (!listening && transcript && !isProcessing) {
-      // User has stopped speaking, and we are not already processing
-      setIsProcessing(true);
-      setLastCommand(transcript);
-      processVoiceCommand({ command: transcript })
-        .then((result) => {
-          setSpokenResponse(result.response);
-          speak(result.response);
-
-          if (result.intent === 'navigate' && result.target) {
-            // Wait a moment before navigating to allow user to hear response
-            setTimeout(() => {
-                router.push(`/dashboard/${result.target}`);
-                setIsDialogOpen(false);
-            }, 1500);
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-          const errorMsg = "Sorry, I had trouble understanding that.";
-          setSpokenResponse(errorMsg);
-          speak(errorMsg);
-        })
-        .finally(() => {
-          setIsProcessing(false);
-          resetTranscript();
-        });
-    }
-  }, [listening, transcript, resetTranscript, router, speak, isProcessing]);
 
   if (!isMounted || !browserSupportsSpeechRecognition) {
     return null;
