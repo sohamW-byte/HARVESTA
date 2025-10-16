@@ -73,8 +73,8 @@ export default function DashboardPage() {
         <Tooltip>
             <TooltipTrigger asChild>
                 <Link href="/dashboard/messages" passHref>
-                    <Button className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg" size="icon">
-                        <Bot className="h-8 w-8" />
+                    <Button className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg" size="icon">
+                        <Bot className="h-7 w-7" />
                     </Button>
                 </Link>
             </TooltipTrigger>
