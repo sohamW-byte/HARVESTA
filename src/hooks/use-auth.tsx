@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, signOut as firebaseSignOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 import { useAuth as useFirebaseAuth, useFirestore, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
@@ -33,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const auth = useFirebaseAuth();
   const db = useFirestore();
+  const router = useRouter();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -68,7 +70,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await firebaseSignOut(auth);
-    // The middleware will handle the redirect after the cookie is erased.
+    eraseCookie('firebaseIdToken');
+    // Force a redirect to the login page to ensure middleware is re-evaluated
+    router.push('/login');
   };
   
   const value = { user, userProfile, loading: isUserLoading || loading, signOut };
