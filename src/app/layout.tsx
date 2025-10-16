@@ -27,20 +27,23 @@ const sourceCodePro = Source_Code_Pro({
 
 function RootProviders({ children }: { children: React.ReactNode }) {
     return (
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-        >
-            <FirebaseClientProvider>
-            <AuthProvider>
-                <TranslationProvider>
-                    {children}
-                    <Toaster />
-                </TranslationProvider>
-            </AuthProvider>
-            </FirebaseClientProvider>
+        <>
+            <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+            >
+                <FirebaseClientProvider>
+                <AuthProvider>
+                    <TranslationProvider>
+                        {children}
+                        <Toaster />
+                    </TranslationProvider>
+                </AuthProvider>
+                </FirebaseClientProvider>
+            </ThemeProvider>
+        </>
     )
 }
 
