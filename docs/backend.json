@@ -12,8 +12,9 @@
         },
         "email": {
           "type": "string",
-          "description": "User's email address.",
-          "format": "email"
+          "description": "User's email address. This field is immutable.",
+          "format": "email",
+          "readonly": true
         },
         "name": {
           "type": "string",
@@ -40,12 +41,13 @@
         },
         "role": {
           "type": "string",
-          "description": "The role of the user.",
+          "description": "The role of the user. This field is immutable.",
           "enum": [
             "farmer",
             "buyer",
             "admin"
-          ]
+          ],
+          "readonly": true
         },
         "farmerId": {
           "type": "string",
