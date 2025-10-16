@@ -1,4 +1,9 @@
+
 import { NextResponse } from "next/server";
+import { config } from 'dotenv';
+
+// Explicitly load environment variables from .env file
+config();
 
 export async function POST(req: Request) {
   try {
@@ -8,14 +13,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing text or targetLang' }, { status: 400 });
     }
     
-    // NOTE: The Sarvam API endpoint and payload structure are assumed based on your instructions.
-    // This may need to be adjusted based on their official documentation.
+    const apiKey = process.env.SARVAM_API_KEY;
+
+    if (!apiKey) {
+      console.error("Sarvam API key is not configured.");
+      return NextResponse.json({ error: 'Server configuration error: Translation service API key not found.' }, { status: 500 });
+    }
+
     const response = await fetch("https://api.sarvam.ai/v1/translate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // The API key is securely accessed from environment variables on the server.
-        "Authorization": `Bearer ${process.env.SARVAM_API_KEY}`,
+        "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         source_language: "en", // Assuming source is always English
@@ -32,8 +41,6 @@ export async function POST(req: Request) {
 
     const data = await response.json();
 
-    // Assuming the response structure has a 'translations' array.
-    // This might need adjustment.
     const translatedText = data.translations?.[0]?.text || text;
 
     return NextResponse.json({ translatedText });
