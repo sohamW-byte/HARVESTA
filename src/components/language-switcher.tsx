@@ -1,4 +1,4 @@
-'use client';
+"use client"
 
 import {
   DropdownMenu,
@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Globe } from 'lucide-react';
+import { useState } from 'react';
 
 const languages = [
   { code: 'en', name: 'English' },
@@ -15,56 +16,37 @@ const languages = [
   { code: 'gom', name: 'कोंकणी (Konkani)' },
 ];
 
+/**
+ * Calls our internal API route to translate text securely on the server.
+ * @param text The text to translate.
+ * @param targetLang The target language code (e.g., 'hi', 'gom').
+ * @returns The translated text, or the original text on failure.
+ */
 async function translateText(text: string, targetLang: string): Promise<string> {
-  const apiKey = process.env.NEXT_PUBLIC_TRANSLATE_API_KEY;
-
-  if (!apiKey) {
-    console.error("Translation API key is not configured.");
-    return text; // Return original text if key is missing
-  }
-  
-  // =================================================================
-  // IMPORTANT: Replace with your actual API endpoint.
-  // This is a placeholder and will not work.
-  // =================================================================
-  const apiEndpoint = 'https://api.your-translation-service.com/translate';
-
   try {
-    const response = await fetch(apiEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // IMPORTANT: The header name 'Authorization' and the 'Bearer' prefix
-        // may be different for your specific API. Check your API's documentation.
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        text: text,
-        target_lang: targetLang,
-        // Your API might require other parameters here.
-      }),
+    const response = await fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, targetLang }),
     });
 
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.error('Translation API request failed:', response.status, errorBody);
+      const errorData = await response.json();
+      console.error("Translation failed:", errorData.details || errorData.error);
       return text; // Return original text on failure
     }
 
-    const result = await response.json();
-
-    // IMPORTANT: The structure of the response will depend on your API.
-    // You might need to adjust `result.translated_text` to match the actual response.
-    return result.translated_text || text;
-
+    const data = await response.json();
+    return data.translatedText || text;
   } catch (error) {
-    console.error('An error occurred during translation:', error);
+    console.error("An error occurred during translation:", error);
     return text;
   }
 }
 
-
 export function LanguageSwitcher() {
+  const [isTranslating, setIsTranslating] = useState(false);
+
   const handleLanguageChange = async (langCode: string) => {
     const greetingElement = document.getElementById('dashboard-greeting');
     
@@ -73,35 +55,37 @@ export function LanguageSwitcher() {
         return;
     }
 
-    // Store original text if not already stored
+    setIsTranslating(true);
+
+    // Store original text if it's not already stored
     if (!greetingElement.dataset.originalText) {
         greetingElement.dataset.originalText = greetingElement.textContent || '';
     }
     
-    if (langCode === 'en') {
-      greetingElement.textContent = greetingElement.dataset.originalText || '';
-      return;
-    }
-    
     const originalText = greetingElement.dataset.originalText;
-    if (originalText) {
+
+    if (langCode === 'en' && originalText) {
+      greetingElement.textContent = originalText;
+    } else if (originalText) {
         const translatedText = await translateText(originalText, langCode);
         greetingElement.textContent = translatedText;
     }
+
+    setIsTranslating(false);
   };
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" disabled={isTranslating}>
             <Globe className="h-5 w-5" />
             <span className="sr-only">Change language</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {languages.map((lang) => (
-            <DropdownMenuItem key={lang.code} onClick={() => handleLanguageChange(lang.code)}>
+            <DropdownMenuItem key={lang.code} onSelect={() => handleLanguageChange(lang.code)}>
               {lang.name}
             </DropdownMenuItem>
           ))}
