@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // This effect handles the result from a redirect sign-in operation.
     // It should run once on mount to check for a redirect result.
+    setLoading(true);
     getRedirectResult(auth)
       .then(async (result) => {
         if (result) {
@@ -62,84 +63,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             };
             
             try {
+              // We create the user doc here. The next effect will handle routing.
               await setDoc(userDocRef, userData, { merge: true });
-              // Redirect to complete profile after creating the doc.
-              // The main onAuthStateChanged listener will handle routing.
             } catch (error) {
               errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: userDocRef.path,
                 operation: 'create',
                 requestResourceData: userData
               }));
-              console.error("Failed to create user document:", error);
+              console.error("Failed to create user document for new Google user:", error);
             }
           }
           // For existing users, the onAuthStateChanged listener below will handle everything.
         }
+        // Whether there was a redirect result or not, we can proceed.
+        // The main user listener will take over.
+        // We set loading false here temporarily, the next hook will manage it.
+        setLoading(false);
       })
       .catch((error) => {
         console.error("Google sign-in redirect error:", error);
+        setLoading(false);
       });
-  }, [auth, db, router]);
+  }, [auth, db]);
 
 
   useEffect(() => {
-    let unsubscribe: () => void = () => {};
-
-    const handleAuthChange = async (user: User | null) => {
+    if (isUserLoading) {
       setLoading(true);
-      if (user) {
-        try {
-          const token = await user.getIdToken();
-          setCookie('firebaseIdToken', token, 1);
-          
-          const userDocRef = doc(db, 'users', user.uid);
-          
-          unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-            if (docSnap.exists()) {
-              const data = docSnap.data() as Omit<UserProfile, 'id'>;
-               setUserProfile({ id: docSnap.id, ...data });
-               // If the user exists but hasn't completed their role selection, keep them on the complete-profile page.
-               if (!data.role && window.location.pathname !== '/signup/complete-profile') {
-                    router.push('/signup/complete-profile');
-               } else if (data.role && (window.location.pathname.startsWith('/login') || window.location.pathname.startsWith('/signup'))) {
-                    router.push('/dashboard');
-               }
-            } else {
-              // This can happen for new Google sign-in users right after redirect,
-              // before the doc is created. We redirect them to complete their profile.
-               if (window.location.pathname !== '/signup/complete-profile' && window.location.pathname !== '/signup') {
-                    router.push('/signup/complete-profile');
-               }
-            }
-            setLoading(false);
-          }, (error) => {
-            console.error("Error listening to user profile:", error);
-            setUserProfile(null);
-            setLoading(false);
-          });
-
-        } catch (error) {
-          console.error("Error handling auth change:", error);
-          setUserProfile(null);
-          eraseCookie('firebaseIdToken');
-          setLoading(false);
-        }
-      } else {
-        setUserProfile(null);
-        eraseCookie('firebaseIdToken');
-        setLoading(false);
-        if (unsubscribe) unsubscribe();
-      }
-    };
-    
-    // Only run this if the initial user check from firebase is done
-    if (!isUserLoading) {
-      handleAuthChange(user);
+      return;
     }
 
-    return () => unsubscribe();
+    if (!user) {
+      setUserProfile(null);
+      eraseCookie('firebaseIdToken');
+      setLoading(false);
+      // Optional: Redirect to login if not on a public page
+      // if (!['/login', '/signup'].includes(window.location.pathname)) {
+      //   router.push('/login');
+      // }
+      return;
+    }
 
+    // User is logged in, set up profile listener
+    const userDocRef = doc(db, 'users', user.uid);
+    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data() as Omit<UserProfile, 'id'>;
+        setUserProfile({ id: docSnap.id, ...data });
+
+        // Routing logic
+        const onAuthPage = window.location.pathname.startsWith('/login') || window.location.pathname.startsWith('/signup');
+        if (data.role) {
+            // Profile is complete, if on auth page, redirect to dashboard
+            if (onAuthPage) {
+                router.push('/dashboard');
+            }
+        } else {
+            // Profile is not complete, redirect to complete-profile
+            if (window.location.pathname !== '/signup/complete-profile') {
+                router.push('/signup/complete-profile');
+            }
+        }
+      } else {
+        // Doc doesn't exist. This can happen for a moment for new users.
+        // Redirect them to complete their profile.
+        if (window.location.pathname !== '/signup/complete-profile') {
+            router.push('/signup/complete-profile');
+        }
+      }
+      setLoading(false);
+    }, (error) => {
+      console.error("Error listening to user profile:", error);
+      setUserProfile(null);
+      setLoading(false);
+    });
+
+    // Set token
+    user.getIdToken().then(token => setCookie('firebaseIdToken', token, 1));
+
+    return () => unsubscribe();
   }, [user, isUserLoading, db, router]);
 
   const signOut = async () => {
@@ -148,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
   
-  const value = { user, auth, userProfile, loading: isUserLoading || loading, signOut };
+  const value = { user, auth, userProfile, loading, signOut };
 
   return (
     <AuthContext.Provider value={value}>
