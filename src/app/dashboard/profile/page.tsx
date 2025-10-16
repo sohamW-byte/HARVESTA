@@ -168,10 +168,16 @@ export default function ProfilePage() {
         address: data.address,
         photoURL: data.photoURL,
         cropsGrown: data.cropsGrown ? data.cropsGrown.split(',').map(s => s.trim()).filter(Boolean) : [],
-        ...(data.role === 'farmer' && { farmerId: data.farmerId }),
-        ...(data.role === 'buyer' && { gstNumber: data.gstNumber }),
       };
       
+      // Only include role-specific fields if they are relevant
+      if (userProfile?.role === 'farmer') {
+        updatedData.farmerId = data.farmerId;
+      }
+      if (userProfile?.role === 'buyer') {
+        updatedData.gstNumber = data.gstNumber;
+      }
+
       await setDoc(userDocRef, updatedData, { merge: true })
         .catch((error) => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -263,13 +269,13 @@ export default function ProfilePage() {
                         />
                         
                         <div className="space-y-2">
-                            <FormLabel>Email</FormLabel>
+                            <Label>Email</Label>
                             <div className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm text-muted-foreground">
-                                {userProfile?.email ? userProfile.email : "Loading..."}
+                                {userProfile?.email || 'No email found'}
                             </div>
-                            <FormDescription>
+                            <p className="text-sm text-muted-foreground">
                                 Your email address cannot be changed.
-                            </FormDescription>
+                            </p>
                         </div>
 
                         <FormField
@@ -419,5 +425,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
