@@ -36,13 +36,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/dashboard/profile', label: 'Profile', icon: UserIcon },
-  { href: '/dashboard/my-fields', label: 'My Fields', icon: Map },
   { href: '/dashboard/recommendations', label: 'AI Suggestions', icon: Lightbulb },
   { href: '/dashboard/marketplace', label: 'Marketplace', icon: Store },
+  { href: '/dashboard/my-fields', label: 'My Fields', icon: Map },
+  { href: '/dashboard/reports', label: 'Reports', icon: BarChart },
   { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
   { href: '/dashboard/community', label: 'Community', icon: Users },
-  { href: '/dashboard/reports', label: 'Reports', icon: BarChart },
+  { href: '/dashboard/profile', label: 'Profile', icon: UserIcon },
   { href: '/dashboard/feedback', label: 'Feedback & Help', icon: LifeBuoy },
   { href: '/dashboard/admin', label: 'Admin', icon: UserCog, adminOnly: true },
 ];
@@ -135,5 +135,3 @@ export function DashboardSidebar() {
     </Sidebar>
   );
 }
-
-    
