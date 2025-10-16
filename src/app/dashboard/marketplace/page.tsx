@@ -2,10 +2,15 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MarketplaceItem } from "@/components/marketplace-item";
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collectionGroup, query } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ProduceListing } from "@/lib/types";
+
+const forSaleItems = [
+    { id: 1, name: "Sona Masoori Rice", quantity: "10 quintal", price: "₹2,800/qtl", seller: "Ramesh Kumar", location: "Nalgonda, TS", imageId: "produce-rice", contactInfo: "9876543210" },
+    { id: 2, name: "Nagpur Oranges", quantity: "50 kg", price: "₹40/kg", seller: "Sunita Deshpande", location: "Nagpur, MH", imageId: "produce-oranges", contactInfo: "9876543211" },
+    { id: 3, name: "Organic Turmeric", quantity: "5 quintal", price: "₹8,000/qtl", seller: "Vijay Farms", location: "Erode, TN", imageId: "produce-onions", contactInfo: "9876543212" },
+    { id: 4, name: "Alphonso Mangoes", quantity: "10 dozen", price: "₹1,200/dozen", seller: "Konkan Orchards", location: "Ratnagiri, MH", imageId: "produce-mangoes", contactInfo: "9876543213" },
+];
+
 
 const wantedItems = [
     { id: 1, name: "Organic Turmeric", quantity: "5 quintal", price: "Up to ₹8,000/qtl", buyer: "Spice India Exports", location: "Erode, TN", imageId: "produce-onions" },
@@ -16,15 +21,6 @@ const wantedItems = [
 
 
 export default function MarketplacePage() {
-  const db = useFirestore();
-
-  const produceListingsQuery = useMemoFirebase(
-    () => db ? query(collectionGroup(db, 'produceListings')) : null,
-    [db]
-  );
-  const { data: forSaleItems, isLoading: isLoadingListings } = useCollection<ProduceListing>(produceListingsQuery);
-
-  const isLoading = isLoadingListings;
 
   return (
     <div>
@@ -38,26 +34,19 @@ export default function MarketplacePage() {
         </TabsList>
         <TabsContent value="for-sale" className="mt-4">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {isLoading && (
-              Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[400px] w-full" />)
-            )}
-            {!isLoading && forSaleItems && forSaleItems.map(item => (
-              <MarketplaceItem 
+            {forSaleItems.map(item => (
+              <MarketplaceItem
                 key={item.id}
-                name={item.cropName}
-                quantity={`${item.quantity} units`}
-                price={`₹${item.price}/unit`}
-                seller={`Seller ID: ${item.userId.substring(0, 6)}...`}
-                location={'Unknown Location'}
+                name={item.name}
+                quantity={item.quantity}
+                price={item.price}
+                seller={item.seller}
+                location={item.location}
+                imageId={item.imageId}
                 type="sale" 
                 contactInfo={item.contactInfo}
               />
             ))}
-             {!isLoading && (!forSaleItems || forSaleItems.length === 0) && (
-                <div className="col-span-full text-center text-muted-foreground py-10">
-                    No produce has been listed for sale yet.
-                </div>
-            )}
           </div>
         </TabsContent>
         <TabsContent value="wanted" className="mt-4">
