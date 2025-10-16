@@ -45,21 +45,31 @@ const searchUsers = ai.defineTool(
   }
 );
 
-export const ChatInputSchema = z.object({
-    message: z.string(),
-});
-export type ChatInput = z.infer<typeof ChatInputSchema>;
+export type ChatInput = {
+    message: string;
+};
 
-export const ChatOutputSchema = z.object({
-    reply: z.string(),
-    users: z.array(UserSearchResultSchema).optional(),
-});
-export type ChatOutput = z.infer<typeof ChatOutputSchema>;
+export type ChatOutput = {
+    reply: string;
+    users?: UserSearchResult[];
+};
 
 
-const chatPrompt = ai.definePrompt({
-    name: 'chatPrompt',
-    system: `You are Harvesta Assistant, a helpful AI assistant for farmers and buyers on the Harvesta platform.
+const chatFlow = ai.defineFlow(
+  {
+    name: 'chatFlow',
+    inputSchema: z.object({
+        message: z.string(),
+    }),
+    outputSchema: z.object({
+        reply: z.string(),
+        users: z.array(UserSearchResultSchema).optional(),
+    }),
+  },
+  async (input) => {
+    const chatPrompt = ai.definePrompt({
+        name: 'chatPrompt',
+        system: `You are Harvesta Assistant, a helpful AI assistant for farmers and buyers on the Harvesta platform.
 Your role is to assist users within the application.
 You can help users find other users on the platform by name.
 If a user asks to find someone, use the searchUsers tool.
@@ -67,19 +77,11 @@ When you find users, present them clearly to the user. Do not make it a list.
 For example: "I found these users: Ramesh Kumar (Farmer) and Ramesh Gupta (Buyer)."
 If you don't find anyone, say "I couldn't find any users with that name."
 Be friendly and concise.`,
-    tools: [searchUsers],
-    input: { schema: ChatInputSchema },
-    // No output schema here, as we handle tool logic manually
-});
+        tools: [searchUsers],
+        input: { schema: z.object({ message: z.string() }) },
+        // No output schema here, as we handle tool logic manually
+    });
 
-
-const chatFlow = ai.defineFlow(
-  {
-    name: 'chatFlow',
-    inputSchema: ChatInputSchema,
-    outputSchema: ChatOutputSchema,
-  },
-  async (input) => {
     const llmResponse = await chatPrompt(input);
     const toolCalls = llmResponse.toolCalls();
 
