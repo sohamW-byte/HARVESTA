@@ -7,8 +7,8 @@ export interface UserProfile {
   role: 'farmer' | 'buyer' | 'admin';
   farmerId?: string;
   gstNumber?: string;
-  region: string;
-  cropsGrown: string[];
+  region?: string;
+  cropsGrown?: string[];
   updateHistory?: {
     date: Timestamp;
     region: string;
@@ -94,3 +94,4 @@ export interface CommunityComment {
     content: string;
     timestamp: Timestamp;
 }
+

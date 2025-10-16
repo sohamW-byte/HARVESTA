@@ -33,13 +33,26 @@
           "items": {
             "type": "string"
           }
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user.",
+          "enum": ["farmer", "buyer", "admin"]
+        },
+        "farmerId": {
+          "type": "string",
+          "description": "Government-issued Farmer ID, required if role is 'farmer'."
+        },
+        "gstNumber": {
+          "type": "string",
+          "description": "GST Number, required if role is 'buyer'."
         }
       },
       "required": [
         "id",
         "email",
         "name",
-        "region"
+        "role"
       ]
     },
     "Field": {
