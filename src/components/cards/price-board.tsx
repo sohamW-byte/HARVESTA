@@ -36,21 +36,21 @@ interface MarketDataRecord {
 }
 
 const demoPrices: MarketDataRecord[] = [
-    { state: "Maharashtra", district: "Nashik", market: "Nashik", commodity: "Onion", variety: "Red", modal_price: "1250", arrival_date: "2023-10-26", min_price: "1100", max_price: "1400" },
-    { state: "Punjab", district: "Ludhiana", market: "Khanna", commodity: "Wheat", variety: "HD-2967", modal_price: "2150", arrival_date: "2023-10-26", min_price: "2100", max_price: "2200" },
-    { state: "Uttar Pradesh", district: "Lucknow", market: "Lucknow", commodity: "Potato", variety: "Kufri Bahar", modal_price: "980", arrival_date: "2023-10-26", min_price: "900", max_price: "1050" },
-    { state: "Andhra Pradesh", district: "Guntur", market: "Guntur", commodity: "Red Chilli", variety: "Teja", modal_price: "18500", arrival_date: "2023-10-25", min_price: "17000", max_price: "20000" },
-    { state: "West Bengal", district: "Kolkata", market: "Sealdah", commodity: "Rice", variety: "Sona Masuri", modal_price: "3200", arrival_date: "2023-10-26", min_price: "3100", max_price: "3300" },
-    { state: "Gujarat", district: "Rajkot", market: "Gondal", commodity: "Cotton", variety: "Shankar-6", modal_price: "7500", arrival_date: "2023-10-25", min_price: "7200", max_price: "7800" },
-    { state: "Madhya Pradesh", district: "Indore", market: "Indore", commodity: "Soybean", variety: "JS-9560", modal_price: "4800", arrival_date: "2023-10-26", min_price: "4650", max_price: "5000" },
-    { state: "Karnataka", district: "Bengaluru", market: "Bengaluru", commodity: "Tomato", variety: "Hybrid", modal_price: "1500", arrival_date: "2023-10-26", min_price: "1300", max_price: "1700" },
-    { state: "Tamil Nadu", district: "Erode", market: "Erode", commodity: "Turmeric", variety: "Erode Local", modal_price: "7200", arrival_date: "2023-10-25", min_price: "6800", max_price: "7500" },
-    { state: "Rajasthan", district: "Jaipur", market: "Jaipur (F&V)", commodity: "Mustard", variety: "Hybrid", modal_price: "5400", arrival_date: "2023-10-26", min_price: "5200", max_price: "5600" },
-    { state: "Maharashtra", district: "Ratnagiri", market: "Ratnagiri", commodity: "Mango", variety: "Alphonso", modal_price: "45000", arrival_date: "2023-05-20", min_price: "40000", max_price: "50000" },
-    { state: "Kerala", district: "Idukki", market: "Nedumkandam", commodity: "Black Pepper", variety: "Un-Garbled", modal_price: "51000", arrival_date: "2023-10-25", min_price: "50500", max_price: "51500" },
-    { state: "Assam", district: "Guwahati", market: "Pamohi", commodity: "Ginger", variety: "Nadia", modal_price: "6500", arrival_date: "2023-10-26", min_price: "6000", max_price: "7000" },
-    { state: "Bihar", district: "Patna", market: "Meethapur", commodity: "Lentil (Masur)", variety: "Small", modal_price: "6300", arrival_date: "2023-10-25", min_price: "6200", max_price: "6400" },
-    { state: "Haryana", district: "Karnal", market: "Karnal", commodity: "Paddy (Basmati)", variety: "1121", modal_price: "4200", arrival_date: "2023-10-26", min_price: "4000", max_price: "4400" }
+    { state: "Maharashtra", district: "Nashik", market: "Nashik", commodity: "Onion", variety: "Red", modal_price: "13", arrival_date: "2023-10-26", min_price: "11", max_price: "14" },
+    { state: "Punjab", district: "Ludhiana", market: "Khanna", commodity: "Wheat", variety: "HD-2967", modal_price: "22", arrival_date: "2023-10-26", min_price: "21", max_price: "23" },
+    { state: "Uttar Pradesh", district: "Lucknow", market: "Lucknow", commodity: "Potato", variety: "Kufri Bahar", modal_price: "10", arrival_date: "2023-10-26", min_price: "9", max_price: "11" },
+    { state: "Andhra Pradesh", district: "Guntur", market: "Guntur", commodity: "Red Chilli", variety: "Teja", modal_price: "185", arrival_date: "2023-10-25", min_price: "170", max_price: "200" },
+    { state: "West Bengal", district: "Kolkata", market: "Sealdah", commodity: "Rice", variety: "Sona Masuri", modal_price: "32", arrival_date: "2023-10-26", min_price: "31", max_price: "33" },
+    { state: "Gujarat", district: "Rajkot", market: "Gondal", commodity: "Cotton", variety: "Shankar-6", modal_price: "75", arrival_date: "2023-10-25", min_price: "72", max_price: "78" },
+    { state: "Madhya Pradesh", district: "Indore", market: "Indore", commodity: "Soybean", variety: "JS-9560", modal_price: "48", arrival_date: "2023-10-26", min_price: "46", max_price: "50" },
+    { state: "Karnataka", district: "Bengaluru", market: "Bengaluru", commodity: "Tomato", variety: "Hybrid", modal_price: "15", arrival_date: "2023-10-26", min_price: "13", max_price: "17" },
+    { state: "Tamil Nadu", district: "Erode", market: "Erode", commodity: "Turmeric", variety: "Erode Local", modal_price: "72", arrival_date: "2023-10-25", min_price: "68", max_price: "75" },
+    { state: "Rajasthan", district: "Jaipur", market: "Jaipur (F&V)", commodity: "Mustard", variety: "Hybrid", modal_price: "54", arrival_date: "2023-10-26", min_price: "52", max_price: "56" },
+    { state: "Maharashtra", district: "Ratnagiri", market: "Ratnagiri", commodity: "Mango", variety: "Alphonso", modal_price: "450", arrival_date: "2023-05-20", min_price: "400", max_price: "500" },
+    { state: "Kerala", district: "Idukki", market: "Nedumkandam", commodity: "Black Pepper", variety: "Un-Garbled", modal_price: "510", arrival_date: "2023-10-25", min_price: "505", max_price: "515" },
+    { state: "Assam", district: "Guwahati", market: "Pamohi", commodity: "Ginger", variety: "Nadia", modal_price: "65", arrival_date: "2023-10-26", min_price: "60", max_price: "70" },
+    { state: "Bihar", district: "Patna", market: "Meethapur", commodity: "Lentil (Masur)", variety: "Small", modal_price: "63", arrival_date: "2023-10-25", min_price: "62", max_price: "64" },
+    { state: "Haryana", district: "Karnal", market: "Karnal", commodity: "Paddy (Basmati)", variety: "1121", modal_price: "42", arrival_date: "2023-10-26", min_price: "40", max_price: "44" }
 ];
 
 const INITIAL_VISIBLE_ROWS = 5;
@@ -164,7 +164,7 @@ export function PriceBoard() {
             <TableRow>
               <TableHead>Commodity 🌾</TableHead>
               <TableHead>Market 📍</TableHead>
-              <TableHead>Price (Modal/Qtl) 💰</TableHead>
+              <TableHead>Price (Modal/Kg) 💰</TableHead>
               <TableHead className="text-right">Arrival Date 🗓️</TableHead>
             </TableRow>
           </TableHeader>
