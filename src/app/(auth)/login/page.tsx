@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { useAuth, useFirestore } from '@/firebase';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
+import { useAuth as useAppAuth } from '@/hooks/use-auth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,9 +23,6 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Sprout } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import type { UserProfile } from '@/lib/types';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -62,8 +58,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const auth = useAuth();
-  const db = useFirestore();
+  const { auth } = useAppAuth();
 
   const {
     register,
@@ -93,6 +88,7 @@ export default function LoginPage() {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     try {
+      // signInWithRedirect will navigate away from the page
       await signInWithRedirect(auth, provider);
       // The user will be redirected to Google's sign-in page.
       // The result is handled by the useAuth hook upon redirect back to the app.

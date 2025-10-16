@@ -11,6 +11,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 interface AuthContextType {
   user: User | null;
+  auth: ReturnType<typeof useFirebaseAuth>;
   userProfile: UserProfile | null;
   loading: boolean;
   signOut: () => Promise<void>;
@@ -42,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // This effect handles the result from a redirect sign-in operation.
+    // It should run once on mount to check for a redirect result.
     getRedirectResult(auth)
       .then(async (result) => {
         if (result) {
@@ -61,8 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             try {
               await setDoc(userDocRef, userData, { merge: true });
-              // Redirect to complete profile after creating the doc
-              router.push('/signup/complete-profile');
+              // Redirect to complete profile after creating the doc.
+              // The main onAuthStateChanged listener will handle routing.
             } catch (error) {
               errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: userDocRef.path,
@@ -100,13 +102,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                // If the user exists but hasn't completed their role selection, keep them on the complete-profile page.
                if (!data.role && window.location.pathname !== '/signup/complete-profile') {
                     router.push('/signup/complete-profile');
-               } else if (data.role && window.location.pathname.startsWith('/(auth)')) {
+               } else if (data.role && (window.location.pathname.startsWith('/login') || window.location.pathname.startsWith('/signup'))) {
                     router.push('/dashboard');
                }
             } else {
-              // This can happen briefly for new Google sign-in users before their doc is created.
-              // We redirect them to complete their profile.
-               if (window.location.pathname !== '/signup/complete-profile') {
+              // This can happen for new Google sign-in users right after redirect,
+              // before the doc is created. We redirect them to complete their profile.
+               if (window.location.pathname !== '/signup/complete-profile' && window.location.pathname !== '/signup') {
                     router.push('/signup/complete-profile');
                }
             }
@@ -131,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
     
-    // Only run this if the initial user check is done
+    // Only run this if the initial user check from firebase is done
     if (!isUserLoading) {
       handleAuthChange(user);
     }
@@ -146,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
   
-  const value = { user, userProfile, loading: isUserLoading || loading, signOut };
+  const value = { user, auth, userProfile, loading: isUserLoading || loading, signOut };
 
   return (
     <AuthContext.Provider value={value}>
