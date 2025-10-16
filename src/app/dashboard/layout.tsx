@@ -2,6 +2,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
 import { DashboardHeader } from '@/components/dashboard-header';
 import { LocationProvider } from '@/hooks/use-location';
+import { AnimatePresence } from '@/components/animate-presence';
 
 export default function DashboardLayout({
   children,
@@ -15,7 +16,7 @@ export default function DashboardLayout({
         <LocationProvider>
           <DashboardHeader />
           <main className="flex-1 p-4 md:p-6 lg:p-8 bg-background">
-            {children}
+            <AnimatePresence>{children}</AnimatePresence>
           </main>
         </LocationProvider>
       </div>

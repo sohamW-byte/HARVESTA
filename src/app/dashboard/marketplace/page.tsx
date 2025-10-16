@@ -1,10 +1,9 @@
-
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MarketplaceItem } from "@/components/marketplace-item";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/hooks/use-translation";
+import { motion } from "framer-motion";
 
 const forSaleItems = [
     { id: 1, name: "Sona Masoori Rice", quantity: "10 quintal", price: "₹2,800/qtl", seller: "Ramesh Kumar", location: "Nalgonda, TS", imageId: "produce-rice", contactInfo: "9876543210" },
@@ -25,9 +24,18 @@ const wantedItems = [
     { id: 6, name: "Cardamom", quantity: "500 kg", price: "Up to ₹1,800/kg", buyer: "Kerala Spice Co.", location: "Idukki, KL", imageId: "produce-cardamom", contactInfo: "9876543217" },
 ];
 
-
 export default function MarketplacePage() {
   const { t } = useTranslation();
+
+  const containerVariants = {
+    hidden: { opacity: 1 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+      },
+    },
+  };
 
   return (
     <div>
@@ -40,7 +48,12 @@ export default function MarketplacePage() {
           <TabsTrigger value="wanted">{t('Wanted')}</TabsTrigger>
         </TabsList>
         <TabsContent value="for-sale" className="mt-4">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <motion.div 
+            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {forSaleItems.map(item => (
               <MarketplaceItem
                 key={item.id}
@@ -54,14 +67,19 @@ export default function MarketplacePage() {
                 contactInfo={item.contactInfo}
               />
             ))}
-          </div>
+          </motion.div>
         </TabsContent>
         <TabsContent value="wanted" className="mt-4">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <motion.div 
+            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {wantedItems.map(item => (
               <MarketplaceItem key={item.id} {...item} type="wanted" contactInfo="9876543210" />
             ))}
-          </div>
+          </motion.div>
         </TabsContent>
       </Tabs>
     </div>
