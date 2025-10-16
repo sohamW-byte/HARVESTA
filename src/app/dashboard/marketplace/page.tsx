@@ -3,7 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MarketplaceItem } from "@/components/marketplace-item";
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collectionGroup, query } from "firebase/firestore";
+import { collectionGroup, query, collection } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ProduceListing, UserProfile } from "@/lib/types";
 import { useCollection as useUsersCollection } from "@/firebase/firestore/use-collection";
