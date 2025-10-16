@@ -31,7 +31,7 @@ const fieldSchema = z.object({
 type FieldFormValues = z.infer<typeof fieldSchema>;
 
 export default function MyFieldsPage() {
-  const { user, userProfile } = useAppAuth();
+  const { user, userProfile, loading: isUserLoading } = useAppAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const db = useFirestore();
@@ -143,8 +143,8 @@ export default function MyFieldsPage() {
                     </FormItem>
                   )}
                 />
-                 <Button type="submit" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                 <Button type="submit" disabled={loading || isUserLoading}>
+                    {(loading || isUserLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Save Changes
                 </Button>
               </form>
