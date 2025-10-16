@@ -172,15 +172,13 @@ export function VoiceAssistant() {
   const handleToggleListen = async () => {
     let permissionGranted = hasMicPermission;
 
-    // If permission status is unknown, request it now.
     if (permissionGranted === null) {
-        permissionGranted = await handleMicPermission();
+      permissionGranted = await handleMicPermission();
     }
     
-    // If permission is false after checking, do nothing.
     if (!permissionGranted) {
-        setIsDialogOpen(true); // Open dialog to show the error
-        return;
+      setIsDialogOpen(true);
+      return;
     }
     
     if (isListening) {
