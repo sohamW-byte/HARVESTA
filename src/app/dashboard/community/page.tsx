@@ -125,11 +125,11 @@ export default function CommunityPage() {
                                 <div className="flex items-center gap-3">
                                     <Avatar>
                                         <AvatarImage src={post.author.avatar} />
-                                        <AvatarFallback>{post.author.name.charAt(0)}</AvatarFallback>
+                                        <AvatarFallback>{t(post.author.name).charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <p className="font-semibold">{post.author.name}</p>
+                                            <p className="font-semibold">{t(post.author.name)}</p>
                                             {isQuestion && <HelpCircle className="h-4 w-4 text-accent" />}
                                         </div>
                                         <p className="text-xs text-muted-foreground">{t(post.author.role)} · {t(post.time)}</p>

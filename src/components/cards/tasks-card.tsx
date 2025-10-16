@@ -27,7 +27,7 @@ export function TasksCard({ completionPercentage, nextTaskTitle, nextTaskDue }: 
             <span className="text-sm text-muted-foreground">{t('Completion')}</span>
             <span className="text-lg font-semibold">{completionPercentage}%</span>
           </div>
-          <Progress value={completionPercentage} aria-label={`${completionPercentage}% of tasks complete`} />
+          <Progress value={completionPercentage} aria-label={`${completionPercentage}% ${t('of tasks complete')}`} />
         </div>
         <div>
           <p className="text-sm text-muted-foreground">{t('Next Up')}</p>

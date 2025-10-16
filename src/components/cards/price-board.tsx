@@ -83,9 +83,9 @@ export function PriceBoard() {
       .filter(price => {
         const query = searchQuery.toLowerCase();
         return (
-          (price.commodity.toLowerCase().includes(query) ||
-           price.market.toLowerCase().includes(query) ||
-           price.district.toLowerCase().includes(query)) &&
+          (t(price.commodity).toLowerCase().includes(query) ||
+           t(price.market).toLowerCase().includes(query) ||
+           t(price.district).toLowerCase().includes(query)) &&
           (filterState === 'all' || price.state === filterState)
         );
       })
@@ -96,14 +96,14 @@ export function PriceBoard() {
           case 'price_desc':
             return parseInt(b.modal_price) - parseInt(a.modal_price);
           case 'commodity_asc':
-            return a.commodity.localeCompare(b.commodity);
+            return t(a.commodity).localeCompare(t(b.commodity));
           case 'commodity_desc':
-            return b.commodity.localeCompare(a.commodity);
+            return t(b.commodity).localeCompare(t(a.commodity));
           default:
             return 0;
         }
       });
-  }, [prices, searchQuery, sortBy, filterState]);
+  }, [prices, searchQuery, sortBy, filterState, t]);
 
   const itemsToDisplay = showAll ? filteredAndSortedPrices : filteredAndSortedPrices.slice(0, INITIAL_VISIBLE_ROWS);
 
@@ -143,7 +143,7 @@ export function PriceBoard() {
                     <SelectContent>
                         {uniqueStates.map(state => (
                             <SelectItem key={state} value={state}>
-                                {state === 'all' ? t('All States') : state}
+                                {t(state)}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -192,8 +192,8 @@ export function PriceBoard() {
             ) : itemsToDisplay.length > 0 ? (
               itemsToDisplay.map((item, index) => (
                 <TableRow key={index}>
-                  <TableCell className="font-medium">{item.commodity}</TableCell>
-                  <TableCell>{item.market}, {item.district}</TableCell>
+                  <TableCell className="font-medium">{t(item.commodity)}</TableCell>
+                  <TableCell>{t(item.market)}, {t(item.district)}</TableCell>
                   <TableCell>₹{parseInt(item.modal_price).toLocaleString('en-IN')}</TableCell>
                   <TableCell className="text-right">{formatDate(item.arrival_date)}</TableCell>
                 </TableRow>

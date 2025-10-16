@@ -34,7 +34,7 @@ export function MarketplaceItem({ name, quantity, price, location, imageId, sell
         <div className="relative aspect-video">
           <Image
             src={image.imageUrl}
-            alt={image.description}
+            alt={t(image.description)}
             fill
             className="object-cover"
             data-ai-hint={image.imageHint}
@@ -42,21 +42,21 @@ export function MarketplaceItem({ name, quantity, price, location, imageId, sell
         </div>
       )}
       <CardHeader>
-        <CardTitle>{name}</CardTitle>
-        <CardDescription>{type === 'sale' ? `${t('Sold by')} ${seller}` : `${t('Wanted by')} ${buyer}`}</CardDescription>
+        <CardTitle>{t(name)}</CardTitle>
+        <CardDescription>{type === 'sale' ? `${t('Sold by')} ${t(seller || '')}` : `${t('Wanted by')} ${t(buyer || '')}`}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow space-y-2">
          <div className="flex items-center text-sm text-muted-foreground">
             <Package className="mr-2 h-4 w-4 flex-shrink-0" />
-            <span>{t('Quantity')}: {quantity}</span>
+            <span>{t('Quantity')}: {t(quantity)}</span>
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
             <IndianRupee className="mr-2 h-4 w-4 flex-shrink-0" />
-            <span>{t('Price')}: {price}</span>
+            <span>{t('Price')}: {t(price)}</span>
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
             <MapPin className="mr-2 h-4 w-4 flex-shrink-0" />
-            <span>{t('Location')}: {location}</span>
+            <span>{t('Location')}: {t(location)}</span>
         </div>
       </CardContent>
       <CardFooter>

@@ -67,12 +67,12 @@ export function TestimonialsCard() {
                         </p>
                         <div className="flex items-center gap-3 mt-4">
                             <Avatar>
-                                <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
-                                <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={testimonial.avatar} alt={t(testimonial.name)} />
+                                <AvatarFallback>{t(testimonial.name).charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
-                                <p className="font-semibold">{testimonial.name}</p>
-                                <p className="text-sm text-muted-foreground">{testimonial.location}</p>
+                                <p className="font-semibold">{t(testimonial.name)}</p>
+                                <p className="text-sm text-muted-foreground">{t(testimonial.location)}</p>
                             </div>
                         </div>
                     </div>
