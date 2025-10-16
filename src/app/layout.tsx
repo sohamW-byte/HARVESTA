@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase';
 import { ThemeProvider } from '@/components/theme-provider';
+import { TranslationProvider } from '@/hooks/use-translation';
 
 export const metadata: Metadata = {
   title: 'Harvesta',
@@ -34,8 +35,10 @@ function RootProviders({ children }: { children: React.ReactNode }) {
         >
             <FirebaseClientProvider>
             <AuthProvider>
-                {children}
-                <Toaster />
+                <TranslationProvider>
+                    {children}
+                    <Toaster />
+                </TranslationProvider>
             </AuthProvider>
             </FirebaseClientProvider>
         </ThemeProvider>

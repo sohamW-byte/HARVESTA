@@ -23,9 +23,11 @@ import Link from 'next/link';
 import { LanguageSwitcher } from './language-switcher';
 import { HeaderSearch } from './header-search';
 import { ThemeToggle } from './theme-toggle';
+import { useTranslation } from '@/hooks/use-translation';
 
 export function DashboardHeader() {
   const { userProfile, signOut } = useAuth();
+  const { t } = useTranslation();
   
   const userInitial = userProfile?.name?.charAt(0).toUpperCase() || '?';
 
@@ -76,13 +78,13 @@ export function DashboardHeader() {
             <Link href="/dashboard/profile">
               <DropdownMenuItem>
                 <User className="mr-2 h-4 w-4" />
-                <span data-translate="true">Profile</span>
+                <span>{t('Profile')}</span>
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut}>
               <LogOut className="mr-2 h-4 w-4" />
-              <span data-translate="true">Log out</span>
+              <span>{t('Log out')}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
