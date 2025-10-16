@@ -15,6 +15,7 @@ import { useLocation } from '@/hooks/use-location';
 import { useAuth } from '@/hooks/use-auth';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { VoiceInput } from '@/components/ui/voice-input';
 
 interface WeatherData {
   temp_c: number;
@@ -142,7 +143,7 @@ export default function RecommendationsPage() {
                             <FormControl>
                                 <div className="relative">
                                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input placeholder="Enter location or allow access..." {...field} className="pl-9" />
+                                    <VoiceInput placeholder="Enter location or allow access..." {...field} onValueChange={field.onChange} className="pl-9" />
                                 </div>
                             </FormControl>
                             <FormMessage />
@@ -158,7 +159,7 @@ export default function RecommendationsPage() {
                              <FormControl>
                                 <div className="relative">
                                     <Sprout className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input placeholder="e.g., Grapes, Onions, Tomatoes" {...field} className="pl-9" />
+                                    <VoiceInput placeholder="e.g., Grapes, Onions, Tomatoes" {...field} onValueChange={field.onChange} className="pl-9" />
                                 </div>
                             </FormControl>
                             <FormMessage />

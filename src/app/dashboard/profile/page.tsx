@@ -32,6 +32,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { UserProfile } from '@/lib/types';
+import { VoiceInput } from '@/components/ui/voice-input';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -231,7 +232,7 @@ export default function ProfilePage() {
                             <FormItem>
                             <FormLabel>Full Name</FormLabel>
                             <FormControl>
-                                <Input placeholder="Your full name" {...field} />
+                                <VoiceInput placeholder="Your full name" {...field} onValueChange={field.onChange}/>
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -272,7 +273,7 @@ export default function ProfilePage() {
                             <FormItem>
                                 <FormLabel>Farmer ID</FormLabel>
                                 <FormControl>
-                                <Input placeholder="Enter your government-issued Farmer ID" {...field} />
+                                <VoiceInput placeholder="Enter your government-issued Farmer ID" {...field} onValueChange={field.onChange} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -288,7 +289,7 @@ export default function ProfilePage() {
                             <FormItem>
                                 <FormLabel>GST Number</FormLabel>
                                 <FormControl>
-                                <Input placeholder="Enter your GST Number" {...field} />
+                                <VoiceInput placeholder="Enter your GST Number" {...field} onValueChange={field.onChange} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -303,7 +304,7 @@ export default function ProfilePage() {
                             <FormItem>
                             <FormLabel>Region</FormLabel>
                             <FormControl>
-                                <Input placeholder="E.g., Nashik, Maharashtra" {...field} />
+                                <VoiceInput placeholder="E.g., Nashik, Maharashtra" {...field} onValueChange={field.onChange}/>
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -316,7 +317,7 @@ export default function ProfilePage() {
                             <FormItem>
                             <FormLabel>Main Crops Grown (comma-separated)</FormLabel>
                             <FormControl>
-                                <Input placeholder="E.g., Grapes, Onions, Tomatoes" {...field} />
+                                <VoiceInput placeholder="E.g., Grapes, Onions, Tomatoes" {...field} onValueChange={field.onChange}/>
                             </FormControl>
                             <FormMessage />
                             </FormItem>

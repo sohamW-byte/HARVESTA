@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Search, Sprout, User } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { VoiceInput } from './ui/voice-input';
 
 const mockSearchResults = [
   { id: 1, type: 'product', name: 'Sona Masoori Rice', href: '/dashboard/marketplace' },
@@ -61,12 +61,12 @@ export function HeaderSearch() {
   return (
     <div className="relative w-full md:max-w-xs" ref={searchRef}>
       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-      <Input
+      <VoiceInput
         type="search"
         placeholder="Search products, farmers, buyers..."
         className="w-full appearance-none bg-background pl-8 shadow-none"
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onValueChange={setQuery}
         onFocus={() => setIsFocused(true)}
       />
       {isFocused && query.length > 0 && (

@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { chat, type ChatOutput } from '@/ai/flows/chat-flow';
 import Link from 'next/link';
+import { VoiceInput } from '@/components/ui/voice-input';
 
 // Mock data, to be replaced with Firebase data
 const initialConversations = [
@@ -313,12 +314,12 @@ export default function MessagesPage() {
 
             <div className="p-4 border-t">
               <div className="relative">
-                <Input
+                <VoiceInput
                   placeholder={selectedConversation.id === 'assistant' ? "Ask the AI assistant..." : "Type a message..."}
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onValueChange={setNewMessage}
                   onKeyDown={(e) => e.key === 'Enter' && !isTyping && handleSendMessage()}
-                  className="pr-12"
+                  className="pr-16"
                   disabled={isTyping}
                 />
                 <Button
