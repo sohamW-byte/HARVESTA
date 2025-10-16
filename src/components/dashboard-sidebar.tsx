@@ -34,19 +34,6 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 
-const menuItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/dashboard/recommendations', label: 'AI Suggestions', icon: Lightbulb },
-  { href: '/dashboard/marketplace', label: 'Marketplace', icon: Store },
-  { href: '/dashboard/my-fields', label: 'My Fields', icon: Map },
-  { href: '/dashboard/reports', label: 'Reports', icon: BarChart },
-  { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
-  { href: '/dashboard/community', label: 'Community', icon: Users },
-  { href: '/dashboard/profile', label: 'Profile', icon: UserIcon },
-  { href: '/dashboard/feedback', label: 'Feedback & Help', icon: LifeBuoy },
-  { href: '/dashboard/admin', label: 'Admin', icon: UserCog, adminOnly: true },
-];
-
 const yojanaLinks = [
     { href: 'https://pmkisan.gov.in/', label: 'PM Kisan Samman Nidhi' },
     { href: 'https://www.enam.gov.in/web/', label: 'e-NAM' },
@@ -58,6 +45,19 @@ const yojanaLinks = [
 export function DashboardSidebar() {
   const pathname = usePathname();
   const { userProfile } = useAuth();
+
+  const menuItems = [
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/dashboard/recommendations', label: 'AI Suggestions', icon: Lightbulb },
+    { href: '/dashboard/marketplace', label: 'Marketplace', icon: Store },
+    { href: '/dashboard/my-fields', label: 'My Fields', icon: Map },
+    { href: '/dashboard/reports', label: 'Reports', icon: BarChart },
+    { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
+    { href: '/dashboard/community', label: 'Community', icon: Users },
+    { href: '/dashboard/profile', label: 'Profile', icon: UserIcon },
+    { href: '/dashboard/feedback', label: 'Feedback & Help', icon: LifeBuoy },
+    { href: '/dashboard/admin', label: 'Admin', icon: UserCog, adminOnly: true },
+  ];
 
   const userInitial = userProfile?.name?.charAt(0).toUpperCase() || '?';
   const isAdmin = userProfile?.role === 'admin';
