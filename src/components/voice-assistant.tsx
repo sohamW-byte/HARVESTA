@@ -25,7 +25,6 @@ import { processVoiceCommand } from '@/ai/flows/voice-assistant-flow';
 
 export function VoiceAssistant() {
   const router = useRouter();
-  const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [spokenResponse, setSpokenResponse] = useState('');
@@ -46,6 +45,8 @@ export function VoiceAssistant() {
 
   const speak = useCallback((text: string) => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
+      // Cancel any ongoing speech to prevent overlap
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-US';
       window.speechSynthesis.speak(utterance);
@@ -53,23 +54,20 @@ export function VoiceAssistant() {
   }, []);
 
   const handleToggleListen = () => {
-    if (isListening) {
+    if (listening) {
       SpeechRecognition.stopListening();
-      setIsListening(false);
     } else {
       resetTranscript();
       setSpokenResponse('');
       setLastCommand('');
       SpeechRecognition.startListening({ continuous: false, language: 'en-IN' });
-      setIsListening(true);
       setIsDialogOpen(true);
     }
   };
 
   useEffect(() => {
-    setIsListening(listening);
-    if (!listening && transcript) {
-      // User has stopped speaking
+    if (!listening && transcript && !isProcessing) {
+      // User has stopped speaking, and we are not already processing
       setIsProcessing(true);
       setLastCommand(transcript);
       processVoiceCommand({ command: transcript })
@@ -96,7 +94,7 @@ export function VoiceAssistant() {
           resetTranscript();
         });
     }
-  }, [listening, transcript, resetTranscript, router, speak]);
+  }, [listening, transcript, resetTranscript, router, speak, isProcessing]);
 
   if (!isMounted || !browserSupportsSpeechRecognition) {
     return null;
@@ -110,11 +108,11 @@ export function VoiceAssistant() {
             onClick={handleToggleListen}
             className={cn(
               "fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-50 transition-colors duration-300",
-              isListening ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
+              listening ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
             )}
             size="icon"
           >
-            {isListening ? (
+            {listening ? (
               <MicOff className="h-8 w-8" />
             ) : (
               <Mic className="h-8 w-8" />
@@ -122,7 +120,7 @@ export function VoiceAssistant() {
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">
-          <p>{isListening ? 'Stop Listening' : 'Activate Voice Assistant'}</p>
+          <p>{listening ? 'Stop Listening' : 'Activate Voice Assistant'}</p>
         </TooltipContent>
       </Tooltip>
 
@@ -134,14 +132,14 @@ export function VoiceAssistant() {
               Harvesta Assistant
             </DialogTitle>
             <DialogDescription>
-              {isListening ? "I'm listening..." : "How can I help you today?"}
+              {listening ? "I'm listening..." : isProcessing ? "Thinking..." : "How can I help you today?"}
             </DialogDescription>
           </DialogHeader>
           <div className="py-8 text-center space-y-4">
             <div className="text-2xl font-semibold h-14">
-                {isProcessing ? <Loader2 className="h-8 w-8 mx-auto animate-spin" /> : transcript || <span className="text-muted-foreground">...</span>}
+                {isProcessing && !spokenResponse ? <Loader2 className="h-8 w-8 mx-auto animate-spin" /> : transcript || <span className="text-muted-foreground">...</span>}
             </div>
-            {lastCommand && <p className="text-sm text-muted-foreground">You said: "{lastCommand}"</p>}
+            {lastCommand && !isProcessing && <p className="text-sm text-muted-foreground">You said: "{lastCommand}"</p>}
             {spokenResponse && <p className="text-lg text-primary mt-4">{spokenResponse}</p>}
           </div>
         </DialogContent>
