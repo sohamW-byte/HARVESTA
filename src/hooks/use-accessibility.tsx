@@ -63,10 +63,6 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     setColorInversionState(enabled);
   };
   
-  if (!isMounted) {
-      return null;
-  }
-
   return (
     <AccessibilityContext.Provider value={{ fontSize, setFontSize, colorInversion, setColorInversion }}>
       {children}
