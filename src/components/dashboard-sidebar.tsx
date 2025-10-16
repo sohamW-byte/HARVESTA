@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -11,11 +12,10 @@ import {
   Sprout,
   Lightbulb,
   MessageSquare,
-  UserCog,
-  ScrollText,
-  ChevronDown,
   User as UserIcon,
   LifeBuoy,
+  ScrollText,
+  ChevronDown,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -31,7 +31,6 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Button } from './ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { useTranslation } from '@/hooks/use-translation';
 
@@ -128,7 +127,7 @@ export function DashboardSidebar() {
               </Avatar>
               <div className="flex flex-col overflow-hidden">
                 <span className="font-medium truncate text-sm">{userProfile?.name || "User"}</span>
-                <span className="text-xs text-muted-foreground truncate">{userProfile?.email || "user@email.com"}</span>
+                {userProfile?.email && <span className="text-xs text-muted-foreground truncate">{userProfile.email}</span>}
               </div>
           </div>
         </SidebarGroup>
