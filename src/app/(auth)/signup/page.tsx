@@ -102,15 +102,21 @@ export default function SignupPage() {
       const user = userCredential.user;
 
       const userDocRef = doc(db, 'users', user.uid);
-      const userData = {
+      
+      const userData: any = {
         name: data.name,
         email: data.email,
         role: data.role,
-        farmerId: data.farmerId || '',
-        gstNumber: data.gstNumber || '',
         region: '',
         cropsGrown: [],
       };
+
+      if (data.role === 'farmer' && data.farmerId) {
+        userData.farmerId = data.farmerId;
+      }
+      if (data.role === 'buyer' && data.gstNumber) {
+        userData.gstNumber = data.gstNumber;
+      }
 
       await setDoc(userDocRef, userData)
         .catch((error) => {
@@ -119,15 +125,20 @@ export default function SignupPage() {
                 operation: 'create',
                 requestResourceData: userData
            }));
+           // Re-throw to ensure the user sees the error and we don't redirect
+           throw error;
         });
 
       router.push('/dashboard');
     } catch (error: any) {
-      toast({
-        title: 'Sign Up Failed',
-        description: error.message || 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
+      // Only show toast if it's not a permission error (which has its own overlay)
+      if (!(error instanceof FirestorePermissionError)) {
+          toast({
+            title: 'Sign Up Failed',
+            description: error.message || 'An unexpected error occurred.',
+            variant: 'destructive',
+          });
+      }
     } finally {
       setLoading(false);
     }

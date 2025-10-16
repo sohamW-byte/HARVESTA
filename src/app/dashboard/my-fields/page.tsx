@@ -78,7 +78,8 @@ export default function MyFieldsPage() {
             date: entry.date.toDate().toLocaleDateString('en-IN'),
             region: entry.region,
             crops: entry.cropsGrown.join(', '),
-            availability: entry.produceAvailability,
+            // The availability is a one-time message, not part of the historical record view
+            availability: entry.produceAvailability || 'N/A', 
         })).reverse();
         setSubmissionHistory(history);
       }
@@ -105,7 +106,8 @@ export default function MyFieldsPage() {
         date: Timestamp.now(),
         region: data.region,
         cropsGrown: cropsArray,
-        produceAvailability: data.produceAvailability
+        // The one-time availability message is part of the history entry
+        produceAvailability: data.produceAvailability 
       };
 
       const updateData = {
@@ -146,7 +148,7 @@ export default function MyFieldsPage() {
       });
 
     } catch (error: any) {
-      if (!error.message.includes('permission-error')) {
+      if (!(error instanceof FirestorePermissionError)) {
          toast({
             title: 'Update failed',
             description: error.message || 'Could not save your farm details.',
