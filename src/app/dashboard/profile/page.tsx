@@ -41,7 +41,6 @@ const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
   farmerId: z.string().optional(),
   gstNumber: z.string().optional(),
-  region: z.string().optional(),
   address: z.string().optional(),
   cropsGrown: z.string().optional(),
   photoURL: z.string().optional(),
@@ -68,7 +67,6 @@ export default function ProfilePage() {
       name: '',
       farmerId: '',
       gstNumber: '',
-      region: '',
       address: '',
       cropsGrown: '',
       photoURL: '',
@@ -84,7 +82,6 @@ export default function ProfilePage() {
         name: userProfile.name || '',
         farmerId: userProfile.farmerId || '',
         gstNumber: userProfile.gstNumber || '',
-        region: userProfile.region || '',
         address: userProfile.address || '',
         cropsGrown: userProfile.cropsGrown?.join(', ') || '',
         photoURL: userProfile.photoURL || '',
@@ -147,18 +144,10 @@ export default function ProfilePage() {
   
   const handleAutofillLocation = () => {
     if (location?.address) {
-      const parts = location.address.split(',');
-      const city = parts.length > 2 ? parts[parts.length - 3]?.trim() : '';
-      const state = parts.length > 1 ? parts[parts.length - 2]?.trim() : '';
-      const region = city && state ? `${city}, ${state}` : state;
-
       form.setValue('address', location.address);
-      if (region) {
-        form.setValue('region', region);
-      }
       toast({
         title: 'Location Filled',
-        description: 'Address and region have been updated.',
+        description: 'Address has been updated.',
       });
     } else {
        toast({
@@ -185,7 +174,6 @@ export default function ProfilePage() {
 
       const updatedData: Partial<UserProfile> = {
         name: data.name,
-        region: data.region,
         address: data.address,
         photoURL: data.photoURL,
         cropsGrown: data.cropsGrown ? data.cropsGrown.split(',').map(s => s.trim()).filter(Boolean) : [],
@@ -332,19 +320,6 @@ export default function ProfilePage() {
                             />
                         </div>
 
-                         <FormField
-                            control={form.control}
-                            name="region"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Region</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="E.g., Nashik, Maharashtra" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
                          <FormField
                             control={form.control}
                             name="cropsGrown"

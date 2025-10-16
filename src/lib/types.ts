@@ -8,7 +8,6 @@ export interface UserProfile {
   photoURL?: string;
   farmerId?: string;
   gstNumber?: string;
-  region?: string;
   address?: string;
   cropsGrown?: string[];
   phoneNumber?: string;

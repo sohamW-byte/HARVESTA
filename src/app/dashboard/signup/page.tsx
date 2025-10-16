@@ -109,7 +109,6 @@ export default function SignupPage() {
         email: data.email,
         role: data.role,
         cropsGrown: [],
-        region: '',
         address: '',
       };
 
@@ -263,5 +262,3 @@ export default function SignupPage() {
     </Card>
   );
 }
-
-    

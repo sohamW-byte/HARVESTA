@@ -25,7 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
 const fieldSchema = z.object({
-  region: z.string().min(2, { message: 'Region is required.' }),
+  address: z.string().min(2, { message: 'Address is required.' }),
   cropsGrown: z.string().min(3, { message: 'Please list at least one crop.' }),
 });
 
@@ -40,7 +40,7 @@ export default function MyFieldsPage() {
   const form = useForm<FieldFormValues>({
     resolver: zodResolver(fieldSchema),
     defaultValues: {
-      region: '',
+      address: '',
       cropsGrown: '',
     },
   });
@@ -48,7 +48,7 @@ export default function MyFieldsPage() {
   useEffect(() => {
     if (userProfile) {
       form.reset({
-        region: userProfile.region || '',
+        address: userProfile.address || '',
         cropsGrown: userProfile.cropsGrown?.join(', ') || '',
       });
     }
@@ -72,7 +72,7 @@ export default function MyFieldsPage() {
       // Create a full updated profile object
       const updatedProfile = {
         ...userProfile, // Start with existing data
-        region: data.region,
+        address: data.address,
         cropsGrown: cropsArray,
       };
 
@@ -131,9 +131,9 @@ export default function MyFieldsPage() {
                         <div>
                             <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
                                 <MapPin className="h-4 w-4"/>
-                                Region
+                                Address
                             </h3>
-                            <p>{userProfile.region || 'Not set'}</p>
+                            <p>{userProfile.address || 'Not set'}</p>
                         </div>
                         <Separator />
                         <div>
@@ -173,10 +173,10 @@ export default function MyFieldsPage() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
-                  name="region"
+                  name="address"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Region</FormLabel>
+                      <FormLabel>Address</FormLabel>
                       <FormControl>
                         <Input placeholder="E.g., Nashik, Maharashtra" {...field} />
                       </FormControl>
