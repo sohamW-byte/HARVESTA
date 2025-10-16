@@ -57,7 +57,7 @@ export function PriceBoard() {
         if (!response.ok) {
           const errorBody = await response.text();
           console.error("API Error Body:", errorBody);
-          throw new Error(`API request failed with status: ${response.status}`);
+          throw new Error(`API request failed with status: ${response.status}. The API key might be invalid or the service may be down.`);
         }
         const data = await response.json();
         if (data.records) {
