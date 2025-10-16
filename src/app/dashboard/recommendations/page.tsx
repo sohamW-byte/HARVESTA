@@ -64,7 +64,7 @@ export default function RecommendationsPage() {
     <div className="container mx-auto py-8 max-w-3xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Lightbulb className="text-accent" /> Smart Crop Suggestions
+            <Lightbulb className="text-accent" /> AI Suggestions
         </h1>
         <p className="text-muted-foreground">
           Get crop ideas and trending prices for your area.
