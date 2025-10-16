@@ -24,15 +24,16 @@ import {
 } from '@/components/ui/form';
 import { useAuth as useAppAuth } from '@/hooks/use-auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useAuth } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { ChangeEvent, useEffect, useState, useRef } from 'react';
-import { Loader2, User as UserIcon, Camera, Gift, Copy, Check } from 'lucide-react';
+import { Loader2, User as UserIcon, Camera, Gift, Copy, Check, KeyRound, MapPin } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { UserProfile } from '@/lib/types';
-import { VoiceInput } from '@/components/ui/voice-input';
+import { useLocation } from '@/hooks/use-location';
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -41,6 +42,7 @@ const profileSchema = z.object({
   farmerId: z.string().optional(),
   gstNumber: z.string().optional(),
   region: z.string().optional(),
+  address: z.string().optional(),
   cropsGrown: z.string().optional(),
   photoURL: z.string().optional(),
 });
@@ -49,10 +51,12 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
   const { user, userProfile, loading: userLoading } = useAppAuth();
+  const auth = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const db = useFirestore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { location, loading: locationLoading } = useLocation();
   
   const [referralLink, setReferralLink] = useState('');
   const [copied, setCopied] = useState(false);
@@ -67,6 +71,7 @@ export default function ProfilePage() {
       farmerId: '',
       gstNumber: '',
       region: '',
+      address: '',
       cropsGrown: '',
       photoURL: '',
     },
@@ -84,6 +89,7 @@ export default function ProfilePage() {
         farmerId: userProfile.farmerId || '',
         gstNumber: userProfile.gstNumber || '',
         region: userProfile.region || '',
+        address: userProfile.address || '',
         cropsGrown: userProfile.cropsGrown?.join(', ') || '',
         photoURL: userProfile.photoURL || '',
       });
@@ -121,8 +127,32 @@ export default function ProfilePage() {
     });
   };
 
+  const handlePasswordReset = async () => {
+    if (!user?.email) {
+      toast({
+        title: 'Error',
+        description: 'No email address found for this user.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, user.email);
+      toast({
+        title: 'Password Reset Email Sent',
+        description: `A link to reset your password has been sent to ${user.email}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error Sending Email',
+        description: error.message || 'Could not send password reset email.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   async function onSubmit(data: ProfileFormValues) {
-    if (!user || !userProfile) {
+    if (!user) {
       toast({
         title: 'Error',
         description: 'You must be logged in to update your profile.',
@@ -138,16 +168,12 @@ export default function ProfilePage() {
       const updatedData: Partial<UserProfile> = {
         name: data.name,
         region: data.region,
+        address: data.address,
         photoURL: data.photoURL,
         cropsGrown: data.cropsGrown ? data.cropsGrown.split(',').map(s => s.trim()).filter(Boolean) : [],
+        farmerId: data.farmerId,
+        gstNumber: data.gstNumber,
       };
-
-      if (data.role === 'farmer') {
-        updatedData.farmerId = data.farmerId;
-      }
-      if (data.role === 'buyer') {
-        updatedData.gstNumber = data.gstNumber;
-      }
       
       await setDoc(userDocRef, updatedData, { merge: true })
         .catch((error) => {
@@ -232,7 +258,7 @@ export default function ProfilePage() {
                             <FormItem>
                             <FormLabel>Full Name</FormLabel>
                             <FormControl>
-                                <VoiceInput placeholder="Your full name" {...field} onValueChange={field.onChange}/>
+                                <Input placeholder="Your full name" {...field} />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -254,15 +280,64 @@ export default function ProfilePage() {
                             </FormItem>
                         )}
                         />
+                        <FormField
+                          control={form.control}
+                          name="address"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Address</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <Input placeholder="Your full address" {...field} />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                                    onClick={() => location?.address && form.setValue('address', location.address)}
+                                    disabled={locationLoading || !location}
+                                    title="Use current location"
+                                  >
+                                    <MapPin className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="region"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Region</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="E.g., Nashik, Maharashtra" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="cropsGrown"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Main Crops Grown (comma-separated)</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="E.g., Grapes, Onions, Tomatoes" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
                         <FormItem>
-                        <FormLabel>Role</FormLabel>
-                        <FormControl>
-                            <Input value={userProfile?.role || ''} disabled className="capitalize" />
-                        </FormControl>
-                        <FormDescription>
-                            Your role is fixed upon registration.
-                        </FormDescription>
+                            <FormLabel>Role</FormLabel>
+                            <FormControl>
+                                <Input value={userProfile?.role || ''} disabled className="capitalize" />
+                            </FormControl>
                         </FormItem>
 
                         {watchedRole === 'farmer' && (
@@ -273,7 +348,7 @@ export default function ProfilePage() {
                             <FormItem>
                                 <FormLabel>Farmer ID</FormLabel>
                                 <FormControl>
-                                <VoiceInput placeholder="Enter your government-issued Farmer ID" {...field} onValueChange={field.onChange} />
+                                <Input placeholder="Enter your government-issued Farmer ID" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -289,7 +364,7 @@ export default function ProfilePage() {
                             <FormItem>
                                 <FormLabel>GST Number</FormLabel>
                                 <FormControl>
-                                <VoiceInput placeholder="Enter your GST Number" {...field} onValueChange={field.onChange} />
+                                <Input placeholder="Enter your GST Number" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -297,32 +372,6 @@ export default function ProfilePage() {
                         />
                         )}
 
-                        <FormField
-                        control={form.control}
-                        name="region"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Region</FormLabel>
-                            <FormControl>
-                                <VoiceInput placeholder="E.g., Nashik, Maharashtra" {...field} onValueChange={field.onChange}/>
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name="cropsGrown"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Main Crops Grown (comma-separated)</FormLabel>
-                            <FormControl>
-                                <VoiceInput placeholder="E.g., Grapes, Onions, Tomatoes" {...field} onValueChange={field.onChange}/>
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
                     </div>
                     
                     <Button type="submit" disabled={isLoading}>
@@ -340,7 +389,7 @@ export default function ProfilePage() {
             <Card>
                 <CardHeader>
                     <div className="flex items-center gap-2">
-                        <Gift className="h-5 w-5 text-accent"/>
+                        <Gift className="h-5 w-5 text-primary"/>
                         <CardTitle>Refer a Friend</CardTitle>
                     </div>
                     <CardDescription>
@@ -356,8 +405,27 @@ export default function ProfilePage() {
                     </div>
                 </CardContent>
             </Card>
+
+             <Card>
+                <CardHeader>
+                    <div className="flex items-center gap-2">
+                        <KeyRound className="h-5 w-5 text-primary"/>
+                        <CardTitle>Security</CardTitle>
+                    </div>
+                    <CardDescription>
+                        Manage your account security settings.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button variant="outline" onClick={handlePasswordReset}>
+                        Change Password
+                    </Button>
+                </CardContent>
+            </Card>
         </div>
       </div>
     </div>
   );
 }
+
+    

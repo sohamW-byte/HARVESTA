@@ -23,6 +23,10 @@
           "type": "string",
           "description": "User's phone number."
         },
+        "address": {
+            "type": "string",
+            "description": "User's full address."
+        },
         "region": {
           "type": "string",
           "description": "User's region or location."

@@ -9,6 +9,7 @@ export interface UserProfile {
   farmerId?: string;
   gstNumber?: string;
   region?: string;
+  address?: string;
   cropsGrown?: string[];
   phoneNumber?: string;
 }
@@ -99,3 +100,5 @@ export interface CommunityComment {
     content: string;
     timestamp: Timestamp;
 }
+
+    
