@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, getAdditionalUserInfo } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 import { useForm } from 'react-hook-form';
@@ -93,46 +93,15 @@ export default function LoginPage() {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const additionalInfo = getAdditionalUserInfo(result);
-
-      if (additionalInfo?.isNewUser) {
-        // For new users, we need to create their profile but mark it as incomplete
-        const userDocRef = doc(db, 'users', user.uid);
-        const userData: Omit<UserProfile, 'id' | 'role'> = {
-            name: user.displayName || 'New User',
-            email: user.email!,
-            photoURL: user.photoURL || undefined,
-            // Mark other fields as needing completion
-            cropsGrown: [],
-            address: '',
-        };
-        
-        await setDoc(userDocRef, userData, { merge: true }).catch((error) => {
-           errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: userDocRef.path,
-                operation: 'create',
-                requestResourceData: userData
-           }));
-           throw error;
-        });
-
-        // Redirect to a dedicated page to complete their profile
-        router.push('/signup/complete-profile');
-      } else {
-        // Existing user, just go to dashboard
-        router.push('/dashboard');
-      }
+      await signInWithRedirect(auth, provider);
+      // The user will be redirected to Google's sign-in page.
+      // The result is handled by the useAuth hook upon redirect back to the app.
     } catch (error: any) {
-      if (!(error instanceof FirestorePermissionError)) {
-        toast({
-            title: 'Google Sign-In Failed',
-            description: error.message || 'An unexpected error occurred.',
-            variant: 'destructive',
-        });
-      }
-    } finally {
+      toast({
+        title: 'Google Sign-In Failed',
+        description: error.message || 'Could not initiate Google Sign-In.',
+        variant: 'destructive',
+      });
       setGoogleLoading(false);
     }
   };

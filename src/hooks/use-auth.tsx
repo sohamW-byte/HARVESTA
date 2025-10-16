@@ -1,11 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, signOut as firebaseSignOut } from 'firebase/auth';
+import { User, signOut as firebaseSignOut, getRedirectResult, getAdditionalUserInfo } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useAuth as useFirebaseAuth, useFirestore, useUser } from '@/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 interface AuthContextType {
   user: User | null;
@@ -39,6 +41,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // This effect handles the result from a redirect sign-in operation.
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result) {
+          const user = result.user;
+          const additionalInfo = getAdditionalUserInfo(result);
+          
+          if (additionalInfo?.isNewUser) {
+            // New user via Google redirect. Create their profile shell.
+            const userDocRef = doc(db, 'users', user.uid);
+            const userData: Omit<UserProfile, 'id' | 'role'> = {
+              name: user.displayName || 'New User',
+              email: user.email!,
+              photoURL: user.photoURL || undefined,
+              cropsGrown: [],
+              address: '',
+            };
+            
+            try {
+              await setDoc(userDocRef, userData, { merge: true });
+              // Redirect to complete profile after creating the doc
+              router.push('/signup/complete-profile');
+            } catch (error) {
+              errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: userDocRef.path,
+                operation: 'create',
+                requestResourceData: userData
+              }));
+              console.error("Failed to create user document:", error);
+            }
+          }
+          // For existing users, the onAuthStateChanged listener below will handle everything.
+        }
+      })
+      .catch((error) => {
+        console.error("Google sign-in redirect error:", error);
+      });
+  }, [auth, db, router]);
+
+
+  useEffect(() => {
     let unsubscribe: () => void = () => {};
 
     const handleAuthChange = async (user: User | null) => {
@@ -49,12 +92,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setCookie('firebaseIdToken', token, 1);
           
           const userDocRef = doc(db, 'users', user.uid);
-          // Subscribe to real-time updates
-          unsubscribe = onSnapshot(userDocRef, (doc) => {
-            if (doc.exists()) {
-              setUserProfile({ id: doc.id, ...doc.data() } as UserProfile);
+          
+          unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+              const data = docSnap.data() as Omit<UserProfile, 'id'>;
+               setUserProfile({ id: docSnap.id, ...data });
+               // If the user exists but hasn't completed their role selection, keep them on the complete-profile page.
+               if (!data.role && window.location.pathname !== '/signup/complete-profile') {
+                    router.push('/signup/complete-profile');
+               } else if (data.role && window.location.pathname.startsWith('/(auth)')) {
+                    router.push('/dashboard');
+               }
             } else {
-              setUserProfile(null);
+              // This can happen briefly for new Google sign-in users before their doc is created.
+              // We redirect them to complete their profile.
+               if (window.location.pathname !== '/signup/complete-profile') {
+                    router.push('/signup/complete-profile');
+               }
             }
             setLoading(false);
           }, (error) => {
@@ -77,16 +131,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
     
-    handleAuthChange(user);
+    // Only run this if the initial user check is done
+    if (!isUserLoading) {
+      handleAuthChange(user);
+    }
 
-    return () => unsubscribe(); // Cleanup the listener on component unmount
+    return () => unsubscribe();
 
-  }, [user, db]);
+  }, [user, isUserLoading, db, router]);
 
   const signOut = async () => {
     await firebaseSignOut(auth);
     eraseCookie('firebaseIdToken');
-    // Force a redirect to the login page to ensure middleware is re-evaluated
     router.push('/login');
   };
   
