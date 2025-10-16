@@ -1,9 +1,9 @@
+
 'use client';
 
 import {
   User,
   LogOut,
-  Loader2,
   Store,
 } from 'lucide-react';
 
@@ -66,7 +66,7 @@ export function DashboardHeader() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{userProfile?.name}</p>
+                <p className="text-sm font-medium leading-none" data-translate="true">{userProfile?.name}</p>
                 <p className="text-xs leading-none text-muted-foreground">
                   {userProfile?.email}
                 </p>
@@ -76,13 +76,13 @@ export function DashboardHeader() {
             <Link href="/dashboard/profile">
               <DropdownMenuItem>
                 <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+                <span data-translate="true">Profile</span>
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut}>
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
+              <span data-translate="true">Log out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
