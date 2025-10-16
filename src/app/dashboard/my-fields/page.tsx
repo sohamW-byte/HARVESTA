@@ -24,7 +24,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/hooks/use-auth';
 import { doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
@@ -51,6 +51,7 @@ export default function MyFieldsPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [submissionHistory, setSubmissionHistory] = useState<SubmissionHistoryEntry[]>([]);
+  const db = useFirestore();
 
   const form = useForm<FieldFormValues>({
     resolver: zodResolver(fieldSchema),
