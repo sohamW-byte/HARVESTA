@@ -66,7 +66,7 @@ export function DashboardHeader() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none" data-translate="true">{userProfile?.name}</p>
+                <p className="text-sm font-medium leading-none">{userProfile?.name}</p>
                 <p className="text-xs leading-none text-muted-foreground">
                   {userProfile?.email}
                 </p>

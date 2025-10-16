@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Globe, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const languages = [
   { code: 'en', name: 'English' },
@@ -19,10 +19,6 @@ const languages = [
 
 // A simple dictionary for mock translations
 const translations: Record<string, Record<string, string>> = {
-  'en': {
-    'Profile': 'Profile',
-    'Log out': 'Log out',
-  },
   'hi': {
     'Profile': 'प्रोफ़ाइल',
     'Log out': 'लॉग आउट',
@@ -33,7 +29,6 @@ const translations: Record<string, Record<string, string>> = {
   }
 };
 
-
 // Store for original texts to allow toggling back to English
 const originalTexts = new Map<HTMLElement, string>();
 let currentLanguage = 'en';
@@ -41,83 +36,39 @@ let currentLanguage = 'en';
 export function LanguageSwitcher() {
   const [isTranslating, setIsTranslating] = useState(false);
 
-  const translateNode = (node: Node, langCode: string) => {
-    if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
-      const parentElement = node.parentElement;
-      if (parentElement && window.getComputedStyle(parentElement).display !== 'none') {
-        const originalText = (originalTexts.get(parentElement) || node.textContent).trim();
-        
-        if (!originalTexts.has(parentElement)) {
-          originalTexts.set(parentElement, originalText);
-        }
-        
-        const translatedText = translations[langCode]?.[originalText];
-        if (translatedText) {
-          node.textContent = translatedText;
-        } else if (langCode === 'en' && originalTexts.has(parentElement)) {
-            node.textContent = originalTexts.get(parentElement) || '';
-        }
+  // Function to find and store original English text
+  const storeOriginalTexts = () => {
+    if (originalTexts.size > 0) return; // Only store once
+    document.querySelectorAll('[data-translate="true"]').forEach(el => {
+      const htmlEl = el as HTMLElement;
+      if (htmlEl.innerText && !originalTexts.has(htmlEl)) {
+        originalTexts.set(htmlEl, htmlEl.innerText);
       }
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      const element = node as HTMLElement;
-       if (element.closest('[data-id="language-switcher"]') || element.tagName === 'SCRIPT' || element.tagName === 'STYLE') {
-        return;
-      }
-      // Check for elements specifically marked for translation
-      if(element.dataset.translate === 'true') {
-        // Store original text if not already stored
-        if (!originalTexts.has(element)) {
-            originalTexts.set(element, element.innerText);
-        }
-        
-        const originalText = originalTexts.get(element)?.trim();
-        if (originalText) {
-            const translatedText = translations[langCode]?.[originalText];
-            if (translatedText) {
-                element.innerText = translatedText;
-            } else if (langCode === 'en') {
-                element.innerText = originalText;
-            }
-        }
-      }
-    }
+    });
   };
 
+  useEffect(() => {
+    // Initial scan to store original texts when the component mounts
+    const timeoutId = setTimeout(storeOriginalTexts, 200);
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   const handleLanguageChange = async (langCode: string) => {
     if (langCode === currentLanguage) return;
 
     setIsTranslating(true);
+    storeOriginalTexts(); // Ensure originals are stored before translating
     
+    // Allow UI to update before heavy DOM manipulation
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    const elementsToTranslate: NodeListOf<HTMLElement> = document.querySelectorAll('body *');
-
-    // Store originals on first translation away from English
-    if (currentLanguage === 'en' && langCode !== 'en') {
-        originalTexts.clear();
-        document.querySelectorAll('[data-translate="true"]').forEach(el => {
-            const htmlEl = el as HTMLElement;
-            if(htmlEl.innerText) {
-                originalTexts.set(htmlEl, htmlEl.innerText);
-            }
-        });
-    }
-
-
-    elementsToTranslate.forEach(element => {
-      if (element.dataset.translate === 'true') {
-        const originalText = originalTexts.get(element)?.trim() || element.innerText.trim();
-        if (!originalTexts.has(element)) {
-            originalTexts.set(element, originalText);
-        }
-        
-        const translatedText = translations[langCode]?.[originalText];
-
-        if (langCode === 'en') {
-            element.innerText = originalTexts.get(element) || originalText;
-        } else if (translatedText) {
-            element.innerText = translatedText;
+    originalTexts.forEach((originalText, element) => {
+      if (langCode === 'en') {
+        element.innerText = originalText; // Restore from map
+      } else {
+        const translatedText = translations[langCode]?.[originalText.trim()];
+        if (translatedText) {
+          element.innerText = translatedText;
         }
       }
     });
@@ -146,4 +97,3 @@ export function LanguageSwitcher() {
     </div>
   );
 }
-
