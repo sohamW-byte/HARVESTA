@@ -27,7 +27,6 @@ import { FirestorePermissionError } from '@/firebase/errors';
 const fieldSchema = z.object({
   region: z.string().min(2, { message: 'Region is required.' }),
   cropsGrown: z.string().min(3, { message: 'Please list at least one crop.' }),
-  produceAvailability: z.string().min(5, { message: 'Please describe your produce availability.' }),
 });
 
 type FieldFormValues = z.infer<typeof fieldSchema>;
@@ -44,7 +43,6 @@ export default function MyFieldsPage() {
     defaultValues: {
       region: '',
       cropsGrown: '',
-      produceAvailability: '',
     },
   });
 
@@ -53,7 +51,6 @@ export default function MyFieldsPage() {
       form.reset({
         region: userProfile.region || '',
         cropsGrown: userProfile.cropsGrown?.join(', ') || '',
-        produceAvailability: '',
       });
     }
   }, [userProfile, form]);
@@ -92,11 +89,6 @@ export default function MyFieldsPage() {
       toast({
         title: 'Success!',
         description: 'Your farm details have been updated.',
-      });
-      
-      form.reset({
-        ...data,
-        produceAvailability: '', 
       });
 
     } catch (error: any) {
@@ -151,22 +143,6 @@ export default function MyFieldsPage() {
                         <Input placeholder="E.g., Grapes, Onions, Tomatoes" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="produceAvailability"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Current Produce Availability (One-time Message)</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="E.g., 500 kg of Thompson Seedless grapes available for immediate sale. This message is not saved."
-                          {...field}
-                        />
-                      </FormControl>
-                       <FormMessage />
                     </FormItem>
                   )}
                 />

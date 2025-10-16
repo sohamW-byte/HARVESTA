@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/select';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import type { UserProfile } from '@/lib/types';
 
 const signupSchema = z
   .object({
@@ -47,7 +48,7 @@ const signupSchema = z
   .refine(
     (data) => {
       if (data.role === 'farmer') {
-        return !!data.farmerId && data.farmerId.length > 0;
+        return !!data.farmerId && data.farmerId.trim().length > 0;
       }
       return true;
     },
@@ -59,7 +60,7 @@ const signupSchema = z
   .refine(
     (data) => {
       if (data.role === 'buyer') {
-        return !!data.gstNumber && data.gstNumber.length > 0;
+        return !!data.gstNumber && data.gstNumber.trim().length > 0;
       }
       return true;
     },
@@ -103,12 +104,10 @@ export default function SignupPage() {
 
       const userDocRef = doc(db, 'users', user.uid);
       
-      const userData: any = {
+      const userData: Omit<UserProfile, 'id'> = {
         name: data.name,
         email: data.email,
         role: data.role,
-        region: '',
-        cropsGrown: [],
       };
 
       if (data.role === 'farmer' && data.farmerId) {

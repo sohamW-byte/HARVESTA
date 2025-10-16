@@ -37,12 +37,8 @@ const profileSchema = z.object({
   role: z.enum(['farmer', 'buyer', 'admin']),
   farmerId: z.string().optional(),
   gstNumber: z.string().optional(),
-}).refine(data => !(data.role === 'farmer' && !data.farmerId), {
-  message: 'Farmer ID is required for farmers',
-  path: ['farmerId'],
-}).refine(data => !(data.role === 'buyer' && !data.gstNumber), {
-  message: 'GST Number is required for buyers',
-  path: ['gstNumber'],
+  region: z.string().optional(),
+  cropsGrown: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -62,6 +58,8 @@ export default function ProfilePage() {
       role: 'farmer',
       farmerId: '',
       gstNumber: '',
+      region: '',
+      cropsGrown: '',
     },
   });
 
@@ -73,6 +71,8 @@ export default function ProfilePage() {
         role: userProfile.role || 'farmer',
         farmerId: userProfile.farmerId || '',
         gstNumber: userProfile.gstNumber || '',
+        region: userProfile.region || '',
+        cropsGrown: userProfile.cropsGrown?.join(', ') || '',
       });
     }
   }, [userProfile, form]);
@@ -94,21 +94,18 @@ export default function ProfilePage() {
     try {
       const userDocRef = doc(db, 'users', currentUser.uid);
 
-      const updateData: Partial<ProfileFormValues> = {
+      const updateData: any = {
         name: data.name,
       };
 
-      if (data.role === 'farmer') {
+      if (data.region) updateData.region = data.region;
+      if (data.cropsGrown) updateData.cropsGrown = data.cropsGrown.split(',').map(s => s.trim()).filter(Boolean);
+
+      // Role-specific fields. Note that role itself cannot be changed.
+      if (userProfile?.role === 'farmer') {
         updateData.farmerId = data.farmerId;
-        updateData.gstNumber = ''; // Clear other role's ID
-      } else if (data.role === 'buyer') {
+      } else if (userProfile?.role === 'buyer') {
         updateData.gstNumber = data.gstNumber;
-        updateData.farmerId = ''; // Clear other role's ID
-      }
-      
-      // Only include role if it has changed, to avoid permission issues
-      if (data.role !== userProfile?.role) {
-        updateData.role = data.role;
       }
 
       await updateDoc(userDocRef, updateData)
@@ -149,7 +146,7 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle>Your Information</CardTitle>
             <CardDescription>
-              Update your personal and role-specific details here.
+              Update your personal and role-specific details here. Your role and email cannot be changed.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -183,32 +180,23 @@ export default function ProfilePage() {
                       <FormControl>
                         <Input placeholder="your@email.com" {...field} disabled />
                       </FormControl>
+                       <FormDescription>
+                        Your email address cannot be changed.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Role</FormLabel>
-                       <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select your role" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="farmer">Farmer / Seller</SelectItem>
-                          <SelectItem value="buyer">Buyer / Businessman</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <FormControl>
+                    <Input value={form.getValues('role')} disabled />
+                  </FormControl>
+                  <FormDescription>
+                    Your role is fixed upon registration.
+                  </FormDescription>
+                </FormItem>
 
                 {watchedRole === 'farmer' && (
                   <FormField
@@ -241,6 +229,33 @@ export default function ProfilePage() {
                     )}
                   />
                 )}
+
+                <FormField
+                  control={form.control}
+                  name="region"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Region</FormLabel>
+                      <FormControl>
+                        <Input placeholder="E.g., Nashik, Maharashtra" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="cropsGrown"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Main Crops Grown (comma-separated)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="E.g., Grapes, Onions, Tomatoes" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
                  <Button type="submit" disabled={loading}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

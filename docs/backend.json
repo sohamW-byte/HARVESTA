@@ -37,7 +37,11 @@
         "role": {
           "type": "string",
           "description": "The role of the user.",
-          "enum": ["farmer", "buyer", "admin"]
+          "enum": [
+            "farmer",
+            "buyer",
+            "admin"
+          ]
         },
         "farmerId": {
           "type": "string",
