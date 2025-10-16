@@ -5,16 +5,15 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Map,
-  ClipboardList,
   BarChart,
-  ChevronDown,
-  Atom,
   Store,
   Users,
   Sprout,
   Lightbulb,
   MessageSquare,
   UserCog,
+  ScrollText,
+  ChevronDown,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -36,14 +35,20 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/my-fields', label: 'My Fields', icon: Map },
-  { href: '/dashboard/tasks', label: 'Tasks', icon: ClipboardList },
   { href: '/dashboard/recommendations', label: 'Crop Suggestions', icon: Lightbulb },
   { href: '/dashboard/marketplace', label: 'Marketplace', icon: Store },
   { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
   { href: '/dashboard/community', label: 'Community', icon: Users },
-  { href: '/dashboard/automation', label: 'Automation', icon: Atom },
   { href: '/dashboard/reports', label: 'Reports', icon: BarChart },
   { href: '/dashboard/admin', label: 'Admin', icon: UserCog, adminOnly: true },
+];
+
+const yojanaLinks = [
+    { href: 'https://pmkisan.gov.in/', label: 'PM Kisan Samman Nidhi' },
+    { href: 'https://www.enam.gov.in/web/', label: 'e-NAM' },
+    { href: 'https://soilhealth.dac.gov.in/', label: 'Soil Health Card' },
+    { href: 'https://www.agriinsurancetg.gov.in/', label: 'Pradhan Mantri Fasal Bima Yojana' },
+    { href: 'https://mvk.iitd.ac.in/', label: 'Kisan Suvidha' },
 ];
 
 export function DashboardSidebar() {
@@ -83,6 +88,30 @@ export function DashboardSidebar() {
               </SidebarMenuItem>
             )
           })}
+           <Collapsible className="w-full">
+              <CollapsibleTrigger asChild>
+                  <SidebarMenuButton variant='ghost' className='w-full justify-start group'>
+                      <ScrollText />
+                      <span>Yojanas & Schemes</span>
+                      <ChevronDown className='ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180' />
+                  </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="pl-10 pr-2 py-2 flex flex-col gap-2">
+                    {yojanaLinks.map(link => (
+                        <a 
+                            key={link.href} 
+                            href={link.href} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            {link.label}
+                        </a>
+                    ))}
+                </div>
+              </CollapsibleContent>
+          </Collapsible>
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
