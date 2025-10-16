@@ -6,18 +6,10 @@ import { SummaryCard } from '@/components/cards/summary-card';
 import { TestimonialsCard } from '@/components/cards/testimonials-card';
 import { TasksCard } from '@/components/cards/tasks-card';
 import { GrowthMonitorChart } from '@/components/charts/growth-monitor-chart';
-import { DollarSign, CheckCircle, Bot } from 'lucide-react';
+import { DollarSign, CheckCircle } from 'lucide-react';
 import { PriceBoard } from '@/components/cards/price-board';
 import { AddProduceDialog } from '@/components/add-produce-dialog';
 import { WeatherCard } from '@/components/cards/weather-card';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { useTranslation } from '@/hooks/use-translation';
 
 export default function DashboardPage() {
@@ -72,20 +64,6 @@ export default function DashboardPage() {
         <TestimonialsCard />
       </div>
 
-      <TooltipProvider>
-        <Tooltip>
-            <TooltipTrigger asChild>
-                <Link href="/dashboard/messages" passHref>
-                    <Button className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg" size="icon">
-                        <Bot className="h-7 w-7" />
-                    </Button>
-                </Link>
-            </TooltipTrigger>
-            <TooltipContent side="left">
-                <p>{t('Ask the AI Assistant')}</p>
-            </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
     </div>
   );
 }

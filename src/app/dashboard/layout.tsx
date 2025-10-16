@@ -3,6 +3,7 @@ import { DashboardSidebar } from '@/components/dashboard-sidebar';
 import { DashboardHeader } from '@/components/dashboard-header';
 import { AnimatePresence } from '@/components/animate-presence';
 import { LocationProvider } from '@/hooks/use-location';
+import { VoiceAssistant } from '@/components/voice-assistant';
 
 export default function DashboardLayout({
   children,
@@ -21,6 +22,7 @@ export default function DashboardLayout({
             </AnimatePresence>
           </main>
         </div>
+        <VoiceAssistant />
       </LocationProvider>
     </SidebarProvider>
   );
