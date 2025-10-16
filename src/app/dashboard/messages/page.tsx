@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Send, Bot } from 'lucide-react';
+import { Search, Send, Bot, Loader2, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { chat, type ChatOutput } from '@/ai/flows/chat-flow';
+import Link from 'next/link';
 
 // Mock data, to be replaced with Firebase data
 const initialConversations = [
@@ -50,30 +52,112 @@ const initialMessages: { [key: string]: any[] } = {
   '2': [],
 };
 
+interface Message {
+  id: string;
+  sender: string;
+  text: string;
+  isUser: boolean;
+  isThinking?: boolean;
+  usersFound?: ChatOutput['users'];
+}
+
+
 export default function MessagesPage() {
   const { userProfile } = useAuth();
   const [conversations, setConversations] = useState(initialConversations);
   const [selectedConversation, setSelectedConversation] = useState(initialConversations[0]);
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState<{[key: string]: Message[]}>(initialMessages);
   const [newMessage, setNewMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleSendMessage = () => {
-    if (newMessage.trim() === '') return;
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-    const newMsg = {
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, selectedConversation]);
+
+  const handleSendMessage = async () => {
+    if (newMessage.trim() === '' || !selectedConversation) return;
+
+    const userMessage: Message = {
       id: `m${Date.now()}`,
       sender: 'You',
       text: newMessage,
       isUser: true,
     };
+    
+    const currentConvoId = selectedConversation.id;
 
     setMessages(prev => ({
         ...prev,
-        [selectedConversation.id]: [...(prev[selectedConversation.id] || []), newMsg]
+        [currentConvoId]: [...(prev[currentConvoId] || []), userMessage]
     }));
     
+    const messageToSend = newMessage;
     setNewMessage('');
-    // In a real app, you would also send this message to your backend/Firebase
+    
+    if (selectedConversation.id === 'assistant') {
+      setIsTyping(true);
+
+      const thinkingMessage: Message = {
+          id: `t${Date.now()}`,
+          sender: 'Harvesta Assistant',
+          text: '...',
+          isUser: false,
+          isThinking: true,
+      };
+
+      setMessages(prev => ({
+          ...prev,
+          [currentConvoId]: [...(prev[currentConvoId] || []), thinkingMessage]
+      }));
+
+      try {
+        const result = await chat({ message: messageToSend });
+
+        const assistantMessage: Message = {
+          id: `a${Date.now()}`,
+          sender: 'Harvesta Assistant',
+          text: result.reply,
+          isUser: false,
+          usersFound: result.users,
+        };
+        
+        setMessages(prev => {
+            const updatedMessages = [...(prev[currentConvoId] || [])];
+            // Replace the "thinking" message with the actual reply
+            const thinkingIndex = updatedMessages.findIndex(m => m.isThinking);
+            if (thinkingIndex !== -1) {
+                updatedMessages[thinkingIndex] = assistantMessage;
+            } else {
+                updatedMessages.push(assistantMessage);
+            }
+            return { ...prev, [currentConvoId]: updatedMessages };
+        });
+
+      } catch (error) {
+        console.error("Chatbot error:", error);
+        const errorMessage: Message = {
+            id: `e${Date.now()}`,
+            sender: 'Harvesta Assistant',
+            text: "Sorry, I ran into an error. Please try again.",
+            isUser: false,
+        };
+         setMessages(prev => {
+            const updatedMessages = [...(prev[currentConvoId] || [])];
+            const thinkingIndex = updatedMessages.findIndex(m => m.isThinking);
+            if (thinkingIndex !== -1) {
+                updatedMessages[thinkingIndex] = errorMessage;
+            }
+            return { ...prev, [currentConvoId]: updatedMessages };
+        });
+      } finally {
+        setIsTyping(false);
+      }
+    }
   };
 
   return (
@@ -170,7 +254,32 @@ export default function MessagesPage() {
                           : 'bg-card border rounded-bl-none'
                       )}
                     >
-                      <p>{msg.text}</p>
+                      {msg.isThinking ? (
+                        <div className="flex items-center gap-2">
+                           <Loader2 className="h-4 w-4 animate-spin" />
+                           <span>Thinking...</span>
+                        </div>
+                      ) : (
+                        <p>{msg.text}</p>
+                      )}
+
+                      {msg.usersFound && msg.usersFound.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-primary-foreground/20 space-y-2">
+                            {msg.usersFound.map(user => (
+                                <Link key={user.id} href={`/dashboard/profile/${user.id}`} passHref>
+                                    <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-primary-foreground/10 transition-colors">
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="font-semibold text-sm">{user.name}</p>
+                                            <p className="text-xs opacity-80">{user.role}</p>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                          </div>
+                      )}
                     </div>
                      {msg.isUser && (
                        <Avatar className="h-8 w-8">
@@ -180,25 +289,27 @@ export default function MessagesPage() {
                     )}
                   </div>
                 ))}
+                 <div ref={messagesEndRef} />
               </div>
             </div>
 
             <div className="p-4 border-t">
               <div className="relative">
                 <Input
-                  placeholder="Type a message..."
+                  placeholder={selectedConversation.id === 'assistant' ? "Ask the AI assistant..." : "Type a message..."}
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                  onKeyDown={(e) => e.key === 'Enter' && !isTyping && handleSendMessage()}
                   className="pr-12"
+                  disabled={isTyping}
                 />
                 <Button
                   size="icon"
                   className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
                   onClick={handleSendMessage}
-                  disabled={!newMessage.trim()}
+                  disabled={!newMessage.trim() || isTyping}
                 >
-                  <Send className="h-4 w-4" />
+                  {isTyping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
