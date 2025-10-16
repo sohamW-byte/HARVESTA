@@ -37,7 +37,6 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
-  email: z.string().email(),
   role: z.enum(['farmer', 'buyer', 'admin']),
   farmerId: z.string().optional(),
   gstNumber: z.string().optional(),
@@ -66,7 +65,6 @@ export default function ProfilePage() {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: '',
-      email: '',
       role: 'farmer',
       farmerId: '',
       gstNumber: '',
@@ -84,7 +82,6 @@ export default function ProfilePage() {
     if (userProfile) {
       form.reset({
         name: userProfile.name || '',
-        email: userProfile.email || '',
         role: userProfile.role || 'farmer',
         farmerId: userProfile.farmerId || '',
         gstNumber: userProfile.gstNumber || '',
@@ -165,14 +162,16 @@ export default function ProfilePage() {
     try {
       const userDocRef = doc(db, 'users', user.uid);
 
+      // We only want to update fields that are actually editable
       const updatedData: Partial<UserProfile> = {
         name: data.name,
         region: data.region,
         address: data.address,
         photoURL: data.photoURL,
         cropsGrown: data.cropsGrown ? data.cropsGrown.split(',').map(s => s.trim()).filter(Boolean) : [],
-        farmerId: data.farmerId,
-        gstNumber: data.gstNumber,
+        // Only include role-specific IDs if they are part of the form for that role
+        ...(data.role === 'farmer' && { farmerId: data.farmerId }),
+        ...(data.role === 'buyer' && { gstNumber: data.gstNumber }),
       };
       
       await setDoc(userDocRef, updatedData, { merge: true })
@@ -264,22 +263,17 @@ export default function ProfilePage() {
                             </FormItem>
                         )}
                         />
-                        <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                            <FormItem>
+                        
+                        <div className="space-y-2">
                             <FormLabel>Email</FormLabel>
-                            <FormControl>
-                                <Input placeholder="your@email.com" {...field} disabled />
-                            </FormControl>
+                            <p className="text-sm text-muted-foreground p-2 h-10 flex items-center">
+                              {userProfile?.email || 'No email found'}
+                            </p>
                             <FormDescription>
                                 Your email address cannot be changed.
                             </FormDescription>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
+                        </div>
+
                         <FormField
                           control={form.control}
                           name="address"
