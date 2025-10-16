@@ -61,7 +61,7 @@ export function WeatherCard() {
   const locationName = location?.address?.split(',').slice(0, 2).join(', ') || 'Your Location';
 
   return (
-    <Card className="rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 bg-card/60 backdrop-blur-sm">
+    <Card className="rounded-2xl transition-all duration-300 bg-card/60 backdrop-blur-sm">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <MapPin className="h-4 w-4" />

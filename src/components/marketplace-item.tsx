@@ -27,7 +27,7 @@ export function MarketplaceItem({ name, quantity, price, location, imageId, sell
   const image = imageId ? PlaceHolderImages.find(img => img.id === imageId) : PlaceHolderImages.find(i => i.id.includes('produce'));
   
   return (
-    <Card className="rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 bg-card/60 backdrop-blur-sm overflow-hidden flex flex-col">
+    <Card className="rounded-2xl transition-shadow duration-300 bg-card/60 backdrop-blur-sm overflow-hidden flex flex-col">
       {image && (
         <div className="relative aspect-video">
           <Image

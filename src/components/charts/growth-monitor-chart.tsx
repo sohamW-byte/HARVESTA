@@ -56,7 +56,7 @@ export function GrowthMonitorChart() {
   const isLoading = isLoadingFields || isLoadingGrowthData;
 
   return (
-    <Card className="rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 h-full bg-card/60 backdrop-blur-sm">
+    <Card className="rounded-2xl transition-shadow duration-300 h-full bg-card/60 backdrop-blur-sm">
       <CardHeader>
         <CardTitle>Crop Growth Monitor</CardTitle>
         <CardDescription>

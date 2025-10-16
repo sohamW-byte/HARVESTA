@@ -38,7 +38,7 @@ const testimonials = [
 
 export function TestimonialsCard() {
   return (
-    <Card className="rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 h-full bg-card/60 backdrop-blur-sm flex flex-col">
+    <Card className="rounded-2xl transition-shadow duration-300 h-full bg-card/60 backdrop-blur-sm flex flex-col">
       <CardHeader>
         <CardTitle>Voices from the Field</CardTitle>
         <CardDescription>
