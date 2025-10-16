@@ -29,6 +29,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import type { UserProfile } from '@/lib/types';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 
 const fieldSchema = z.object({
@@ -106,11 +108,20 @@ export default function MyFieldsPage() {
         produceAvailability: data.produceAvailability
       };
 
-      await updateDoc(userDocRef, {
+      const updateData = {
         region: data.region,
         cropsGrown: cropsArray,
         updateHistory: arrayUnion(historyEntry)
-      });
+      };
+
+      await updateDoc(userDocRef, updateData)
+        .catch((error) => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: userDocRef.path,
+                operation: 'update',
+                requestResourceData: updateData
+            }));
+        });
       
       toast({
         title: 'Success!',
@@ -135,6 +146,7 @@ export default function MyFieldsPage() {
       });
 
     } catch (error: any) {
+      // This will now primarily catch client-side errors, not permission errors
       console.error("Error updating document: ", error);
       toast({
         title: 'Update failed',

@@ -30,6 +30,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const signupSchema = z
   .object({
@@ -99,7 +101,8 @@ export default function SignupPage() {
       );
       const user = userCredential.user;
 
-      await setDoc(doc(db, 'users', user.uid), {
+      const userDocRef = doc(db, 'users', user.uid);
+      const userData = {
         name: data.name,
         email: data.email,
         role: data.role,
@@ -107,7 +110,16 @@ export default function SignupPage() {
         gstNumber: data.gstNumber || '',
         region: '',
         cropsGrown: [],
-      });
+      };
+
+      await setDoc(userDocRef, userData)
+        .catch((error) => {
+           errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: userDocRef.path,
+                operation: 'create',
+                requestResourceData: userData
+           }));
+        });
 
       router.push('/dashboard');
     } catch (error: any) {
