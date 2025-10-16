@@ -1,15 +1,15 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { ThumbsUp, MessageSquare, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 
-const mockPosts = [
+const initialPosts = [
   {
     id: 1,
     author: {
@@ -64,16 +64,28 @@ const mockPosts = [
 export default function CommunityPage() {
     const { userProfile } = useAuth();
     const userInitial = userProfile?.name?.charAt(0).toUpperCase() || '?';
+    const [posts, setPosts] = useState(initialPosts);
+    const [newPostContent, setNewPostContent] = useState('');
 
-    const sortedPosts = useMemo(() => {
-        return [...mockPosts].sort((a, b) => {
-            const aIsQuestion = a.content.includes('?');
-            const bIsQuestion = b.content.includes('?');
-            if (aIsQuestion && !bIsQuestion) return -1;
-            if (!aIsQuestion && bIsQuestion) return 1;
-            return 0;
-        });
-    }, []);
+    const handlePostSubmit = () => {
+        if (!newPostContent.trim() || !userProfile) return;
+
+        const newPost = {
+            id: Date.now(),
+            author: {
+                name: userProfile.name || 'Anonymous',
+                avatar: userProfile.photoURL || `https://i.pravatar.cc/150?u=${userProfile.id}`,
+                role: userProfile.role || 'User',
+            },
+            time: 'Just now',
+            content: newPostContent,
+            likes: 0,
+            comments: 0,
+        };
+
+        setPosts([newPost, ...posts]);
+        setNewPostContent('');
+    };
 
     return (
         <div className="container mx-auto py-8">
@@ -89,16 +101,21 @@ export default function CommunityPage() {
                                 <AvatarImage src={userProfile?.photoURL || `https://i.pravatar.cc/150?u=${userProfile?.id}`} />
                                 <AvatarFallback>{userInitial}</AvatarFallback>
                             </Avatar>
-                            <Textarea placeholder="Share an update or ask a question..." className="flex-1 bg-muted border-none focus-visible:ring-1 focus-visible:ring-primary" />
+                            <Textarea 
+                                placeholder="Share an update or ask a question..." 
+                                className="flex-1 bg-muted border-none focus-visible:ring-1 focus-visible:ring-primary"
+                                value={newPostContent}
+                                onChange={(e) => setNewPostContent(e.target.value)}
+                            />
                         </div>
                     </CardHeader>
                     <CardFooter className="p-4 flex justify-end">
-                        <Button>Post</Button>
+                        <Button onClick={handlePostSubmit} disabled={!newPostContent.trim()}>Post</Button>
                     </CardFooter>
                 </Card>
 
                 {/* Feed */}
-                {sortedPosts.map(post => {
+                {posts.map(post => {
                     const isQuestion = post.content.includes('?');
                     return (
                         <Card key={post.id}>
