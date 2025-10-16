@@ -61,7 +61,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full max-w-sm animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+    <div className="w-full max-w-sm">
         <Card className="bg-card/80 backdrop-blur-sm">
         <CardHeader>
             <div className="flex flex-col items-center text-center">
