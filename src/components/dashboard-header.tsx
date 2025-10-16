@@ -4,9 +4,8 @@ import {
   User,
   LogOut,
   Loader2,
+  Store,
 } from 'lucide-react';
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
 
 import {
   DropdownMenu,
@@ -22,64 +21,13 @@ import { useAuth } from '@/hooks/use-auth';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { LanguageSwitcher } from './language-switcher';
-import { useLocation } from '@/hooks/use-location';
 import { HeaderSearch } from './header-search';
 import { ThemeToggle } from './theme-toggle';
 
-interface WeatherData {
-    temp_c: number;
-    condition: {
-        text: string;
-        icon: string;
-    };
-}
-
-
 export function DashboardHeader() {
   const { userProfile, signOut } = useAuth();
-  const { location, error: locationError, loading: locationLoading } = useLocation();
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [weatherError, setWeatherError] = useState<string | null>(null);
-  const [isWeatherLoading, setIsWeatherLoading] = useState(true);
-
+  
   const userInitial = userProfile?.name?.charAt(0).toUpperCase() || '?';
-
-  useEffect(() => {
-    async function fetchWeather() {
-      if (location) {
-        setIsWeatherLoading(true);
-        setWeatherError(null);
-        try {
-          const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
-          if (!apiKey) {
-            throw new Error("Weather API key is not configured.");
-          }
-          const response = await fetch(`https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location.latitude},${location.longitude}`);
-          if (!response.ok) {
-            throw new Error('Failed to fetch weather data.');
-          }
-          const data = await response.json();
-          setWeather(data.current);
-        } catch (error) {
-          console.error("Weather fetch error:", error);
-          setWeatherError('Could not fetch weather.');
-        } finally {
-          setIsWeatherLoading(false);
-        }
-      } else {
-         if (locationError) {
-            setWeatherError('Location access denied.');
-         }
-         setIsWeatherLoading(false);
-      }
-    }
-    
-    // Only fetch weather when location loading is complete
-    if(!locationLoading){
-        fetchWeather();
-    }
-  }, [location, locationError, locationLoading]);
-
 
   return (
     <header className="flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 sticky top-0 z-30">
@@ -95,19 +43,13 @@ export function DashboardHeader() {
         <div className="md:hidden flex-1">
             <HeaderSearch />
         </div>
-        <div className="hidden sm:flex items-center gap-2 text-sm font-medium">
-           {isWeatherLoading || locationLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-           ) : weather ? (
-            <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={weather.condition.icon} alt={weather.condition.text} className="h-6 w-6" />
-                <span>{weather.temp_c}°C, {weather.condition.text}</span>
-            </>
-          ) : weatherError ? (
-            <span className="text-muted-foreground text-xs">{weatherError}</span>
-          ) : null}
-        </div>
+        
+        <Link href="/dashboard/marketplace" passHref>
+          <Button variant="outline">
+            <Store className="mr-2 h-4 w-4" />
+            Marketplace
+          </Button>
+        </Link>
 
         <LanguageSwitcher />
         <ThemeToggle />
