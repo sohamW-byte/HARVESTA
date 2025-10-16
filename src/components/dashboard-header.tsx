@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { LanguageSwitcher } from './language-switcher';
 import { useLocation } from '@/hooks/use-location';
 import { HeaderSearch } from './header-search';
+import { ThemeToggle } from './theme-toggle';
 
 interface WeatherData {
     temp_c: number;
@@ -134,6 +135,8 @@ export function DashboardHeader() {
                 <span>Profile</span>
               </DropdownMenuItem>
             </Link>
+             <DropdownMenuSeparator />
+             <ThemeToggle />
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut}>
               <LogOut className="mr-2 h-4 w-4" />

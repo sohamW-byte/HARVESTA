@@ -5,6 +5,7 @@ import { AuthProvider } from '@/hooks/use-auth';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase';
+import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
   title: 'Harvesta',
@@ -25,12 +26,19 @@ const sourceCodePro = Source_Code_Pro({
 
 function RootProviders({ children }: { children: React.ReactNode }) {
     return (
-        <FirebaseClientProvider>
-          <AuthProvider>
-            {children}
-            <Toaster />
-          </AuthProvider>
-        </FirebaseClientProvider>
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+            <FirebaseClientProvider>
+            <AuthProvider>
+                {children}
+                <Toaster />
+            </AuthProvider>
+            </FirebaseClientProvider>
+        </ThemeProvider>
     )
 }
 
