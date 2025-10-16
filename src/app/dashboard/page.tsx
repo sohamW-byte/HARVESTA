@@ -42,7 +42,7 @@ export default function DashboardPage() {
           icon={<CheckCircle className="text-green-500" />}
         />
         <SummaryCard
-          title={t("Total Expenses")}
+          title={t("Total Profits")}
           value={`₹${totalExpenses.toLocaleString()}`}
           description={t("This month so far")}
           icon={<DollarSign className="text-primary" />}
