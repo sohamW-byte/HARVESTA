@@ -43,21 +43,54 @@ export function VoiceAssistant() {
   const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null);
 
   const recognitionRef = useRef<any | null>(null);
-
+  
   useEffect(() => {
     setIsMounted(true);
     // Check for SpeechRecognition API support first
-    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
       setHasMicPermission(false);
       console.error("Browser does not support the Web Speech API.");
     }
   }, []);
 
-  const initializeSpeechRecognition = useCallback(() => {
-    if (recognitionRef.current) return;
+  const speak = useCallback((text: string) => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      window.speechSynthesis.speak(utterance);
+    }
+  }, []);
 
+  const handleProcessCommand = useCallback(async (command: string) => {
+    if (!command || isProcessing) return;
+
+    setIsProcessing(true);
+    try {
+      const result = await processVoiceCommand({ command });
+      setSpokenResponse(result.response);
+      speak(result.response);
+
+      if (result.intent === 'navigate' && result.target) {
+        setTimeout(() => {
+          router.push(`/dashboard/${result.target}`);
+          setIsDialogOpen(false);
+        }, 1500);
+      }
+    } catch (err) {
+      console.error(err);
+      const errorMsg = "Sorry, I had trouble understanding that.";
+      setSpokenResponse(errorMsg);
+      speak(errorMsg);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [isProcessing, router, speak]);
+
+  const initializeSpeechRecognition = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition || recognitionRef.current) return;
 
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
@@ -73,7 +106,6 @@ export function VoiceAssistant() {
 
     recognition.onend = () => {
       setIsListening(false);
-      // Let dialog close naturally or by user action
     };
 
     recognition.onresult = (event: any) => {
@@ -103,12 +135,16 @@ export function VoiceAssistant() {
         });
       }
       setIsListening(false);
-      // setIsDialogOpen(false);
     };
     
     recognitionRef.current = recognition;
-  }, [toast]);
+  }, [toast, handleProcessCommand]);
 
+  const startListening = () => {
+    if (recognitionRef.current && !isListening) {
+      recognitionRef.current.start();
+    }
+  }
 
   const handleMicPermission = async () => {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -117,77 +153,48 @@ export function VoiceAssistant() {
         return false;
       }
       try {
+        // Request microphone permission
         await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        // Permission granted!
         setHasMicPermission(true);
         initializeSpeechRecognition();
+        
+        // Use a slight delay to ensure the recognition object is ready before starting
+        setTimeout(() => {
+          if (recognitionRef.current) {
+            recognitionRef.current.start();
+          }
+        }, 100);
+
         return true;
       } catch (error) {
         console.error("Microphone access denied:", error);
         setHasMicPermission(false);
-        toast({
-            variant: 'destructive',
-            title: 'Microphone Access Denied',
-            description: 'Please enable microphone permissions in your browser settings to use the voice assistant.',
-            duration: 5000,
-        });
+        setIsDialogOpen(true); // Open the dialog to show the error
         return false;
       }
   };
 
-
-  const handleProcessCommand = async (command: string) => {
-    if (!command || isProcessing) return;
-
-    setIsProcessing(true);
-    try {
-      const result = await processVoiceCommand({ command });
-      setSpokenResponse(result.response);
-      speak(result.response);
-
-      if (result.intent === 'navigate' && result.target) {
-        setTimeout(() => {
-          router.push(`/dashboard/${result.target}`);
-          setIsDialogOpen(false);
-        }, 1500);
-      }
-    } catch (err) {
-      console.error(err);
-      const errorMsg = "Sorry, I had trouble understanding that.";
-      setSpokenResponse(errorMsg);
-      speak(errorMsg);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const speak = useCallback((text: string) => {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      window.speechSynthesis.speak(utterance);
-    }
-  }, []);
-
   const handleToggleListen = async () => {
-    let permissionGranted = hasMicPermission;
-
-    if (permissionGranted === null) {
-      permissionGranted = await handleMicPermission();
-    }
-    
-    if (!permissionGranted) {
-      setIsDialogOpen(true);
-      return;
-    }
-    
     if (isListening) {
       recognitionRef.current?.stop();
-    } else {
+      return;
+    }
+  
+    // If permission has already been granted
+    if (hasMicPermission) {
       if (!recognitionRef.current) {
         initializeSpeechRecognition();
       }
-      recognitionRef.current?.start();
+      // Use a timeout to ensure the object is ready
+      setTimeout(() => startListening(), 100);
+    } else if (hasMicPermission === false) {
+      // If permission has been explicitly denied, show the dialog.
+      setIsDialogOpen(true);
+    } else {
+      // If permission has not been asked yet (is null), request it.
+      await handleMicPermission();
     }
   };
   
@@ -203,8 +210,7 @@ export function VoiceAssistant() {
             onClick={handleToggleListen}
             className={cn(
               "fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-50 transition-colors duration-300",
-              isListening ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90",
-              hasMicPermission === false && "bg-muted-foreground hover:bg-muted-foreground/90 cursor-not-allowed"
+              isListening ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
             )}
             size="icon"
           >
@@ -217,7 +223,7 @@ export function VoiceAssistant() {
         </TooltipTrigger>
         <TooltipContent side="left">
           {hasMicPermission === false 
-            ? <p>Microphone access is required</p>
+            ? <p>Microphone access required</p>
             : <p>{isListening ? 'Stop Listening' : 'Activate Voice Assistant'}</p>
           }
         </TooltipContent>
