@@ -5,9 +5,10 @@ import { SummaryCard } from '@/components/cards/summary-card';
 import { TestimonialsCard } from '@/components/cards/testimonials-card';
 import { TasksCard } from '@/components/cards/tasks-card';
 import { GrowthMonitorChart } from '@/components/charts/growth-monitor-chart';
-import { DollarSign, CloudRain, CheckCircle } from 'lucide-react';
+import { DollarSign, CheckCircle } from 'lucide-react';
 import { PriceBoard } from '@/components/cards/price-board';
 import { AddProduceDialog } from '@/components/add-produce-dialog';
+import { WeatherCard } from '@/components/cards/weather-card';
 
 export default function DashboardPage() {
   const { userProfile } = useAuth();
@@ -47,13 +48,7 @@ export default function DashboardPage() {
           icon={<DollarSign className="text-primary" />}
           className="lg:col-span-1"
         />
-        <SummaryCard
-          title="Rainfall"
-          value="5 mm"
-          description="Expected today"
-          icon={<CloudRain className="text-blue-500" />}
-          className="lg:col-span-1"
-        />
+        <WeatherCard />
          <TasksCard
           completionPercentage={tasksCompletion}
           nextTaskTitle={nextTask.title}
