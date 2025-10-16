@@ -82,15 +82,20 @@ export function DashboardHeader() {
 
   return (
     <header className="flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 sticky top-0 z-30">
-        <div className="md:hidden">
-            <SidebarTrigger />
+        <div className="flex items-center gap-2">
+            <div className="md:hidden">
+                <SidebarTrigger />
+            </div>
+            <div className="hidden md:flex">
+                <HeaderSearch />
+            </div>
         </div>
-      <div className="flex-1">
-        <HeaderSearch />
-      </div>
-      <div className="flex items-center gap-4">
+      <div className="flex-1 flex justify-end items-center gap-4">
+        <div className="md:hidden flex-1">
+            <HeaderSearch />
+        </div>
         <LanguageSwitcher />
-        <div className="flex items-center gap-2 text-sm font-medium">
+        <div className="hidden sm:flex items-center gap-2 text-sm font-medium">
            {isWeatherLoading || locationLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
            ) : weather ? (
