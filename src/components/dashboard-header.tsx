@@ -24,6 +24,7 @@ import { LanguageSwitcher } from './language-switcher';
 import { HeaderSearch } from './header-search';
 import { ThemeToggle } from './theme-toggle';
 import { useTranslation } from '@/hooks/use-translation';
+import { AccessibilityMenu } from './accessibility-menu';
 
 export function DashboardHeader() {
   const { userProfile, signOut } = useAuth();
@@ -54,6 +55,7 @@ export function DashboardHeader() {
         </Link>
 
         <LanguageSwitcher />
+        <AccessibilityMenu />
         <ThemeToggle />
 
         <DropdownMenu>
