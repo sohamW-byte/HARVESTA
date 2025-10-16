@@ -14,6 +14,7 @@ import {
   UserCog,
   ScrollText,
   ChevronDown,
+  User as UserIcon,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -34,6 +35,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/profile', label: 'Profile', icon: UserIcon },
   { href: '/dashboard/my-fields', label: 'My Fields', icon: Map },
   { href: '/dashboard/recommendations', label: 'AI Suggestions', icon: Lightbulb },
   { href: '/dashboard/marketplace', label: 'Marketplace', icon: Store },
