@@ -5,7 +5,6 @@ import { User, signOut as firebaseSignOut } from 'firebase/auth';
 import { useAuth as useFirebaseAuth, useFirestore, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
-import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -36,7 +35,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const db = useFirestore();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     const handleAuthChange = async (user: User | null) => {
@@ -70,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await firebaseSignOut(auth);
-    router.push('/login');
+    // The middleware will handle the redirect after the cookie is erased.
   };
   
   const value = { user, userProfile, loading: isUserLoading || loading, signOut };
