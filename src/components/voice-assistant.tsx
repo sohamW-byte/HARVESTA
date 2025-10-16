@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mic, MicOff, Loader2, Bot } from 'lucide-react';
+import { Mic, MicOff, Loader2, Bot, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { processVoiceCommand } from '@/ai/flows/voice-assistant-flow';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 // Declare the SpeechRecognition interface for TypeScript
 declare global {
@@ -31,17 +33,42 @@ declare global {
 
 export function VoiceAssistant() {
   const router = useRouter();
+  const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [spokenResponse, setSpokenResponse] = useState('');
   const [transcript, setTranscript] = useState('');
   const [isMounted, setIsMounted] = useState(false);
+  const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null);
 
   const recognitionRef = useRef<any | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
+
+    const checkAndRequestMicPermission = async () => {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            setHasMicPermission(false);
+            return;
+        }
+        try {
+            await navigator.mediaDevices.getUserMedia({ audio: true });
+            setHasMicPermission(true);
+        } catch (error) {
+            console.error("Microphone access denied:", error);
+            setHasMicPermission(false);
+            toast({
+                variant: 'destructive',
+                title: 'Microphone Access Denied',
+                description: 'Please enable microphone permissions in your browser settings to use the voice assistant.',
+                duration: 5000,
+            });
+        }
+    };
+
+    checkAndRequestMicPermission();
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (SpeechRecognition) {
@@ -79,12 +106,23 @@ export function VoiceAssistant() {
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
+        if(event.error === 'not-allowed' || event.error === 'audio-capture') {
+            setHasMicPermission(false);
+             toast({
+                variant: 'destructive',
+                title: 'Voice Assistant Error',
+                description: 'Microphone access was denied. Please enable it in your browser settings.',
+                duration: 5000,
+            });
+        }
         setIsListening(false);
       };
       
       recognitionRef.current = recognition;
+    } else {
+        setHasMicPermission(false);
     }
-  }, []);
+  }, [toast]);
 
   const handleProcessCommand = async (command: string) => {
     if (!command || isProcessing) return;
@@ -122,7 +160,14 @@ export function VoiceAssistant() {
   }, []);
 
   const handleToggleListen = () => {
-    if (!recognitionRef.current) return;
+    if (!recognitionRef.current || !hasMicPermission) {
+        toast({
+            variant: 'destructive',
+            title: 'Microphone Not Available',
+            description: 'Please grant microphone access to use this feature.',
+        });
+        return;
+    };
     
     if (isListening) {
       recognitionRef.current.stop();
@@ -131,8 +176,8 @@ export function VoiceAssistant() {
     }
   };
   
-  if (!isMounted || !recognitionRef.current) {
-    return null; // Don't render if not mounted or speech recognition is not supported
+  if (!isMounted) {
+    return null;
   }
 
   return (
@@ -141,9 +186,11 @@ export function VoiceAssistant() {
         <TooltipTrigger asChild>
           <Button
             onClick={handleToggleListen}
+            disabled={!hasMicPermission && hasMicPermission !== null}
             className={cn(
               "fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-50 transition-colors duration-300",
-              isListening ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
+              isListening ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90",
+              !hasMicPermission && hasMicPermission !== null && "bg-muted-foreground hover:bg-muted-foreground/90 cursor-not-allowed"
             )}
             size="icon"
           >
@@ -155,7 +202,10 @@ export function VoiceAssistant() {
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">
-          <p>{isListening ? 'Stop Listening' : 'Activate Voice Assistant'}</p>
+          {hasMicPermission === false 
+            ? <p>Microphone access is required</p>
+            : <p>{isListening ? 'Stop Listening' : 'Activate Voice Assistant'}</p>
+          }
         </TooltipContent>
       </Tooltip>
 
@@ -166,15 +216,27 @@ export function VoiceAssistant() {
               <Bot />
               Harvesta Assistant
             </DialogTitle>
-            <DialogDescription>
-              {isListening && !isProcessing ? "I'm listening..." : isProcessing ? "Thinking..." : "How can I help you today?"}
+             <DialogDescription>
+              {hasMicPermission === false ? "Microphone access is required." : isListening && !isProcessing ? "I'm listening..." : isProcessing ? "Thinking..." : "How can I help you today?"}
             </DialogDescription>
           </DialogHeader>
           <div className="py-8 text-center space-y-4">
-            <div className="text-2xl font-semibold h-14">
-                {isProcessing && !spokenResponse ? <Loader2 className="h-8 w-8 mx-auto animate-spin" /> : transcript || <span className="text-muted-foreground">...</span>}
-            </div>
-            {spokenResponse && <p className="text-lg text-primary mt-4">{spokenResponse}</p>}
+             {hasMicPermission === false ? (
+                <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Microphone Blocked</AlertTitle>
+                    <AlertDescription>
+                        Please enable microphone permissions in your browser's site settings to use the voice assistant.
+                    </AlertDescription>
+                </Alert>
+             ) : (
+                <>
+                    <div className="text-2xl font-semibold h-14">
+                        {isProcessing && !spokenResponse ? <Loader2 className="h-8 w-8 mx-auto animate-spin" /> : transcript || <span className="text-muted-foreground">...</span>}
+                    </div>
+                    {spokenResponse && <p className="text-lg text-primary mt-4">{spokenResponse}</p>}
+                </>
+             )}
           </div>
         </DialogContent>
       </Dialog>
