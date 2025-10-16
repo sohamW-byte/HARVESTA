@@ -22,7 +22,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, LifeBuoy, Mail, Phone, Send } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { VoiceInput } from '@/components/ui/voice-input';
 
 const feedbackSchema = z.object({
   name: z.string().min(2, { message: 'Name is required.' }),
@@ -130,7 +129,7 @@ export default function FeedbackPage() {
                                 <FormItem>
                                 <FormLabel>Your Name</FormLabel>
                                 <FormControl>
-                                    <VoiceInput placeholder="John Doe" {...field} onValueChange={field.onChange} />
+                                    <Input placeholder="John Doe" {...field} />
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>

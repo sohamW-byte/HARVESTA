@@ -32,7 +32,6 @@ import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { ProduceListing } from '@/lib/types';
-import { VoiceInput } from './ui/voice-input';
 
 const produceSchema = z.object({
   cropName: z.string().min(2, { message: 'Crop name is required.' }),
@@ -134,7 +133,7 @@ export function AddProduceDialog() {
                 <FormItem>
                   <FormLabel>Crop Name</FormLabel>
                   <FormControl>
-                    <VoiceInput placeholder="e.g., Sona Masoori Rice" {...field} onValueChange={field.onChange} />
+                    <Input placeholder="e.g., Sona Masoori Rice" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
