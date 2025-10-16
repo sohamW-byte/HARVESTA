@@ -22,9 +22,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth as useAppAuth } from '@/hooks/use-auth';
 import { doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useAuth } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
@@ -49,7 +49,8 @@ interface SubmissionHistoryEntry {
 }
 
 export default function MyFieldsPage() {
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAppAuth();
+  const auth = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [submissionHistory, setSubmissionHistory] = useState<SubmissionHistoryEntry[]>([]);
@@ -68,26 +69,25 @@ export default function MyFieldsPage() {
     if (userProfile) {
       form.reset({
         region: userProfile.region || '',
-        // Assuming cropsGrown is an array of strings in the profile
         cropsGrown: userProfile.cropsGrown?.join(', ') || '',
-        produceAvailability: '', // This is likely transactional, so not pre-filled
+        produceAvailability: '',
       });
 
-      // Populate history from profile if available
       if (userProfile.updateHistory) {
         const history = userProfile.updateHistory.map(entry => ({
             date: entry.date.toDate().toLocaleDateString('en-IN'),
             region: entry.region,
             crops: entry.cropsGrown.join(', '),
             availability: entry.produceAvailability,
-        })).reverse(); // show most recent first
+        })).reverse();
         setSubmissionHistory(history);
       }
     }
   }, [userProfile, form]);
   
   async function onSubmit(data: FieldFormValues) {
-    if (!user) {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
       toast({
         title: 'Error',
         description: 'You must be logged in to update your fields.',
@@ -98,7 +98,7 @@ export default function MyFieldsPage() {
 
     setLoading(true);
     try {
-      const userDocRef = doc(db, 'users', user.uid);
+      const userDocRef = doc(db, 'users', currentUser.uid);
       const cropsArray = data.cropsGrown.split(',').map(crop => crop.trim()).filter(Boolean);
 
       const historyEntry = {
@@ -121,6 +121,7 @@ export default function MyFieldsPage() {
                 operation: 'update',
                 requestResourceData: updateData
             }));
+            throw error; // Re-throw to be caught by the outer catch block
         });
       
       toast({
@@ -128,7 +129,6 @@ export default function MyFieldsPage() {
         description: 'Your farm details have been updated.',
       });
 
-      // Manually update history state to reflect new submission instantly
       setSubmissionHistory(prev => [
           {
             date: historyEntry.date.toDate().toLocaleDateString('en-IN'),
@@ -142,17 +142,17 @@ export default function MyFieldsPage() {
 
       form.reset({
         ...data,
-        produceAvailability: '', // Clear availability for next entry
+        produceAvailability: '', 
       });
 
     } catch (error: any) {
-      // This will now primarily catch client-side errors, not permission errors
-      console.error("Error updating document: ", error);
-      toast({
-        title: 'Update failed',
-        description: error.message || 'Could not save your farm details.',
-        variant: 'destructive',
-      });
+      if (!error.message.includes('permission-error')) {
+         toast({
+            title: 'Update failed',
+            description: error.message || 'Could not save your farm details.',
+            variant: 'destructive',
+        });
+      }
     } finally {
       setLoading(false);
     }
