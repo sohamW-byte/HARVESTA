@@ -9,7 +9,6 @@ import { DollarSign, CheckCircle } from 'lucide-react';
 import { PriceBoard } from '@/components/cards/price-board';
 import { AddProduceDialog } from '@/components/add-produce-dialog';
 import { WeatherCard } from '@/components/cards/weather-card';
-import { FieldMapCard } from '@/components/cards/field-map-card';
 
 export default function DashboardPage() {
   const { userProfile } = useAuth();
@@ -48,7 +47,11 @@ export default function DashboardPage() {
           className="lg:col-span-1"
         />
         <WeatherCard />
-        <FieldMapCard />
+        <TasksCard
+            completionPercentage={75}
+            nextTaskTitle="Harvest Wheat"
+            nextTaskDue="in 3 days"
+        />
       </div>
 
       <div className="grid gap-6">
