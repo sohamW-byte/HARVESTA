@@ -28,14 +28,13 @@ const sourceCodePro = Source_Code_Pro({
 
 function RootProviders({ children }: { children: React.ReactNode }) {
     return (
-        <>
+        <AccessibilityProvider>
             <ThemeProvider
                 attribute="class"
                 defaultTheme="system"
                 enableSystem
                 disableTransitionOnChange
             >
-              <AccessibilityProvider>
                 <FirebaseClientProvider>
                 <AuthProvider>
                     <TranslationProvider>
@@ -44,9 +43,8 @@ function RootProviders({ children }: { children: React.ReactNode }) {
                     </TranslationProvider>
                 </AuthProvider>
                 </FirebaseClientProvider>
-              </AccessibilityProvider>
             </ThemeProvider>
-        </>
+        </AccessibilityProvider>
     )
 }
 

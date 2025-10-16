@@ -16,47 +16,55 @@ const AccessibilityContext = createContext<AccessibilityContextType | undefined>
 const FONT_SIZE_KEY = 'harvesta-font-size';
 const COLOR_INVERSION_KEY = 'harvesta-color-inversion';
 
+const FONT_SIZE_MULTIPLIERS: Record<FontSize, number> = {
+  sm: 0.875,
+  base: 1,
+  lg: 1.125,
+};
+
 export function AccessibilityProvider({ children }: { children: ReactNode }) {
   const [fontSize, setFontSizeState] = useState<FontSize>('base');
   const [colorInversion, setColorInversionState] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     // Load settings from localStorage on initial client-side render
     const storedFontSize = localStorage.getItem(FONT_SIZE_KEY) as FontSize | null;
     const storedColorInversion = localStorage.getItem(COLOR_INVERSION_KEY);
 
-    if (storedFontSize) {
+    if (storedFontSize && FONT_SIZE_MULTIPLIERS[storedFontSize]) {
       setFontSizeState(storedFontSize);
     }
     if (storedColorInversion) {
       setColorInversionState(storedColorInversion === 'true');
     }
-    setIsMounted(true);
   }, []);
   
   useEffect(() => {
     if (!isMounted) return;
 
-    const htmlElement = document.documentElement;
+    const bodyElement = document.body;
 
-    // Apply font size
-    htmlElement.classList.remove('font-size-sm', 'font-size-base', 'font-size-lg');
-    htmlElement.classList.add(`font-size-${fontSize}`);
+    // Apply font size via CSS custom property
+    const multiplier = FONT_SIZE_MULTIPLIERS[fontSize];
+    document.documentElement.style.setProperty('--font-size-multiplier', String(multiplier));
     localStorage.setItem(FONT_SIZE_KEY, fontSize);
 
     // Apply color inversion
     if (colorInversion) {
-      htmlElement.classList.add('invert-colors');
+      bodyElement.classList.add('invert-colors');
     } else {
-      htmlElement.classList.remove('invert-colors');
+      bodyElement.classList.remove('invert-colors');
     }
     localStorage.setItem(COLOR_INVERSION_KEY, String(colorInversion));
 
   }, [fontSize, colorInversion, isMounted]);
 
   const setFontSize = (size: FontSize) => {
-    setFontSizeState(size);
+    if (FONT_SIZE_MULTIPLIERS[size]) {
+      setFontSizeState(size);
+    }
   };
 
   const setColorInversion = (enabled: boolean) => {

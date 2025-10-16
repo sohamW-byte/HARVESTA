@@ -37,6 +37,8 @@
     --sidebar-accent-foreground: 142 25% 15%;
     --sidebar-border: 142 20% 88%;
     --sidebar-ring: 142 76% 36%;
+    
+    --font-size-multiplier: 1;
   }
   .dark {
     --background: 20 14.3% 4.1%;
@@ -111,6 +113,10 @@
   }
 
   /* Accessibility Features */
+  body {
+    font-size: calc(1rem * var(--font-size-multiplier));
+  }
+
   .invert-colors {
     filter: invert(1);
     background-color: #fff; /* Prevent background from turning black */
@@ -120,10 +126,6 @@
   .invert-colors [data-invert-ignore="true"] {
     filter: invert(1); /* Double-invert images and specified elements to show them normally */
   }
-
-  .font-size-sm { font-size: 0.875rem; }
-  .font-size-base { font-size: 1rem; }
-  .font-size-lg { font-size: 1.125rem; }
 }
 
 @layer base {
