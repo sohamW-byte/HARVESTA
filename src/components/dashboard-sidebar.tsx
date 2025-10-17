@@ -31,6 +31,8 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -47,7 +49,7 @@ const yojanaLinks = [
 
 const learningLinks = [
     { key: 'Digital Marketing for Farmers', href: 'https://www.youtube.com/watch?v=b7iY-433A-s', label: 'Digital Marketing for Farmers (Video)' },
-    { key: '10 Marketing Strategies', href: 'https://www.agriweb.ca/10-marketing-strategies-for-farmers/', label: '10 Marketing Strategies for Farmers' },
+    { key: '10 Marketing Strategies for Farmers', href: 'https://www.agriweb.ca/10-marketing-strategies-for-farmers/', label: '10 Marketing Strategies for Farmers' },
     { key: 'Precision Agriculture Explained', href: 'https://www.youtube.com/watch?v=5wN2N3Vo', label: 'Precision Agriculture (Video)' },
     { key: 'Vertical Farming Techniques', href: 'https://en.wikipedia.org/wiki/Vertical_farming', label: 'Intro to Vertical Farming' },
 ]
