@@ -1,6 +1,6 @@
 'use client';
 
-import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, getRedirectResult, getAdditionalUserInfo } from 'firebase/auth';
@@ -42,17 +42,13 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       return;
     }
 
-    // This flag helps manage the redirect processing
-    let processingRedirect = true;
-
-    // First, process the potential redirect from Google Sign-In
-    getRedirectResult(auth)
-      .then(async (result) => {
+    const processRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
         if (result) {
           const user = result.user;
           const additionalInfo = getAdditionalUserInfo(result);
           if (additionalInfo?.isNewUser) {
-            // Create a user profile document if it's a new user
             const userDocRef = doc(firestore, 'users', user.uid);
             const docSnap = await getDoc(userDocRef);
             if (!docSnap.exists()) {
@@ -65,26 +61,23 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
             }
           }
         }
-      })
-      .catch((error) => {
+      } catch (error: any) {
         console.error("Error processing redirect result:", error);
         setError(error);
-      })
-      .finally(() => {
-        // Once redirect is processed, we can rely on onAuthStateChanged
-        processingRedirect = false;
-        // The onAuthStateChanged listener below will handle setting the user
-        // and final loading state.
-      });
+      }
+    };
 
     const unsubscribe = onAuthStateChanged(
       auth,
-      (firebaseUser) => {
-        if (!processingRedirect) {
+      async (firebaseUser) => {
+        if (firebaseUser) {
           setUser(firebaseUser);
-          setLoading(false);
-          setError(null);
+        } else {
+          // No user is signed in, but first check for redirect result
+          await processRedirectResult();
+          setUser(null); // Explicitly set user to null if no one is logged in
         }
+        setLoading(false);
       },
       (error) => {
         console.error("onAuthStateChanged error:", error);
@@ -144,7 +137,7 @@ export const useFirebaseApp = (): FirebaseApp => {
 
 type MemoFirebase <T> = T & {__memo?: boolean};
 
-export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | (MemoFirebase<T>) {
+export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T | (MemoFirebase<T>) {
   const memoized = useMemo(factory, deps);
   
   if(typeof memoized !== 'object' || memoized === null) return memoized;

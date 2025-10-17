@@ -23,24 +23,26 @@ function AuthGate({ children }: { children: ReactNode }) {
   const { user, userProfile, loading } = useAuth();
   
   useEffect(() => {
-    if (loading) return; // Wait until loading is complete
+    if (loading) return; // Wait until all auth and profile loading is complete
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/forgot-password');
 
     if (!user) {
-      // User is not logged in, redirect to login if not on an auth page
+      // User is not logged in, redirect to login if not on an auth page.
       if (!isAuthPage) {
         router.replace('/login');
       }
     } else {
-      // User is logged in
+      // User is logged in. Check if their profile is complete.
       if (userProfile?.role) {
-        // Profile is complete, redirect to dashboard if on an auth page
+        // Profile is complete, they should be in the dashboard.
+        // If they are on an auth page, redirect them.
         if (isAuthPage) {
           router.replace('/dashboard');
         }
       } else {
-        // Profile is not complete, redirect to complete-profile page
+        // Profile is not complete (no role).
+        // Redirect them to the complete-profile page if they aren't there already.
         if (pathname !== '/signup/complete-profile') {
           router.replace('/signup/complete-profile');
         }
@@ -48,6 +50,7 @@ function AuthGate({ children }: { children: ReactNode }) {
     }
   }, [user, userProfile, loading, pathname, router]);
 
+  // While loading, show a full-screen loader to prevent any content flash
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
@@ -71,23 +74,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
+    // If the main auth provider is loading, we are also loading.
     if (authLoading) {
       setProfileLoading(true);
       return;
     }
 
+    // If there is no user, there is no profile to load.
     if (!user) {
       setUserProfile(null);
       setProfileLoading(false);
       return;
     }
 
+    // User is logged in, listen for their profile document.
+    setProfileLoading(true);
     const userDocRef = doc(db, 'users', user.uid);
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
         setUserProfile({ id: docSnap.id, ...docSnap.data() } as UserProfile);
       } else {
-        setUserProfile(null); // Profile doesn't exist yet for this new user
+        // This can happen briefly for new Google sign-in users
+        // before the profile is created by the FirebaseProvider.
+        setUserProfile(null);
       }
       setProfileLoading(false);
     }, (error) => {
