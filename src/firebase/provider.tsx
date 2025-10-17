@@ -3,7 +3,7 @@
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
-import { Auth, User, onAuthStateChanged, getRedirectResult, getAdditionalUserInfo } from 'firebase/auth';
+import { Auth, User, onAuthStateChanged, getAdditionalUserInfo, UserCredential } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import type { UserProfile } from '@/lib/types';
 
@@ -34,55 +34,38 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [isProcessingRedirect, setIsProcessingRedirect] = useState(true);
-
+  
   useEffect(() => {
     if (!auth) {
       setLoading(false);
-      setIsProcessingRedirect(false);
       setError(new Error("Auth service not provided."));
       return;
     }
     
-    // First, process any pending redirect results from Google Sign-In
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (result) {
-          const user = result.user;
-          const additionalInfo = getAdditionalUserInfo(result);
-          
-          // If it's a new user, create their profile document shell
-          if (additionalInfo?.isNewUser) {
-            const userDocRef = doc(firestore, 'users', user.uid);
-            const docSnap = await getDoc(userDocRef);
-            if (!docSnap.exists()) {
-              const profileData: Partial<UserProfile> = {
-                name: user.displayName || 'New User',
-                email: user.email!,
-                photoURL: user.photoURL || undefined,
-              };
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      async (firebaseUser) => {
+        if (firebaseUser) {
+          // User is signed in. Check if they have a profile document.
+          const userDocRef = doc(firestore, 'users', firebaseUser.uid);
+          const docSnap = await getDoc(userDocRef);
+
+          if (!docSnap.exists()) {
+            // This is likely a new user from a social provider sign-in.
+            // Create a shell profile for them.
+            const profileData: Partial<UserProfile> = {
+              name: firebaseUser.displayName || 'New User',
+              email: firebaseUser.email!,
+              photoURL: firebaseUser.photoURL || undefined,
+            };
+            try {
               await setDoc(userDocRef, profileData, { merge: true });
+            } catch (e) {
+                console.error("Failed to create user profile document:", e);
+                setError(e as Error);
             }
           }
         }
-      })
-      .catch((error) => {
-        console.error("Error processing redirect result:", error);
-        setError(error);
-      })
-      .finally(() => {
-        setIsProcessingRedirect(false);
-      });
-
-  }, [auth, firestore]);
-  
-  useEffect(() => {
-    if (isProcessingRedirect || !auth) return;
-
-    // After processing redirects, set up the normal auth state listener
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (firebaseUser) => {
         setUser(firebaseUser);
         setLoading(false);
       },
@@ -95,7 +78,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     );
 
     return () => unsubscribe();
-  }, [isProcessingRedirect, auth]);
+  }, [auth, firestore]);
 
 
   const contextValue = useMemo((): FirebaseContextState => ({
@@ -103,9 +86,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     firestore,
     auth,
     user,
-    loading: loading || isProcessingRedirect,
+    loading,
     error,
-  }), [firebaseApp, firestore, auth, user, loading, isProcessingRedirect, error]);
+  }), [firebaseApp, firestore, auth, user, loading, error]);
 
   return (
     <FirebaseContext.Provider value={contextValue}>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -89,15 +89,15 @@ export default function LoginPage() {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithRedirect(auth, provider);
-      // The user will be redirected to Google and then back.
-      // The useAuth hook will handle the result of the redirect.
+      await signInWithPopup(auth, provider);
+      // The onAuthStateChanged listener in the provider will handle the result.
     } catch (error: any) {
       toast({
         title: 'Google Sign-In Failed',
-        description: error.message || 'Could not initiate Google Sign-In.',
+        description: error.message || 'Could not complete Google Sign-In.',
         variant: 'destructive',
       });
+    } finally {
       setGoogleLoading(false);
     }
   };
