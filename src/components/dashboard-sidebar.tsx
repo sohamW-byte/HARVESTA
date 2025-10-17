@@ -88,6 +88,8 @@ export function DashboardSidebar() {
           {menuItems.map((item) => {
             if (item.buyerHidden && isBuyer) return null;
             
+            const isLearningHub = item.href === '/dashboard/learning-hub';
+
             return (
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href} passHref>
@@ -97,7 +99,9 @@ export function DashboardSidebar() {
                     tooltip={t(item.label)}
                   >
                     <item.icon />
-                    <span>{t(item.label)}</span>
+                    <span className={cn(isLearningHub && 'animate-pulse [text-shadow:0_0_8px_hsl(var(--primary))]')}>
+                      {t(item.label)}
+                    </span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
