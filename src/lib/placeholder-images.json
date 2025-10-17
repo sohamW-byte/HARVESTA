@@ -33,13 +33,13 @@
     {
       "id": "produce-rice",
       "description": "Sona Masoori Rice",
-      "imageUrl": "https://picsum.photos/seed/rice/400/300",
+      "imageUrl": "https://images.unsplash.com/photo-1686820740687-426a7b9b2043?w=400&h=300&fit=crop&q=60",
       "imageHint": "rice grains"
     },
     {
       "id": "produce-oranges",
       "description": "Nagpur Oranges",
-      "imageUrl": "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=400&h=300&fit=crop",
+      "imageUrl": "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=400&h=300&fit=crop&q=60",
       "imageHint": "fresh oranges"
     },
     {
