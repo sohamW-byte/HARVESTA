@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { useFirestore, useAuth as useAppAuth } from '@/firebase';
+import { useFirestore, useAuth } from '@/firebase';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -98,7 +98,7 @@ export default function SignupPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const { auth } = useAppAuth();
+  const auth = useAuth();
   const db = useFirestore();
 
   const form = useForm<SignupFormValues>({
