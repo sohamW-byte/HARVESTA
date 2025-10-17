@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { SummaryCard } from '@/components/cards/summary-card';
-import { TasksCard } from '@/components/cards/tasks-card';
+import { ProgressCard } from '@/components/cards/progress-card';
 import { GrowthMonitorChart } from '@/components/charts/growth-monitor-chart';
 import { DollarSign, CheckCircle } from 'lucide-react';
 import { PriceBoard } from '@/components/cards/price-board';
@@ -10,6 +10,7 @@ import { AddProduceDialog } from '@/components/add-produce-dialog';
 import { WeatherCard } from '@/components/cards/weather-card';
 import { useTranslation } from '@/hooks/use-translation';
 import { motion } from 'framer-motion';
+import { learningResources } from './learning-hub/resources';
 
 export default function DashboardPage() {
   const { userProfile } = useAuth();
@@ -18,6 +19,19 @@ export default function DashboardPage() {
   const greeting = userProfile?.name ? `${t('Hello')}, ${userProfile.name.split(' ')[0]} 👋` : `${t('Welcome to Harvesta')} 👋`;
 
   const totalExpenses = 12530.50;
+
+  // Simulate learning progress for the dashboard
+  const allResources = [
+    ...learningResources.marketing,
+    ...learningResources.advancedFarming,
+    ...learningResources.businessManagement,
+  ];
+  const completedLearningIds = ['m1', 'm2', 'af1']; // Mock completed items
+  const totalLearningDuration = allResources.reduce((acc, curr) => acc + curr.duration, 0);
+  const completedLearningDuration = allResources
+    .filter(r => completedLearningIds.includes(r.id))
+    .reduce((acc, curr) => acc + curr.duration, 0);
+  const learningCompletionPercentage = (completedLearningDuration / totalLearningDuration) * 100;
   
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -79,10 +93,9 @@ export default function DashboardPage() {
           <WeatherCard />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <TasksCard
-              completionPercentage={75}
-              nextTaskTitle="Harvest Wheat"
-              nextTaskDue="in 3 days"
+          <ProgressCard
+              fieldCompletionPercentage={75}
+              learningCompletionPercentage={learningCompletionPercentage}
           />
         </motion.div>
       </motion.div>
