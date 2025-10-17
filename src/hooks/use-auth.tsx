@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
@@ -7,6 +8,7 @@ import { useFirebase, useFirestore, useAuth as useFirebaseAuth } from '@/firebas
 import { doc, onSnapshot } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { Loader2, Sprout } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface AuthContextType {
   user: User | null;
@@ -16,6 +18,42 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const AnimatedLoader = () => {
+    const sproutVariants = {
+        initial: {
+            rotate: 0,
+            scale: 1,
+            color: 'hsl(var(--primary))',
+        },
+        animate: {
+            rotate: [0, 20, -20, 0],
+            scale: [1, 1.2, 1, 1.2, 1],
+            color: ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--primary))'],
+            transition: {
+                rotate: { duration: 2, ease: "easeInOut", repeat: Infinity },
+                scale: { duration: 2.5, ease: "easeInOut", repeat: Infinity },
+                color: { duration: 5, ease: "linear", repeat: Infinity, repeatType: "reverse" },
+            },
+        },
+    };
+
+    return (
+        <div className="flex h-screen items-center justify-center bg-background">
+            <div className="flex flex-col items-center gap-4">
+                <motion.div
+                    variants={sproutVariants}
+                    initial="initial"
+                    animate="animate"
+                >
+                    <Sprout className="h-16 w-16" />
+                </motion.div>
+                <p className="text-muted-foreground tracking-widest animate-pulse">HARVESTA</p>
+            </div>
+        </div>
+    );
+};
+
 
 function AuthGate({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -50,16 +88,9 @@ function AuthGate({ children }: { children: ReactNode }) {
     }
   }, [user, userProfile, loading, pathname, router]);
 
-  // While loading, show a full-screen loader.
+  // While loading, show the new animated loader.
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Sprout className="h-12 w-12 text-primary animate-pulse" />
-          <p className="text-muted-foreground">Initializing Session...</p>
-        </div>
-      </div>
-    );
+    return <AnimatedLoader />;
   }
 
   // Determine if we should render children or a loader based on redirection logic.
@@ -77,14 +108,7 @@ function AuthGate({ children }: { children: ReactNode }) {
   }
 
   // In all other intermediate states (e.g., about to redirect), show a loader to prevent flashes of incorrect content.
-  return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Sprout className="h-12 w-12 text-primary animate-pulse" />
-          <p className="text-muted-foreground">Redirecting...</p>
-        </div>
-      </div>
-  );
+  return <AnimatedLoader />;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
