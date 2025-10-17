@@ -3,7 +3,7 @@
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
-import { Auth, User, onAuthStateChanged, getAdditionalUserInfo, UserCredential } from 'firebase/auth';
+import { Auth, User, onAuthStateChanged, getRedirectResult, UserCredential } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import type { UserProfile } from '@/lib/types';
 import { errorEmitter } from './error-emitter';
@@ -43,35 +43,15 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       setError(new Error("Auth service not provided."));
       return;
     }
-    
+
     const unsubscribe = onAuthStateChanged(
       auth,
       async (firebaseUser) => {
         if (firebaseUser) {
-          // User is signed in. Check if they have a profile document.
-          const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-          const docSnap = await getDoc(userDocRef);
-
-          if (!docSnap.exists()) {
-            // This is likely a new user from a social provider sign-in.
-            // Create a shell profile for them.
-            const profileData: Partial<UserProfile> = {
-              name: firebaseUser.displayName || 'New User',
-              email: firebaseUser.email!,
-              photoURL: firebaseUser.photoURL || undefined,
-            };
-            setDoc(userDocRef, profileData, { merge: true }).catch((e) => {
-                console.error("Failed to create user profile document:", e);
-                // Don't set component error state, just emit for global handler
-                errorEmitter.emit('permission-error', new FirestorePermissionError({
-                    path: userDocRef.path,
-                    operation: 'create',
-                    requestResourceData: profileData
-                }));
-            });
-          }
+          setUser(firebaseUser);
+        } else {
+          setUser(null);
         }
-        setUser(firebaseUser);
         setLoading(false);
       },
       (error) => {
@@ -81,6 +61,35 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         setLoading(false);
       }
     );
+
+    // Handle redirect result for social providers
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result) {
+          // This is the first sign-in after a redirect.
+          const userDocRef = doc(firestore, 'users', result.user.uid);
+          const docSnap = await getDoc(userDocRef);
+
+          if (!docSnap.exists()) {
+            // New user, create their profile document
+            const profileData: Partial<UserProfile> = {
+              name: result.user.displayName || 'New User',
+              email: result.user.email!,
+              photoURL: result.user.photoURL || undefined,
+            };
+            
+            setDoc(userDocRef, profileData, { merge: true }).catch((e) => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: userDocRef.path,
+                    operation: 'create',
+                    requestResourceData: profileData
+                }));
+            });
+          }
+        }
+      }).catch((error) => {
+        console.error("Error getting redirect result:", error);
+      });
 
     return () => unsubscribe();
   }, [auth, firestore]);

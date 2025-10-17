@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { useAuth } from '@/firebase';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
+import { useAuth as useFirebaseAuth } from '@/firebase';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,7 +22,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Sprout } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { useAuth as useAppAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -58,8 +57,8 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const auth = useAuth();
-  const { loading: authLoading } = useAppAuth();
+  const auth = useFirebaseAuth();
+  const { loading: authHookLoading } = useAuth();
 
   const {
     register,
@@ -89,15 +88,14 @@ export default function LoginPage() {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      // The onAuthStateChanged listener in the provider will handle the result.
+      // Use redirect which is better for some environments and mobile
+      await signInWithRedirect(auth, provider);
     } catch (error: any) {
       toast({
         title: 'Google Sign-In Failed',
-        description: error.message || 'Could not complete Google Sign-In.',
+        description: error.message || 'Could not start Google Sign-In.',
         variant: 'destructive',
       });
-    } finally {
       setGoogleLoading(false);
     }
   };
@@ -146,8 +144,8 @@ export default function LoginPage() {
             </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-            <Button className="w-full" type="submit" disabled={loading || googleLoading || authLoading}>
-                {(loading || authLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button className="w-full" type="submit" disabled={loading || googleLoading || authHookLoading}>
+                {(loading || authHookLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign in
             </Button>
 
@@ -156,7 +154,7 @@ export default function LoginPage() {
                 <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs uppercase text-muted-foreground">Or continue with</span>
             </div>
 
-            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading || googleLoading || authLoading}>
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading || googleLoading || authHookLoading}>
                 {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
                 Google
             </Button>
