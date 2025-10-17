@@ -7,7 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useFirebase, useFirestore, useAuth as useFirebaseAuth } from '@/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
-import { Loader2, Sprout } from 'lucide-react';
+import { Sprout } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface AuthContextType {
@@ -18,47 +18,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const AnimatedLoader = () => {
-    const [isMounted, setIsMounted] = useState(false);
-
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
-
-    const sproutVariants = {
-        initial: {
-            rotate: 0,
-            scale: 1,
-        },
-        animate: {
-            rotate: [0, 15, -15, 0],
-            scale: [1, 1.1, 1, 1.1, 1],
-            transition: {
-                rotate: { duration: 1, ease: "easeInOut", repeat: Infinity },
-                scale: { duration: 1, ease: "easeInOut", repeat: Infinity },
-            },
-        },
-    };
-    
-    if (!isMounted) {
-        return null; // Don't render on the server
-    }
-
-    return (
-        <div className="flex h-screen items-center justify-center bg-background">
-            <motion.div
-                variants={sproutVariants}
-                initial="initial"
-                animate="animate"
-                className="text-primary"
-            >
-                <Sprout className="h-16 w-16" />
-            </motion.div>
-        </div>
-    );
-};
-
 
 function AuthGate({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -93,12 +52,12 @@ function AuthGate({ children }: { children: ReactNode }) {
     }
   }, [user, userProfile, loading, pathname, router]);
 
-  // While loading, show the new animated loader.
+  // While loading, show nothing.
   if (loading) {
-    return <AnimatedLoader />;
+    return null;
   }
 
-  // Determine if we should render children or a loader based on redirection logic.
+  // Determine if we should render children or nothing based on redirection logic.
   const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/forgot-password');
   
   // Scenarios where we render the page content:
@@ -112,8 +71,8 @@ function AuthGate({ children }: { children: ReactNode }) {
       return <>{children}</>;
   }
 
-  // In all other intermediate states (e.g., about to redirect), show a loader to prevent flashes of incorrect content.
-  return <AnimatedLoader />;
+  // In all other intermediate states (e.g., about to redirect), show nothing.
+  return null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
