@@ -47,13 +47,6 @@ const yojanaLinks = [
     { key: 'Kisan Suvidha', href: 'https://mvk.iitd.ac.in/', label: 'Kisan Suvidha' },
 ];
 
-const learningLinks = [
-    { key: 'Digital Marketing for Farmers', href: 'https://www.youtube.com/watch?v=b7iY-433A-s', label: 'Digital Marketing for Farmers (Video)' },
-    { key: '10 Marketing Strategies for Farmers', href: 'https://www.agriweb.ca/10-marketing-strategies-for-farmers/', label: '10 Marketing Strategies for Farmers' },
-    { key: 'Precision Agriculture Explained', href: 'https://www.youtube.com/watch?v=5wN2N3Vo', label: 'Precision Agriculture (Video)' },
-    { key: 'Vertical Farming Techniques', href: 'https://en.wikipedia.org/wiki/Vertical_farming', label: 'Intro to Vertical Farming' },
-]
-
 export function DashboardSidebar() {
   const pathname = usePathname();
   const { userProfile } = useAuth();
@@ -68,6 +61,7 @@ export function DashboardSidebar() {
     { href: '/dashboard/reports', label: 'Reports', icon: BarChart, buyerHidden: true },
     { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
     { href: '/dashboard/community', label: 'Community', icon: Users },
+    { href: '/dashboard/learning-hub', label: 'Learning Hub', icon: BookOpen },
     { href: '/dashboard/profile', label: 'Profile', icon: UserIcon },
     { href: '/dashboard/feedback', label: 'Feedback & Help', icon: LifeBuoy },
   ];
@@ -110,30 +104,6 @@ export function DashboardSidebar() {
             )
           })}
           <Collapsible className="w-full">
-              <CollapsibleTrigger asChild>
-                  <SidebarMenuButton variant='ghost' className='w-full justify-start group'>
-                      <BookOpen />
-                      <span>{t('Learning Hub')}</span>
-                      <ChevronDown className='ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180' />
-                  </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="pl-10 pr-2 py-2 flex flex-col gap-2">
-                    {learningLinks.map(link => (
-                        <a 
-                            key={link.href} 
-                            href={link.href} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            {t(link.label)}
-                        </a>
-                    ))}
-                </div>
-              </CollapsibleContent>
-          </Collapsible>
-           <Collapsible className="w-full">
               <CollapsibleTrigger asChild>
                   <SidebarMenuButton variant='ghost' className='w-full justify-start group'>
                       <ScrollText />
