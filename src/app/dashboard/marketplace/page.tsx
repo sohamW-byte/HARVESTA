@@ -17,7 +17,7 @@ const forSaleItems = [
 
 const wantedItems = [
     { id: 1, name: "Organic Turmeric", quantity: "5 quintal", price: "Up to ₹8,000/qtl", buyer: "Spice India Exports", location: "Erode, TN", imageId: "produce-tea" },
-    { id: 2, name: "Fresh Cashews", quantity: "1 tonne", price: "Up to ₹70,000/qtl", buyer: "Konkan Dry Fruits", location: "Panaji, Goa", imageId: "produce-wheat" },
+    { id: 2, name: "Fresh Cashews", quantity: "1 tonne", price: "Up to ₹70,000/qtl", buyer: "Konkan Dry Fruits", location: "Panaji, Goa", imageId: "produce-cashews" },
     { id: 3, name: "Long-staple Cotton", quantity: "50 tonne", price: "Market Rate", buyer: "National Textiles", location: "Coimbatore, TN", imageId: "produce-rice" },
     { id: 4, name: "Malka Masur Dal", quantity: "10 quintal", price: "Up to ₹6,500/qtl", buyer: "Delhi Grain Traders", location: "New Delhi, DL", imageId: "produce-onions" },
     { id: 5, name: "Soybeans", quantity: "100 tonne", price: "Market Rate", buyer: "Agro Processors Inc.", location: "Indore, MP", imageId: "produce-soybean", contactInfo: "9876543216" },

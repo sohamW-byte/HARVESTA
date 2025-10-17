@@ -83,6 +83,12 @@
       "description": "Cardamom pods",
       "imageUrl": "https://picsum.photos/seed/cardamom/400/300",
       "imageHint": "green cardamom"
+    },
+    {
+      "id": "produce-cashews",
+      "description": "A pile of fresh cashews.",
+      "imageUrl": "https://images.unsplash.com/photo-1593023027936-32d56a34a9b5?w=400&h=300&fit=crop",
+      "imageHint": "cashew nuts"
     }
   ]
 }
