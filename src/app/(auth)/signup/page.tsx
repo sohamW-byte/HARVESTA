@@ -102,21 +102,19 @@ export default function SignupPage() {
 
       const userDocRef = doc(db, 'users', user.uid);
       
-      const userData: Omit<UserProfile, 'id'> = {
+      const userData: Partial<Omit<UserProfile, 'id'>> = {
         name: data.name,
         email: data.email,
         role: data.role,
-        farmerId: data.farmerId || null,
-        gstNumber: data.gstNumber || null,
-        address: null,
-        cropsGrown: [],
-        phoneNumber: null,
-        photoURL: null,
       };
 
-      await setDoc(userDocRef, userData);
+      if (data.farmerId) userData.farmerId = data.farmerId;
+      if (data.gstNumber) userData.gstNumber = data.gstNumber;
+
 
       // The useAuth hook will handle redirection to the dashboard
+      await setDoc(userDocRef, userData);
+
     } catch (error: any) {
        if (error.code && error.code.startsWith('auth/')) {
          toast({
