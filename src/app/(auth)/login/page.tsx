@@ -23,7 +23,6 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Sprout } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { useUser } from '@/firebase';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -89,6 +88,8 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithRedirect(auth, provider);
+      // The user will be redirected to Google and then back.
+      // The useAuth hook will handle the result of the redirect.
     } catch (error: any) {
       toast({
         title: 'Google Sign-In Failed',

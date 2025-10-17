@@ -126,18 +126,13 @@ export default function SignupPage() {
 
       const userDocRef = doc(db, 'users', user.uid);
       
-      const userData: Partial<UserProfile> = {
+      const userData: Omit<UserProfile, 'id'> = {
         name: data.name,
         email: data.email,
         role: data.role,
+        farmerId: data.farmerId || undefined,
+        gstNumber: data.gstNumber || undefined,
       };
-
-      if (data.role === 'farmer' && data.farmerId) {
-        userData.farmerId = data.farmerId;
-      }
-      if (data.role === 'buyer' && data.gstNumber) {
-        userData.gstNumber = data.gstNumber;
-      }
 
       await setDoc(userDocRef, userData)
         .catch((error) => {
@@ -168,6 +163,8 @@ export default function SignupPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithRedirect(auth, provider);
+      // The user will be redirected to Google and then back.
+      // The useAuth hook will handle the result of the redirect.
     } catch (error: any) {
       toast({
         title: 'Google Sign-In Failed',

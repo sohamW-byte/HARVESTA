@@ -4,8 +4,9 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, signOut as firebaseSignOut, getRedirectResult, getAdditionalUserInfo } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth as useFirebaseAuth, useFirestore, useUser } from '@/firebase';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
 
 interface AuthContextType {
   user: User | null;
@@ -37,10 +38,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const db = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
+  
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isProcessingRedirect, setIsProcessingRedirect] = useState(true);
 
-  // Effect 1: Handle Google Sign-In Redirect
+  // Effect 1: Handle Google Sign-In Redirect. This should run only once on mount.
   useEffect(() => {
     const processRedirectResult = async () => {
       try {
@@ -50,27 +53,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const additionalInfo = getAdditionalUserInfo(result);
 
           if (additionalInfo?.isNewUser) {
-            // New user from Google. Create their profile shell.
             const userDocRef = doc(db, 'users', user.uid);
-            const userData: Partial<UserProfile> = {
-                name: user.displayName || 'New User',
-                email: user.email!,
-                photoURL: user.photoURL || undefined,
-            };
-            await setDoc(userDocRef, userData, { merge: true });
-            // The next effect will handle the redirect to complete-profile
+            // Check if profile already exists from another sign-up method
+            const docSnap = await getDoc(userDocRef);
+            if (!docSnap.exists()) {
+                const userData: Partial<UserProfile> = {
+                    name: user.displayName || 'New User',
+                    email: user.email!,
+                    photoURL: user.photoURL || undefined,
+                };
+                await setDoc(userDocRef, userData, { merge: true });
+            }
           }
         }
       } catch (error) {
         console.error("Error processing redirect result:", error);
+      } finally {
+        setIsProcessingRedirect(false);
       }
     };
     processRedirectResult();
   }, [auth, db]);
 
+
   // Effect 2: Main Auth State and Profile Handling
   useEffect(() => {
-    if (isUserLoading) {
+    if (isUserLoading || isProcessingRedirect) {
       setLoading(true);
       return;
     }
@@ -92,7 +100,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     const userDocRef = doc(db, 'users', user.uid);
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-      setLoading(false);
       const onAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
 
       if (docSnap.exists()) {
@@ -111,11 +118,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } else {
-        // Doc doesn't exist, this happens for new Google users
+        // Doc doesn't exist, this happens for new Google users before profile is created
         if (pathname !== '/signup/complete-profile') {
           router.replace('/signup/complete-profile');
         }
       }
+       setLoading(false);
     }, (error) => {
       console.error("Error listening to user profile, signing out:", error);
       firebaseSignOut(auth);
@@ -123,20 +131,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [user, isUserLoading, auth, db, router, pathname]);
+  }, [user, isUserLoading, isProcessingRedirect, auth, db, router, pathname]);
 
   const signOut = async () => {
     await firebaseSignOut(auth);
     // The main useEffect will handle cleanup and redirection
   };
   
-  const value = { user, auth, userProfile, loading, signOut };
+  const value = { user, auth, userProfile, loading: loading || isUserLoading || isProcessingRedirect, signOut };
 
   // Render a loading screen or children
-  if (loading) {
+  if (loading || isUserLoading || isProcessingRedirect) {
     return (
-        <div className="flex h-screen items-center justify-center">
-            <p>Loading...</p>
+        <div className="flex h-screen items-center justify-center bg-background">
+             <div className="flex flex-col items-center gap-4">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <p className="text-muted-foreground">Initializing Session...</p>
+            </div>
         </div>
     );
   }

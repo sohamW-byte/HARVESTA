@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { doc, setDoc } from 'firebase/firestore';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -141,9 +141,9 @@ export default function CompleteProfilePage() {
     }
   };
   
-  if (authLoading || !user) {
+  if (authLoading || !user || !userProfile) {
     return (
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm">
         <CardHeader>
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-4 w-full" />
@@ -172,6 +172,10 @@ export default function CompleteProfilePage() {
           <div className="space-y-2">
             <Label>Email</Label>
             <p className="text-sm text-muted-foreground">{user.email}</p>
+          </div>
+           <div className="space-y-2">
+            <Label>Name</Label>
+            <p className="text-sm text-muted-foreground">{userProfile.name}</p>
           </div>
           
           <div className="grid gap-2">
