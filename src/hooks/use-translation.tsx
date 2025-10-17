@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
@@ -17,6 +16,8 @@ const dictionary: Translations = {
     'Log out': { 'hi': 'लॉग आउट', 'gom': 'लॉग आउट' },
     'Dashboard': { 'hi': 'डैशबोर्ड', 'gom': 'डॅशबोर्ड' },
     'Marketplace': { 'hi': 'बाज़ार', 'gom': 'बाजारपेठ' },
+    'Orders': { 'hi': 'आदेश', 'gom': 'आदेश' },
+    'Pricing': { 'hi': 'मूल्य निर्धारण', 'gom': 'दर' },
     'Messages': { 'hi': ' संदेश', 'gom': 'संदेश' },
     'Community': { 'hi': 'समुदाय', 'gom': 'समुदाय' },
     'Feedback & Help': { 'hi': 'प्रतिक्रिया और सहायता', 'gom': 'प्रतिक्रिया आनी मदत' },
@@ -101,6 +102,8 @@ const dictionary: Translations = {
     'Location': { 'hi': 'स्थान', 'gom': 'जागो' },
     'Contact Seller': { 'hi': 'विक्रेता से संपर्क करें', 'gom': 'विकप्या कडेन संपर्क करचो' },
     'Contact Buyer': { 'hi': 'खरीदार से संपर्क करें', 'gom': 'खरेदीदारा कडेन संपर्क करचो' },
+    'Buy Now': { 'hi': 'अभी खरीदें', 'gom': 'आतां विकतें घे' },
+    'View Details': { 'hi': 'विवरण देखें', 'gom': 'विवरण पळय' },
     
     // Data Translations
     "Sona Masoori Rice": { "hi": "सोना मसूरी चावल", "gom": "सोना मसूरी तांदूळ" },
@@ -115,6 +118,10 @@ const dictionary: Translations = {
     "Konkan Orchards": { "hi": "कोंकण ऑर्चर्ड्स", "gom": "कोंकण ऑर्चर्ड्स" },
     "Himalayan Fresh": { "hi": "हिमालयन फ्रेश", "gom": "हिमालयन फ्रेश" },
     "Glenburn Tea Estate": { "hi": "ग्लेनबर्न टी एस्टेट", "gom": "ग्लेनबर्न टी इस्टेट" },
+    "Anjali Traders": { "hi": "अंजलि ट्रेडर्स", "gom": "अंजली ट्रेडर्स" },
+    "Spice India Exports": { "hi": "स्पाइस इंडिया एक्सपोर्ट्स", "gom": "स्पाइस इंडिया एक्सपोर्ट्स" },
+    "Fresh Fruits Co.": { "hi": "फ्रेश फ्रूट्स कंपनी", "gom": "फ्रेश फ्रूट्स कंपनी" },
+    "Goa Farms": { "hi": "गोवा फार्म्स", "gom": "गोंय फार्म्स" },
     "Nalgonda, TS": { "hi": "नलगोंडा, टीएस", "gom": "नलगोंडा, टीएस" },
     "Nagpur, MH": { "hi": "नागपुर, एमएच", "gom": "नागपूर, एमएच" },
     "Erode, TN": { "hi": "इरोड, टीएन", "gom": "इरोड, टीएन" },
@@ -133,7 +140,7 @@ const dictionary: Translations = {
     "₹1,200/dozen": { "hi": "₹1,200/दर्जन", "gom": "₹1,200/डझन" },
     "₹1,500/box": { "hi": "₹1,500/बॉक्स", "gom": "₹1,500/पेट" },
     "₹2,500/kg": { "hi": "₹2,500/किलो", "gom": "₹2,500/किलो" },
-    "Spice India Exports": { "hi": "स्पाइस इंडिया एक्सपोर्ट्स", "gom": "स्पाइस इंडिया एक्सपोर्ट्स" },
+    "Up to ₹8,000/qtl": { "hi": "₹8,000/क्विंटल तक", "gom": "₹8,000/क्विंटल मेरेन" },
     "Fresh Cashews": { "hi": "ताजा काजू", "gom": "ताजे काजू" },
     "1 tonne": { "hi": "1 टन", "gom": "1 टन" },
     "Up to ₹70,000/qtl": { "hi": "₹70,000/क्विंटल तक", "gom": "₹70,000/क्विंटल मेरेन" },
@@ -157,6 +164,28 @@ const dictionary: Translations = {
     "Up to ₹1,800/kg": { "hi": "₹1,800/किलो तक", "gom": "₹1,800/किलो मेरेन" },
     "Kerala Spice Co.": { "hi": "केरल स्पाइस कंपनी", "gom": "केरळ स्पाइस कंपनी" },
     "Idukki, KL": { "hi": "इडुक्की, केएल", "gom": "इडुक्की, केएल" },
+
+    // Pricing Page
+    'Get Started': { 'hi': 'शुरू करें', 'gom': 'सुरु करचें' },
+    'Upgrade to Pro': { 'hi': 'प्रो में अपग्रेड करें', 'gom': 'प्रो-क अपग्रेड करचें' },
+    'Contact Sales': { 'hi': 'बिक्री से संपर्क करें', 'gom': 'विक्री कडेन संपर्क करचो' },
+    'Starter Farmer': { 'hi': 'स्टार्टर किसान', 'gom': 'स्टार्टर शेतकार' },
+    'Pro Farmer': { 'hi': 'प्रो किसान', 'gom': 'प्रो शेतकार' },
+    'Business Buyer': { 'hi': 'बिजनेस खरीदार', 'gom': 'बिजनेस खरेदीदार' },
+    'List up to 5 products': { 'hi': '5 उत्पादों तक सूचीबद्ध करें', 'gom': '5 उत्पाद मेरेन सूचीबद्ध करात' },
+    'Basic market price access': { 'hi': 'बुनियादी बाजार मूल्य तक पहुंच', 'gom': 'मूल बाजार दरा मेरेन प्रवेश' },
+    'Community forum access': { 'hi': 'सामुदायिक मंच तक पहुंच', 'gom': 'समुदाय मंचा मेरेन प्रवेश' },
+    'Standard support': { 'hi': 'मानक समर्थन', 'gom': 'मानक आदार' },
+    'Unlimited product listings': { 'hi': 'असीमित उत्पाद लिस्टिंग', 'gom': 'अमर्याद उत्पाद सूची' },
+    'Advanced AI recommendations': { 'hi': 'उन्नत एआई सिफारिशें', 'gom': 'प्रगत एआय शिफारसी' },
+    'Real-time price alerts': { 'hi': 'वास्तविक समय मूल्य अलर्ट', 'gom': 'वास्तविक वेळ दर अलर्ट' },
+    '0% commission on first 5 orders': { 'hi': 'पहले 5 ऑर्डर पर 0% कमीशन', 'gom': 'पयल्या 5 ऑर्डरचेर 0% कमिशन' },
+    'Priority support': { 'hi': 'प्राथमिकता समर्थन', 'gom': 'प्राधान्य आदार' },
+    'Bulk order placement': { 'hi': 'थोक ऑर्डर प्लेसमेंट', 'gom': 'थोक ऑर्डर प्लेसमेंट' },
+    'Access to verified sellers network': { 'hi': 'सत्यापित विक्रेताओं के नेटवर्क तक पहुंच', 'gom': 'सत्यापित विक्रेत्यांच्या नेटवर्क मेरेन प्रवेश' },
+    'Advanced supply chain analytics': { 'hi': 'उन्नत आपूर्ति श्रृंखला विश्लेषिकी', 'gom': 'प्रगत पुरवण साखळी विश्लेषिकी' },
+    'Dedicated account manager': { 'hi': 'समर्पित खाता प्रबंधक', 'gom': 'समर्पित खातें वेवस्थापक' },
+    '24/7 premium support': { 'hi': '24/7 प्रीमियम समर्थन', 'gom': '24/7 प्रीमियम आदार' },
     
     // Community Page
     'Community Forum': { 'hi': 'सामुदायिक मंच', 'gom': 'समुदाय मंच' },
@@ -227,7 +256,6 @@ const dictionary: Translations = {
     "Karnataka, India": {"hi": "कर्नाटक, भारत", "gom": "कर्नाटक, भारत"},
 
     // Testimonials Card
-    "Up to ₹8,000/qtl": {"hi": "₹8,000/क्विंटल तक", "gom": "₹8,000/क्विंटल मेरेन"},
     "produce-rice": {"hi": "चावल के दाने", "gom": "तांदळाचे दाणे"},
     "produce-oranges": {"hi": "ताजे संतरे", "gom": "ताजी संत्री"},
     "produce-wheat": {"hi": "गेहूं का खेत", "gom": "गव्हाचें शेत"},
@@ -241,7 +269,7 @@ const dictionary: Translations = {
     "A satellite view of a farm field.": {"hi": "एक खेत के मैदान का उपग्रह दृश्य।", "gom": "एका शेताच्या मैदानाचो उपग्रह दृश्य."},
     "Avatar for a sample user.": {"hi": "एक नमूना उपयोगकर्ता के लिए अवतार।", "gom": "एका नमुन्या वापरप्या खातीर अवतार."},
     "Avatar for another sample user.": {"hi": "एक और नमूना उपयोगकर्ता के लिए अवतार।", "gom": "दुसऱ्या नमुन्या वापरप्या खातीर अवतार."},
-    "Avatar for a third sample user.": {"hi": "तीसरे नमूना उपयोगकर्ता के लिए अवतार।", "gom": "तिसऱ्या नमुन्या वापरप्या खातीर अवतार."},
+    "Avatar for a third sample user.": {"hi": "तीसरे नमूना उपयोगकर्ता के लिए अवतार।", "gom": "तिसऱ्या नмуन्या वापरप्या खातीर अवतार."},
     "Sona Masoori Rice": {"hi": "सोना मसूरी चावल", "gom": "सोना मसूरी तांदूळ"},
     "Nagpur Oranges": {"hi": "नागपुर संतरे", "gom": "नागपूर संत्री"},
     "Ears of golden wheat.": {"hi": "सुनहरे गेहूं की बालियां।", "gom": "भांगराळ्या गव्हाच्यो कणयो."},

@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -16,6 +15,8 @@ import {
   LifeBuoy,
   ScrollText,
   ChevronDown,
+  FileText,
+  BadgeDollarSign,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -51,6 +52,8 @@ export function DashboardSidebar() {
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/dashboard/recommendations', label: 'AI Suggestions', icon: Lightbulb, buyerHidden: true },
     { href: '/dashboard/marketplace', label: 'Marketplace', icon: Store },
+    { href: '/dashboard/orders', label: 'Orders', icon: FileText },
+    { href: '/dashboard/pricing', label: 'Pricing', icon: BadgeDollarSign },
     { href: '/dashboard/my-fields', label: 'My Fields', icon: Map, buyerHidden: true },
     { href: '/dashboard/reports', label: 'Reports', icon: BarChart, buyerHidden: true },
     { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },

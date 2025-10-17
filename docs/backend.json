@@ -341,6 +341,55 @@
         "message",
         "createdAt"
       ]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents an order placed on the marketplace.",
+      "properties": {
+        "id": { "type": "string" },
+        "buyerId": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "listingId": { "type": "string" },
+        "quantity": { "type": "number" },
+        "totalPrice": { "type": "number" },
+        "commission": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "shipped", "completed", "canceled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "buyerId", "sellerId", "listingId", "quantity", "totalPrice", "commission", "status", "createdAt"]
+    },
+    "Subscription": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Subscription",
+      "type": "object",
+      "description": "Represents a user's subscription plan.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "planId": { "type": "string", "enum": ["starter", "pro", "business"] },
+        "status": { "type": "string", "enum": ["active", "canceled", "past_due"] },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "planId", "status", "startDate"]
+    },
+    "Transaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Transaction",
+      "type": "object",
+      "description": "Represents a financial transaction, like a commission payment.",
+      "properties": {
+        "id": { "type": "string" },
+        "orderId": { "type": "string" },
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["commission", "payout", "subscription_fee"] },
+        "status": { "type": "string", "enum": ["pending", "completed", "failed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "orderId", "userId", "amount", "type", "status", "createdAt"]
     }
   },
   "auth": {
@@ -355,155 +404,82 @@
         "path": "/users/{userId}",
         "definition": {
           "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profile information.  Path-based ownership for private user data.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/User" },
+          "description": "Stores user profile information."
         }
       },
       {
         "path": "/users/{userId}/fields/{fieldId}",
         "definition": {
           "entityName": "Field",
-          "schema": {
-            "$ref": "#/backend/entities/Field"
-          },
-          "description": "Stores field data associated with a user. Path-based ownership enforced via userId.  Includes 'userId' to ensure ownership integrity.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "fieldId",
-              "description": "The unique identifier for the field."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/Field" },
+          "description": "Stores field data for a user."
         }
       },
       {
         "path": "/users/{userId}/expenses/{expenseId}",
         "definition": {
           "entityName": "Expense",
-          "schema": {
-            "$ref": "#/backend/entities/Expense"
-          },
-          "description": "Stores expense records associated with a user. Path-based ownership enforced via userId. Includes 'userId' to ensure ownership integrity.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "expenseId",
-              "description": "The unique identifier for the expense."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/Expense" },
+          "description": "Stores expense records for a user."
         }
       },
       {
         "path": "/users/{userId}/tasks/{taskId}",
         "definition": {
           "entityName": "Task",
-          "schema": {
-            "$ref": "#/backend/entities/Task"
-          },
-          "description": "Stores tasks associated with a user. Path-based ownership enforced via userId. Includes 'userId' to ensure ownership integrity.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "taskId",
-              "description": "The unique identifier for the task."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/fields/{fieldId}/growthData/{growthDataId}",
-        "definition": {
-          "entityName": "GrowthData",
-          "schema": {
-            "$ref": "#/backend/entities/GrowthData"
-          },
-          "description": "Stores growth data for a specific field. Hierarchical path enforces ownership. Includes 'fieldId' to ensure relationship integrity.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "fieldId",
-              "description": "The unique identifier for the field."
-            },
-            {
-              "name": "growthDataId",
-              "description": "The unique identifier for the growth data entry."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/marketPrices/{marketPriceId}",
-        "definition": {
-          "entityName": "MarketPrice",
-          "schema": {
-            "$ref": "#/backend/entities/MarketPrice"
-          },
-          "description": "Stores market price data for different crops.  This is a global collection with no user-specific ownership.  Consider adding region as a field to enable filtering.",
-          "params": [
-            {
-              "name": "marketPriceId",
-              "description": "The unique identifier for the market price entry."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/Task" },
+          "description": "Stores tasks for a user."
         }
       },
       {
         "path": "/users/{userId}/produceListings/{produceListingId}",
         "definition": {
           "entityName": "ProduceListing",
-          "schema": {
-            "$ref": "#/backend/entities/ProduceListing"
-          },
-          "description": "Stores produce listings created by users. Path-based ownership enforced via userId. Includes 'userId' to ensure ownership integrity.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "produceListingId",
-              "description": "The unique identifier for the produce listing."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/ProduceListing" },
+          "description": "Stores produce listings created by users."
+        }
+      },
+      {
+        "path": "/marketPrices/{marketPriceId}",
+        "definition": {
+          "entityName": "MarketPrice",
+          "schema": { "$ref": "#/backend/entities/MarketPrice" },
+          "description": "Global market price data."
         }
       },
       {
         "path": "/feedbacks/{feedbackId}",
         "definition": {
           "entityName": "Feedback",
-          "schema": {
-            "$ref": "#/backend/entities/Feedback"
-          },
-          "description": "Stores user feedback submissions. This is a global collection that can be written by any authenticated user.",
-          "params": [
-            {
-              "name": "feedbackId",
-              "description": "The unique identifier for the feedback submission."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/Feedback" },
+          "description": "User feedback submissions."
+        }
+      },
+      {
+        "path": "/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": { "$ref": "#/backend/entities/Order" },
+          "description": "Stores all marketplace orders."
+        }
+      },
+      {
+        "path": "/users/{userId}/subscriptions/{subscriptionId}",
+        "definition": {
+          "entityName": "Subscription",
+          "schema": { "$ref": "#/backend/entities/Subscription" },
+          "description": "User subscription details."
+        }
+      },
+      {
+        "path": "/transactions/{transactionId}",
+        "definition": {
+          "entityName": "Transaction",
+          "schema": { "$ref": "#/backend/entities/Transaction" },
+          "description": "Stores all financial transactions."
         }
       }
-    ],
-    "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). It leverages Structural Segregation and Access Modeling for clarity.\n\nAuthorization Independence is achieved through denormalization. For instance, all user-owned data (fields, expenses, tasks, produce listings) are stored under the `/users/{userId}` path, eliminating the need for `get()` calls in security rules to verify ownership. Similarly, if collaborative features were added (e.g., shared fields), the members map would be denormalized into the documents needing authorization context.\n\nStructural Segregation is implemented by separating different data types into distinct collections. User profiles are stored in `/users/{userId}`, fields in `/users/{userId}/fields/{fieldId}`, expenses in `/users/{userId}/expenses/{expenseId}`, tasks in `/users/{userId}/tasks/{taskId}`, growth data in `/users/{userId}/fields/{fieldId}/growthData/{growthDataId}` and produce listings in `/users/{userId}/produceListings/{produceListingId}`. This segregation ensures that security rules can be applied consistently to all documents within a collection.\n\nAccess Modeling follows consistent patterns. Private user data resides under `/users/{userId}`, enforcing path-based ownership. Hierarchical paths (e.g., `/users/{userId}/fields/{fieldId}/growthData/{growthDataId}`) are used for nested data, ensuring efficient and secure access control.  Collaborative data would use a membership map denormalized at the document level.\n\nThis structure supports QAPs by ensuring that list operations are secure. Because ownership is explicit in the path, rules can efficiently filter based on `request.auth.uid` without needing to inspect document contents. The segregation of data types also prevents mixing public and private data in the same collection, which could complicate list operations.\n\nInvariants such as ownership are maintained by enforcing that the `userId` field matches the `userId` in the path. Timestamps (if added) can be enforced via rules as well. Denormalized data integrity is ensured by cloud functions triggered on changes to parent documents, updating the corresponding fields in subcollections to reflect those changes."
+    ]
   }
 }
