@@ -18,6 +18,7 @@ import {
   FileText,
   BadgeDollarSign,
   BookOpen,
+  Code,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -47,7 +48,7 @@ const yojanaLinks = [
 const learningLinks = [
     { key: 'Digital Marketing for Farmers', href: 'https://www.youtube.com/watch?v=b7iY-433A-s', label: 'Digital Marketing for Farmers (Video)' },
     { key: '10 Marketing Strategies', href: 'https://www.agriweb.ca/10-marketing-strategies-for-farmers/', label: '10 Marketing Strategies for Farmers' },
-    { key: 'Precision Agriculture Explained', href: 'https://www.youtube.com/watch?v=5wN2N33a3Vo', label: 'Precision Agriculture (Video)' },
+    { key: 'Precision Agriculture Explained', href: 'https://www.youtube.com/watch?v=5wN2N3Vo', label: 'Precision Agriculture (Video)' },
     { key: 'Vertical Farming Techniques', href: 'https://en.wikipedia.org/wiki/Vertical_farming', label: 'Intro to Vertical Farming' },
 ]
 
@@ -67,7 +68,10 @@ export function DashboardSidebar() {
     { href: '/dashboard/community', label: 'Community', icon: Users },
     { href: '/dashboard/profile', label: 'Profile', icon: UserIcon },
     { href: '/dashboard/feedback', label: 'Feedback & Help', icon: LifeBuoy },
-    { href: '/dashboard/pricing', label: 'Pricing', icon: BadgeDollarSign },
+  ];
+  
+  const devMenuItems = [
+    { href: '/dashboard/developer/image-examples', label: 'Image Examples', icon: Code },
   ];
 
   const userInitial = userProfile?.name?.charAt(0).toUpperCase() || '?';
@@ -151,6 +155,45 @@ export function DashboardSidebar() {
                 </div>
               </CollapsibleContent>
           </Collapsible>
+
+          {/* Developer Section */}
+          <div className="!mt-auto pt-4">
+              <SidebarGroup>
+                <SidebarGroupLabel>Developer</SidebarGroupLabel>
+                <SidebarGroupContent>
+                     <SidebarMenu>
+                        {devMenuItems.map((item) => (
+                            <SidebarMenuItem key={item.href}>
+                                <Link href={item.href} passHref>
+                                <SidebarMenuButton
+                                    isActive={pathname === item.href}
+                                    variant="ghost"
+                                    tooltip={t(item.label)}
+                                >
+                                    <item.icon />
+                                    <span>{t(item.label)}</span>
+                                </SidebarMenuButton>
+                                </Link>
+                            </SidebarMenuItem>
+                        ))}
+                    </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+          </div>
+          
+           <SidebarMenuItem>
+                <Link href="/dashboard/pricing" passHref>
+                  <SidebarMenuButton
+                    isActive={pathname === '/dashboard/pricing'}
+                    variant="ghost"
+                    tooltip={t('Pricing')}
+                  >
+                    <BadgeDollarSign />
+                    <span>{t('Pricing')}</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
