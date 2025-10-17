@@ -39,7 +39,7 @@
     {
       "id": "produce-oranges",
       "description": "Nagpur Oranges",
-      "imageUrl": "https://picsum.photos/seed/orangesfresh/400/300",
+      "imageUrl": "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=400&h=300&fit=crop",
       "imageHint": "fresh oranges"
     },
     {
