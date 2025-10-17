@@ -61,7 +61,6 @@ export function DashboardSidebar() {
     { href: '/dashboard/reports', label: 'Reports', icon: BarChart, buyerHidden: true },
     { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
     { href: '/dashboard/community', label: 'Community', icon: Users },
-    { href: '/dashboard/learning-hub', label: 'Learning Hub', icon: BookOpen },
     { href: '/dashboard/profile', label: 'Profile', icon: UserIcon },
     { href: '/dashboard/feedback', label: 'Feedback & Help', icon: LifeBuoy },
   ];
@@ -105,6 +104,21 @@ export function DashboardSidebar() {
               </SidebarMenuItem>
             )
           })}
+          <SidebarMenuItem>
+                <Link href="/dashboard/learning-hub" passHref>
+                  <SidebarMenuButton
+                    isActive={pathname === '/dashboard/learning-hub'}
+                    variant="ghost"
+                    tooltip={t('Learning Hub')}
+                    className="text-primary"
+                  >
+                    <BookOpen />
+                    <span>
+                      {t('Learning Hub')}
+                    </span>
+                  </SidebarMenuButton>
+                </Link>
+          </SidebarMenuItem>
           <Collapsible className="w-full">
               <CollapsibleTrigger asChild>
                   <SidebarMenuButton variant='ghost' className='w-full justify-start group'>
