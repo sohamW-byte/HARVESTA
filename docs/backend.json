@@ -346,8 +346,7 @@
   "auth": {
     "providers": [
       "password",
-      "anonymous",
-      "google.com"
+      "anonymous"
     ]
   },
   "firestore": {
@@ -508,5 +507,3 @@
     "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). It leverages Structural Segregation and Access Modeling for clarity.\n\nAuthorization Independence is achieved through denormalization. For instance, all user-owned data (fields, expenses, tasks, produce listings) are stored under the `/users/{userId}` path, eliminating the need for `get()` calls in security rules to verify ownership. Similarly, if collaborative features were added (e.g., shared fields), the members map would be denormalized into the documents needing authorization context.\n\nStructural Segregation is implemented by separating different data types into distinct collections. User profiles are stored in `/users/{userId}`, fields in `/users/{userId}/fields/{fieldId}`, expenses in `/users/{userId}/expenses/{expenseId}`, tasks in `/users/{userId}/tasks/{taskId}`, growth data in `/users/{userId}/fields/{fieldId}/growthData/{growthDataId}` and produce listings in `/users/{userId}/produceListings/{produceListingId}`. This segregation ensures that security rules can be applied consistently to all documents within a collection.\n\nAccess Modeling follows consistent patterns. Private user data resides under `/users/{userId}`, enforcing path-based ownership. Hierarchical paths (e.g., `/users/{userId}/fields/{fieldId}/growthData/{growthDataId}`) are used for nested data, ensuring efficient and secure access control.  Collaborative data would use a membership map denormalized at the document level.\n\nThis structure supports QAPs by ensuring that list operations are secure. Because ownership is explicit in the path, rules can efficiently filter based on `request.auth.uid` without needing to inspect document contents. The segregation of data types also prevents mixing public and private data in the same collection, which could complicate list operations.\n\nInvariants such as ownership are maintained by enforcing that the `userId` field matches the `userId` in the path. Timestamps (if added) can be enforced via rules as well. Denormalized data integrity is ensured by cloud functions triggered on changes to parent documents, updating the corresponding fields in subcollections to reflect those changes."
   }
 }
-
-    
