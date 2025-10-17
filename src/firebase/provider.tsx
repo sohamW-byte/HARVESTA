@@ -3,7 +3,7 @@
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore, doc, setDoc, getDoc } from 'firebase/firestore';
-import { Auth, User, onAuthStateChanged, getAuth } from 'firebase/auth';
+import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import type { UserProfile } from '@/lib/types';
 import { errorEmitter } from './error-emitter';
@@ -55,24 +55,26 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
           const docSnap = await getDoc(userDocRef);
 
           if (!docSnap.exists()) {
-             // This is a new user (likely from Google Sign-in)
-             // Let's create a profile document shell
+             // This is a new user (likely from Google Sign-in or initial signup)
              const profileData: Partial<UserProfile> = {
                 name: firebaseUser.displayName || 'New User',
                 email: firebaseUser.email!,
-                photoURL: firebaseUser.photoURL || undefined,
-            };
-            // Remove undefined fields
-            if (profileData.photoURL === undefined) {
-              delete profileData.photoURL;
-            }
-            setDoc(userDocRef, profileData, { merge: true }).catch((e) => {
-                 errorEmitter.emit('permission-error', new FirestorePermissionError({
+             };
+             // Conditionally add photoURL only if it exists on the firebaseUser
+             if (firebaseUser.photoURL) {
+                profileData.photoURL = firebaseUser.photoURL;
+             }
+
+            // This is a non-blocking call. The catch block will handle permission errors.
+            setDoc(userDocRef, profileData, { merge: true })
+              .catch((e) => {
+                  // This is the correct place to emit the detailed error.
+                  errorEmitter.emit('permission-error', new FirestorePermissionError({
                     path: userDocRef.path,
                     operation: 'create',
                     requestResourceData: profileData
-                }));
-            });
+                  }));
+              });
           }
         } else {
           setUser(null);
