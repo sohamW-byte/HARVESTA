@@ -62,6 +62,10 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
                 email: firebaseUser.email!,
                 photoURL: firebaseUser.photoURL || undefined,
             };
+            // Remove undefined fields
+            if (profileData.photoURL === undefined) {
+              delete profileData.photoURL;
+            }
             setDoc(userDocRef, profileData, { merge: true }).catch((e) => {
                  errorEmitter.emit('permission-error', new FirestorePermissionError({
                     path: userDocRef.path,

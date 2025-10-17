@@ -102,13 +102,15 @@ export default function SignupPage() {
 
       const userDocRef = doc(db, 'users', user.uid);
       
-      const userData: Omit<UserProfile, 'id'> = {
+      const userData: Partial<UserProfile> = {
         name: data.name,
         email: data.email,
         role: data.role,
-        farmerId: data.farmerId || undefined,
-        gstNumber: data.gstNumber || undefined,
       };
+
+      if (data.farmerId) userData.farmerId = data.farmerId;
+      if (data.gstNumber) userData.gstNumber = data.gstNumber;
+
 
       // Non-blocking write with error handling
       setDoc(userDocRef, userData)

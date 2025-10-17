@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -174,16 +173,16 @@ export default function ProfilePage() {
 
       const updatedData: Partial<UserProfile> = {
         name: data.name,
-        address: data.address,
-        photoURL: data.photoURL,
+        address: data.address || null,
+        photoURL: data.photoURL || null,
         cropsGrown: data.cropsGrown ? data.cropsGrown.split(',').map(s => s.trim()).filter(Boolean) : [],
       };
       
       if (userProfile?.role === 'farmer') {
-        updatedData.farmerId = data.farmerId;
+        updatedData.farmerId = data.farmerId || null;
       }
       if (userProfile?.role === 'buyer') {
-        updatedData.gstNumber = data.gstNumber;
+        updatedData.gstNumber = data.gstNumber || null;
       }
 
       await setDoc(userDocRef, updatedData, { merge: true })
