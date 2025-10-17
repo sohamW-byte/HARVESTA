@@ -53,13 +53,13 @@ export function DashboardSidebar() {
     { href: '/dashboard/recommendations', label: 'AI Suggestions', icon: Lightbulb, buyerHidden: true },
     { href: '/dashboard/marketplace', label: 'Marketplace', icon: Store },
     { href: '/dashboard/orders', label: 'Orders', icon: FileText },
-    { href: '/dashboard/pricing', label: 'Pricing', icon: BadgeDollarSign },
     { href: '/dashboard/my-fields', label: 'My Fields', icon: Map, buyerHidden: true },
     { href: '/dashboard/reports', label: 'Reports', icon: BarChart, buyerHidden: true },
     { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
     { href: '/dashboard/community', label: 'Community', icon: Users },
     { href: '/dashboard/profile', label: 'Profile', icon: UserIcon },
     { href: '/dashboard/feedback', label: 'Feedback & Help', icon: LifeBuoy },
+    { href: '/dashboard/pricing', label: 'Pricing', icon: BadgeDollarSign },
   ];
 
   const userInitial = userProfile?.name?.charAt(0).toUpperCase() || '?';
