@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Sprout } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useUser } from '@/firebase';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -54,11 +55,10 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const { auth } = useAppAuth();
+  const { auth, loading: authLoading } = useAppAuth();
 
   const {
     register,
@@ -72,7 +72,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
-      router.push('/dashboard');
+      // The useAuth hook will handle the redirect
     } catch (error: any) {
       toast({
         title: 'Login Failed',
@@ -88,10 +88,7 @@ export default function LoginPage() {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-      // signInWithRedirect will navigate away from the page
       await signInWithRedirect(auth, provider);
-      // The user will be redirected to Google's sign-in page.
-      // The result is handled by the useAuth hook upon redirect back to the app.
     } catch (error: any) {
       toast({
         title: 'Google Sign-In Failed',
@@ -146,8 +143,8 @@ export default function LoginPage() {
             </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-            <Button className="w-full" type="submit" disabled={loading || googleLoading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button className="w-full" type="submit" disabled={loading || googleLoading || authLoading}>
+                {(loading || authLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign in
             </Button>
 
@@ -156,7 +153,7 @@ export default function LoginPage() {
                 <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs uppercase text-muted-foreground">Or continue with</span>
             </div>
 
-            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading || googleLoading}>
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading || googleLoading || authLoading}>
                 {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
                 Google
             </Button>

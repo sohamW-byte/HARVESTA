@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { useAuth, useFirestore, useUser } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { useFirestore, useUser } from '@/firebase';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,6 +32,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { UserProfile } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/use-auth';
 
 const profileCompletionSchema = z
   .object({
@@ -69,8 +70,8 @@ type ProfileCompletionFormValues = z.infer<typeof profileCompletionSchema>;
 export default function CompleteProfilePage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user, isUserLoading } = useUser();
-  const [loading, setLoading] = useState(false);
+  const { user, loading: authLoading, userProfile } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const db = useFirestore();
 
   const form = useForm<ProfileCompletionFormValues>({
@@ -82,30 +83,26 @@ export default function CompleteProfilePage() {
   });
 
   const role = form.watch('role');
-
+  
   useEffect(() => {
-    // If user is not logged in or still loading, redirect them.
-    if (!isUserLoading && !user) {
-      router.replace('/login');
+    // This page is for users who have a user object but not a role.
+    if (!authLoading) {
+      if (!user) {
+        // Not logged in, go to login.
+        router.replace('/login');
+      } else if (userProfile?.role) {
+        // Profile is already complete, go to dashboard.
+        router.replace('/dashboard');
+      }
     }
-    // If user is logged in, check if their profile is already complete
-    if (user) {
-      const userDocRef = doc(db, 'users', user.uid);
-      getDoc(userDocRef).then(docSnap => {
-        if (docSnap.exists() && docSnap.data().role) {
-            // Profile is already complete, no need to be here
-            router.replace('/dashboard');
-        }
-      });
-    }
-  }, [user, isUserLoading, router, db]);
+  }, [user, userProfile, authLoading, router]);
 
   const onSubmit = async (data: ProfileCompletionFormValues) => {
     if (!user) {
         toast({ title: 'Not Authenticated', description: 'You must be logged in.', variant: 'destructive' });
         return;
     }
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       const userDocRef = doc(db, 'users', user.uid);
       
@@ -130,7 +127,7 @@ export default function CompleteProfilePage() {
            throw error;
         });
 
-      router.push('/dashboard');
+      // The useAuth hook will handle the redirect to dashboard
     } catch (error: any) {
       if (!(error instanceof FirestorePermissionError)) {
           toast({
@@ -140,11 +137,11 @@ export default function CompleteProfilePage() {
           });
       }
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
   
-  if (isUserLoading || !user) {
+  if (authLoading || !user) {
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
@@ -228,8 +225,8 @@ export default function CompleteProfilePage() {
           )}
         </CardContent>
         <CardFooter className="flex flex-col">
-          <Button className="w-full" type="submit" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button className="w-full" type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Complete Signup
           </Button>
         </CardFooter>

@@ -95,7 +95,6 @@ const signupSchema = z
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
-  const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -127,12 +126,10 @@ export default function SignupPage() {
 
       const userDocRef = doc(db, 'users', user.uid);
       
-      const userData: Omit<UserProfile, 'id'> = {
+      const userData: Partial<UserProfile> = {
         name: data.name,
         email: data.email,
         role: data.role,
-        cropsGrown: [],
-        address: '',
       };
 
       if (data.role === 'farmer' && data.farmerId) {
@@ -149,13 +146,11 @@ export default function SignupPage() {
                 operation: 'create',
                 requestResourceData: userData
            }));
-           // Re-throw to ensure the user sees the error and we don't redirect
            throw error;
         });
 
-      router.push('/dashboard');
+      // The useAuth hook will handle redirection to the dashboard
     } catch (error: any) {
-      // Only show toast if it's not a permission error (which has its own overlay)
       if (!(error instanceof FirestorePermissionError)) {
           toast({
             title: 'Sign Up Failed',
@@ -173,8 +168,6 @@ export default function SignupPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithRedirect(auth, provider);
-      // The user will be redirected to Google's sign-in page.
-      // The result is handled by the useAuth hook upon redirect back to the app.
     } catch (error: any) {
       toast({
         title: 'Google Sign-In Failed',
