@@ -20,6 +20,12 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AnimatedLoader = () => {
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
     const sproutVariants = {
         initial: {
             rotate: 0,
@@ -29,11 +35,15 @@ const AnimatedLoader = () => {
             rotate: [0, 15, -15, 0],
             scale: [1, 1.1, 1, 1.1, 1],
             transition: {
-                rotate: { duration: 1.5, ease: "easeInOut", repeat: Infinity },
-                scale: { duration: 1.5, ease: "easeInOut", repeat: Infinity },
+                rotate: { duration: 1, ease: "easeInOut", repeat: Infinity },
+                scale: { duration: 1, ease: "easeInOut", repeat: Infinity },
             },
         },
     };
+    
+    if (!isMounted) {
+        return null; // Don't render on the server
+    }
 
     return (
         <div className="flex h-screen items-center justify-center bg-background">
