@@ -17,6 +17,7 @@ import {
   ChevronDown,
   FileText,
   BadgeDollarSign,
+  BookOpen,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -42,6 +43,13 @@ const yojanaLinks = [
     { key: 'Pradhan Mantri Fasal Bima Yojana', href: 'https://pmfby.gov.in/', label: 'Pradhan Mantri Fasal Bima Yojana' },
     { key: 'Kisan Suvidha', href: 'https://mvk.iitd.ac.in/', label: 'Kisan Suvidha' },
 ];
+
+const learningLinks = [
+    { key: 'Digital Marketing for Farmers', href: 'https://www.youtube.com/watch?v=b7iY-433A-s', label: 'Digital Marketing for Farmers (Video)' },
+    { key: '10 Marketing Strategies', href: 'https://www.agriweb.ca/10-marketing-strategies-for-farmers/', label: '10 Marketing Strategies for Farmers' },
+    { key: 'Precision Agriculture Explained', href: 'https://www.youtube.com/watch?v=5wN2N33a3Vo', label: 'Precision Agriculture (Video)' },
+    { key: 'Vertical Farming Techniques', href: 'https://en.wikipedia.org/wiki/Vertical_farming', label: 'Intro to Vertical Farming' },
+]
 
 export function DashboardSidebar() {
   const pathname = usePathname();
@@ -95,6 +103,30 @@ export function DashboardSidebar() {
               </SidebarMenuItem>
             )
           })}
+          <Collapsible className="w-full">
+              <CollapsibleTrigger asChild>
+                  <SidebarMenuButton variant='ghost' className='w-full justify-start group'>
+                      <BookOpen />
+                      <span>{t('Learning Hub')}</span>
+                      <ChevronDown className='ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180' />
+                  </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="pl-10 pr-2 py-2 flex flex-col gap-2">
+                    {learningLinks.map(link => (
+                        <a 
+                            key={link.href} 
+                            href={link.href} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            {t(link.label)}
+                        </a>
+                    ))}
+                </div>
+              </CollapsibleContent>
+          </Collapsible>
            <Collapsible className="w-full">
               <CollapsibleTrigger asChild>
                   <SidebarMenuButton variant='ghost' className='w-full justify-start group'>

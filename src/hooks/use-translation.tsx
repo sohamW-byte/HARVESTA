@@ -84,12 +84,17 @@ const dictionary: Translations = {
     'AI Suggestions': { 'hi': 'एआई सुझाव', 'gom': 'एआय सूचना' },
     'My Fields': { 'hi': 'मेरे खेत', 'gom': ' म्हजीं शेतां' },
     'Reports': { 'hi': 'रिपोर्ट्स', 'gom': 'अहवाल' },
+    'Learning Hub': { 'hi': 'सीखने का केंद्र', 'gom': 'शिकप केंद्र' },
     'Yojanas & Schemes': { 'hi': 'योजनाएं और स्कीमें', 'gom': 'योजना आनी स्कीमां' },
     'PM Kisan Samman Nidhi': { 'hi': 'पीएम किसान सम्मान निधि', 'gom': 'पीएम किसान सम्मान निधी' },
     'e-NAM': { 'hi': 'ई-नाम', 'gom': 'ई-नाम' },
     'Soil Health Card': { 'hi': 'मृदा स्वास्थ्य कार्ड', 'gom': 'मृदा आरोग्य कार्ड' },
     'Pradhan Mantri Fasal Bima Yojana': { 'hi': 'प्रधानमंत्री फसल बीमा योजना', 'gom': 'प्रधानमंत्री फसल विमा योजना' },
     'Kisan Suvidha': { 'hi': 'किसान सुविधा', 'gom': 'शेतकार सुविधा' },
+    'Digital Marketing for Farmers (Video)': { 'hi': 'किसानों के लिए डिजिटल मार्केटिंग (वीडियो)', 'gom': 'शेतकारां खातीर डिजिटल मार्केटिंग (व्हिडिओ)' },
+    '10 Marketing Strategies for Farmers': { 'hi': 'किसानों के लिए 10 मार्केटिंग रणनीतियाँ', 'gom': 'शेतकारां खातीर 10 पणन रणनीती' },
+    'Precision Agriculture (Video)': { 'hi': 'सटीक कृषि (वीडियो)', 'gom': 'अचूक शेती (व्हिडिओ)' },
+    'Intro to Vertical Farming': { 'hi': 'वर्टिकल फार्मिंग का परिचय', 'gom': 'उब्या शेतीची वळख' },
 
     // Marketplace page
     'Buy and sell produce directly with verified partners.': { 'hi': 'सत्यापित भागीदारों के साथ सीधे उत्पाद खरीदें और बेचें।', 'gom': 'सत्यापित भागीदारांकडेन थेट उत्पादन विकतें घेयात आनी विकचें.' },
