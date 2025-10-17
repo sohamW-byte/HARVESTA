@@ -1,231 +1,191 @@
 /**
- * @fileOverview Firestore Security Rules for the application.
+ * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for personal data, while allowing public read access to market data and public write access for feedback.
+ * This ruleset enforces a strict user-ownership model for personal data, combined with public read access for certain global collections.
  *
  * Data Structure:
- * - /users/{userId}: User profiles, owned by the user.
- * - /users/{userId}/fields/{fieldId}: Field data, owned by the user.
- * - /users/{userId}/expenses/{expenseId}: Expense records, owned by the user.
- * - /users/{userId}/tasks/{taskId}: Tasks, owned by the user.
- * - /users/{userId}/fields/{fieldId}/growthData/{growthDataId}: Growth data, owned by the user and field.
- * - /marketPrices/{marketPriceId}: Market price data, publicly readable.
- * - /users/{userId}/produceListings/{produceListingId}: Produce listings, owned by the user.
- * - /feedbacks/{feedbackId}: User feedback, publicly writable by authenticated users.
+ * - User profiles and associated data (fields, expenses, tasks, produce listings, growth data) are nested under `/users/{userId}`.
+ * - Market prices are stored in the top-level `/marketPrices` collection and are publicly readable.
+ * - User feedback is stored in the top-level `/feedbacks` collection and can be created by authenticated users.
  *
  * Key Security Decisions:
- * - User data is strictly controlled by the user's ID in the path.
- * - Market prices are publicly readable.
- * - Feedback can be created by any authenticated user.
- * - Listing of documents is allowed for user-owned subcollections.
+ * - User listing is disallowed.
+ * - Market prices are publicly readable but only writable by an admin (not implemented in this prototyping phase).
+ * - Feedback can be submitted by any logged-in user.
  *
  * Denormalization for Authorization:
- * - User ownership is enforced by matching the {userId} path segment to the userId field within the documents.
- *   This avoids the need for costly `get()` calls to verify ownership.
+ * - All user-owned data includes the `userId` within the document and is also nested under a path containing the `userId`. This enables authorization checks based on the path.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Secure user profiles. Only the user can read/write their own profile.
+     * @description Ensures the user is signed in.
+     * @returns {boolean} True if the user is signed in.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the request is made by the owner of the resource.
+     * @param {string} userId The user ID to check against.
+     * @returns {boolean} True if the request is made by the owner.
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the request is made by an existing owner of the resource.
+     * @param {string} userId The user ID to check against.
+     * @returns {boolean} True if the request is made by an existing owner.
+     */
+    function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Rules for the /users/{userId} collection.
      * @path /users/{userId}
-     * @allow (create) - User with UID 'user123' can create a profile at /users/user123 with matching id field.
-     * @allow (get, list, update, delete) - User with UID 'user123' can read/write their profile at /users/user123.
-     * @deny (create) - User with UID 'user456' cannot create a profile at /users/user123.
-     * @deny (update, delete) - User with UID 'user456' cannot update/delete the profile at /users/user123.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with ID 'user123' creates their profile: `auth.uid == 'user123'`
+     * @deny (create) User with ID 'user123' tries to create a profile for 'user456': `auth.uid != 'user123'`
+     * @allow (get) User with ID 'user123' gets their own profile: `auth.uid == 'user123'`
+     * @deny (get) User with ID 'user123' tries to get the profile of 'user456': `auth.uid != 'user123'`
+     * @principle Enforces document ownership for writes and reads. Validates ID on create, and immutability of ID on update.
      */
     match /users/{userId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if false;
+      // Only the user themselves can create their profile.
       allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
+      // Only the user can read their own profile.
+      allow get: if isOwner(userId);
+      // Only the user can update their own profile. Enforce immutability of the ID.
       allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      // Only the user can delete their own profile.
       allow delete: if isExistingOwner(userId);
+      // No one can list all users.
+      allow list: if false;
     }
 
     /**
-     * @description Secure field data for a user. Only the user can read/write their own field data.
+     * @description Rules for the /users/{userId}/fields/{fieldId} collection.
      * @path /users/{userId}/fields/{fieldId}
-     * @allow (create) - User with UID 'user123' can create a field at /users/user123/fields/field123.
-     * @allow (get, list, update, delete) - User with UID 'user123' can read/write their field at /users/user123/fields/field123.
-     * @deny (create) - User with UID 'user456' cannot create a field at /users/user123/fields/field123.
-     * @deny (update, delete) - User with UID 'user456' cannot update/delete the field at /users/user123/fields/field123.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with ID 'user123' creates a field under their profile: `auth.uid == 'user123'`
+     * @deny (create) User with ID 'user123' tries to create a field under the profile of 'user456': `auth.uid != 'user123'`
+     * @allow (get) User with ID 'user123' gets a field under their own profile: `auth.uid == 'user123'`
+     * @deny (get) User with ID 'user123' tries to get a field under the profile of 'user456': `auth.uid != 'user123'`
+     * @principle Enforces document ownership for writes and reads. Validates userId on create, and immutability of userId on update.
      */
     match /users/{userId}/fields/{fieldId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
       allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
+      allow get: if isOwner(userId);
       allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
       allow delete: if isExistingOwner(userId);
+      allow list: if isOwner(userId);
     }
 
     /**
-     * @description Secure expense records for a user. Only the user can read/write their own expense records.
+     * @description Rules for the /users/{userId}/expenses/{expenseId} collection.
      * @path /users/{userId}/expenses/{expenseId}
-     * @allow (create) - User with UID 'user123' can create an expense at /users/user123/expenses/expense123.
-     * @allow (get, list, update, delete) - User with UID 'user123' can read/write their expense at /users/user123/expenses/expense123.
-     * @deny (create) - User with UID 'user456' cannot create an expense at /users/user123/expenses/expense123.
-     * @deny (update, delete) - User with UID 'user456' cannot update/delete the expense at /users/user123/expenses/expense123.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with ID 'user123' creates an expense under their profile: `auth.uid == 'user123'`
+     * @deny (create) User with ID 'user123' tries to create an expense under the profile of 'user456': `auth.uid != 'user123'`
+     * @allow (get) User with ID 'user123' gets an expense under their own profile: `auth.uid == 'user123'`
+     * @deny (get) User with ID 'user123' tries to get an expense under the profile of 'user456': `auth.uid != 'user123'`
+     * @principle Enforces document ownership for writes and reads. Validates userId on create, and immutability of userId on update.
      */
     match /users/{userId}/expenses/{expenseId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
       allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
+      allow get: if isOwner(userId);
       allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
       allow delete: if isExistingOwner(userId);
+      allow list: if isOwner(userId);
     }
 
     /**
-     * @description Secure tasks for a user. Only the user can read/write their own tasks.
+     * @description Rules for the /users/{userId}/tasks/{taskId} collection.
      * @path /users/{userId}/tasks/{taskId}
-     * @allow (create) - User with UID 'user123' can create a task at /users/user123/tasks/task123.
-     * @allow (get, list, update, delete) - User with UID 'user123' can read/write their task at /users/user123/tasks/task123.
-     * @deny (create) - User with UID 'user456' cannot create a task at /users/user123/tasks/task123.
-     * @deny (update, delete) - User with UID 'user456' cannot update/delete the task at /users/user123/tasks/task123.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with ID 'user123' creates a task under their profile: `auth.uid == 'user123'`
+     * @deny (create) User with ID 'user123' tries to create a task under the profile of 'user456': `auth.uid != 'user123'`
+     * @allow (get) User with ID 'user123' gets a task under their own profile: `auth.uid == 'user123'`
+     * @deny (get) User with ID 'user123' tries to get a task under the profile of 'user456': `auth.uid != 'user123'`
+     * @principle Enforces document ownership for writes and reads. Validates userId on create, and immutability of userId on update.
      */
     match /users/{userId}/tasks/{taskId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
       allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
+      allow get: if isOwner(userId);
       allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
       allow delete: if isExistingOwner(userId);
+      allow list: if isOwner(userId);
     }
 
     /**
-     * @description Secure growth data for a field. Only the owner of the field can read/write growth data.
+     * @description Rules for the /users/{userId}/fields/{fieldId}/growthData/{growthDataId} collection.
      * @path /users/{userId}/fields/{fieldId}/growthData/{growthDataId}
-     * @allow (create) - User with UID 'user123' can create growth data at /users/user123/fields/field123/growthData/growthData123.
-     * @allow (get, list, update, delete) - User with UID 'user123' can read/write their growth data at /users/user123/fields/field123/growthData/growthData123.
-     * @deny (create) - User with UID 'user456' cannot create growth data at /users/user123/fields/field123/growthData/growthData123.
-     * @deny (update, delete) - User with UID 'user456' cannot update/delete the growth data at /users/user123/fields/field123/growthData/growthData123.
-     * @principle Enforces document ownership for all operations via hierarchical path.
+     * @allow (create) User with ID 'user123' creates growth data under their field: `auth.uid == 'user123'`
+     * @deny (create) User with ID 'user123' tries to create growth data under the field of 'user456': `auth.uid != 'user123'`
+     * @allow (get) User with ID 'user123' gets growth data under their own field: `auth.uid == 'user123'`
+     * @deny (get) User with ID 'user123' tries to get growth data under the field of 'user456': `auth.uid != 'user123'`
+     * @principle Enforces document ownership for writes and reads.
      */
     match /users/{userId}/fields/{fieldId}/growthData/{growthDataId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
+      allow create: if isSignedIn() && isOwner(userId);
       allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.fieldId == fieldId;
-      allow update: if isExistingOwner(userId) && request.resource.data.fieldId == resource.data.fieldId;
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
+      allow list: if isOwner(userId);
     }
 
     /**
-     * @description Market prices are publicly readable, but writes are not allowed in this prototype.
+     * @description Rules for the /marketPrices/{marketPriceId} collection.
      * @path /marketPrices/{marketPriceId}
-     * @allow (get, list) - Any user can read market price data.
-     * @deny (create, update, delete) - No one can create, update, or delete market price data.
-     * @principle Public read access with restricted writes for future admin use.
+     * @allow (get) Anyone can get market price data.
+     * @allow (list) Anyone can list market price data.
+     * @deny (create) No one can create market price data (except through backend).
+     * @deny (update) No one can update market price data (except through backend).
+     * @deny (delete) No one can delete market price data (except through backend).
+     * @principle Allows public read access to market price data.
      */
     match /marketPrices/{marketPriceId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if false; // TODO: Add admin validation
+      allow update: if false; // TODO: Add admin validation
+      allow delete: if false; // TODO: Add admin validation
     }
 
     /**
-     * @description Secure produce listings for a user. Only the user can read/write their own listings.
+     * @description Rules for the /users/{userId}/produceListings/{produceListingId} collection.
      * @path /users/{userId}/produceListings/{produceListingId}
-     * @allow (create) - User with UID 'user123' can create a produce listing at /users/user123/produceListings/listing123.
-     * @allow (get, list, update, delete) - User with UID 'user123' can read/write their listing at /users/user123/produceListings/listing123.
-     * @deny (create) - User with UID 'user456' cannot create a listing at /users/user123/produceListings/listing123.
-     * @deny (update, delete) - User with UID 'user456' cannot update/delete the listing at /users/user123/produceListings/listing123.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with ID 'user123' creates a produce listing under their profile: `auth.uid == 'user123'`
+     * @deny (create) User with ID 'user123' tries to create a produce listing under the profile of 'user456': `auth.uid != 'user123'`
+     * @allow (get) User with ID 'user123' gets a produce listing under their own profile: `auth.uid == 'user123'`
+     * @deny (get) User with ID 'user123' tries to get a produce listing under the profile of 'user456': `auth.uid != 'user123'`
+     * @principle Enforces document ownership for writes and reads. Validates userId on create, and immutability of userId on update.
      */
     match /users/{userId}/produceListings/{produceListingId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
       allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
+      allow get: if isOwner(userId);
       allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
       allow delete: if isExistingOwner(userId);
+      allow list: if isOwner(userId);
     }
 
     /**
-     * @description Allows any authenticated user to submit feedback.
+     * @description Rules for the /feedbacks/{feedbackId} collection.
      * @path /feedbacks/{feedbackId}
-     * @allow (create) - Any signed-in user can create feedback.
-     * @deny (get, list, update, delete) - No get, list, update, or delete operations allowed.
-     * @principle Allows public feedback submission from authenticated users.
+     * @allow (create) Any signed-in user can create feedback.
+     * @deny (get) No one can get feedback (except through backend).
+     * @deny (list) No one can list feedback (except through backend).
+     * @deny (update) No one can update feedback.
+     * @deny (delete) No one can delete feedback.
+     * @principle Allows any authenticated user to create feedback.
      */
     match /feedbacks/{feedbackId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
+      allow create: if isSignedIn();
       allow get: if false;
       allow list: if false;
-      allow create: if isSignedIn();
       allow update: if false;
       allow delete: if false;
     }
