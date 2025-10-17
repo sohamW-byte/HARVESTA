@@ -1,12 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, signOut as firebaseSignOut, getRedirectResult, getAdditionalUserInfo } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth as useFirebaseAuth, useFirestore, useUser } from '@/firebase';
-import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sprout } from 'lucide-react';
 
 interface AuthContextType {
   user: User | null;
@@ -25,127 +25,127 @@ function setCookie(name: string, value: string, days: number) {
         date.setTime(date.getTime() + (days*24*60*60*1000));
         expires = "; expires=" + date.toUTCString();
     }
-    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+    if (typeof document !== 'undefined') {
+        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+    }
 }
 
 function eraseCookie(name: string) {   
-    document.cookie = name+'=; Max-Age=-99999999; path=/';  
+    if (typeof document !== 'undefined') {
+        document.cookie = name+'=; Max-Age=-99999999; path=/';
+    }
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { user, isUserLoading } = useUser();
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const { user, isUserLoading: isAuthLoading } = useUser();
   const auth = useFirebaseAuth();
   const db = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
   
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isProcessingRedirect, setIsProcessingRedirect] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Effect 1: Handle Google Sign-In Redirect. This should run only once on mount.
   useEffect(() => {
-    const processRedirectResult = async () => {
+    const handleAuth = async () => {
+      // Step 1: Process any pending redirect from Google Sign-In
       try {
         const result = await getRedirectResult(auth);
         if (result) {
           const user = result.user;
           const additionalInfo = getAdditionalUserInfo(result);
-
           if (additionalInfo?.isNewUser) {
             const userDocRef = doc(db, 'users', user.uid);
-            // Check if profile already exists from another sign-up method
             const docSnap = await getDoc(userDocRef);
             if (!docSnap.exists()) {
-                const userData: Partial<UserProfile> = {
-                    name: user.displayName || 'New User',
-                    email: user.email!,
-                    photoURL: user.photoURL || undefined,
-                };
-                await setDoc(userDocRef, userData, { merge: true });
+              const profileData: Partial<UserProfile> = {
+                name: user.displayName || 'New User',
+                email: user.email!,
+                photoURL: user.photoURL || undefined,
+              };
+              await setDoc(userDocRef, profileData, { merge: true });
             }
           }
         }
       } catch (error) {
         console.error("Error processing redirect result:", error);
-      } finally {
-        setIsProcessingRedirect(false);
       }
-    };
-    processRedirectResult();
-  }, [auth, db]);
-
-
-  // Effect 2: Main Auth State and Profile Handling
-  useEffect(() => {
-    if (isUserLoading || isProcessingRedirect) {
-      setLoading(true);
-      return;
-    }
-
-    if (!user) {
-      // User is logged out
-      setUserProfile(null);
-      eraseCookie('firebaseIdToken');
-      setLoading(false);
-      const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/forgot-password');
-      if (!isAuthRoute) {
-        router.replace('/login');
+      
+      // After processing redirect, isAuthLoading will eventually become false.
+      // We wait for that, and then for the actual user object to be available.
+      if (isAuthLoading) {
+        return; // Wait for Firebase Auth to initialize
       }
-      return;
-    }
 
-    // User is logged in, manage their session and profile
-    user.getIdToken().then(token => setCookie('firebaseIdToken', token, 1));
-    
-    const userDocRef = doc(db, 'users', user.uid);
-    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-      const onAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
+      // Step 2: Handle user state (logged in or out)
+      if (!user) {
+        // User is not logged in
+        setUserProfile(null);
+        eraseCookie('firebaseIdToken');
+        const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/forgot-password');
+        if (!isAuthPage) {
+          router.replace('/login');
+        }
+        setIsLoading(false);
+        return;
+      }
 
-      if (docSnap.exists()) {
-        const profile = { id: docSnap.id, ...docSnap.data() } as UserProfile;
-        setUserProfile(profile);
+      // User is logged in, set token and subscribe to profile
+      user.getIdToken().then(token => setCookie('firebaseIdToken', token, 1));
 
-        if (profile.role) {
-          // Profile is complete
-          if (onAuthPage) {
-            router.replace('/dashboard');
+      const userDocRef = doc(db, 'users', user.uid);
+      const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+        const onAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
+
+        if (docSnap.exists()) {
+          const profile = { id: docSnap.id, ...docSnap.data() } as UserProfile;
+          setUserProfile(profile);
+
+          if (profile.role) {
+            // Profile is complete, go to dashboard
+            if (onAuthPage) {
+              router.replace('/dashboard');
+            }
+          } else {
+            // Profile is incomplete, go to completion page
+            if (pathname !== '/signup/complete-profile') {
+              router.replace('/signup/complete-profile');
+            }
           }
         } else {
-          // Profile is incomplete
+          // New user (e.g. from Google) whose doc might have just been created
+          // or an old user whose doc was deleted. Send to complete profile.
+          setUserProfile(null);
           if (pathname !== '/signup/complete-profile') {
             router.replace('/signup/complete-profile');
           }
         }
-      } else {
-        // Doc doesn't exist, this happens for new Google users before profile is created
-        if (pathname !== '/signup/complete-profile') {
-          router.replace('/signup/complete-profile');
-        }
-      }
-       setLoading(false);
-    }, (error) => {
-      console.error("Error listening to user profile, signing out:", error);
-      firebaseSignOut(auth);
-      setLoading(false);
-    });
+        setIsLoading(false);
+      }, (error) => {
+        console.error("Error listening to user profile:", error);
+        firebaseSignOut(auth);
+        setIsLoading(false);
+      });
 
-    return () => unsubscribe();
-  }, [user, isUserLoading, isProcessingRedirect, auth, db, router, pathname]);
+      return () => unsubscribe();
+    };
+
+    handleAuth();
+  }, [user, isAuthLoading, auth, db, router, pathname]);
 
   const signOut = async () => {
+    setIsLoading(true);
     await firebaseSignOut(auth);
-    // The main useEffect will handle cleanup and redirection
+    // The useEffect hook will handle the rest
   };
   
-  const value = { user, auth, userProfile, loading: loading || isUserLoading || isProcessingRedirect, signOut };
+  const value: AuthContextType = { user, auth, userProfile, loading: isLoading, signOut };
 
-  // Render a loading screen or children
-  if (loading || isUserLoading || isProcessingRedirect) {
+  if (isLoading) {
     return (
         <div className="flex h-screen items-center justify-center bg-background">
              <div className="flex flex-col items-center gap-4">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <Sprout className="h-12 w-12 text-primary animate-pulse" />
                 <p className="text-muted-foreground">Initializing Session...</p>
             </div>
         </div>
@@ -159,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');

@@ -141,7 +141,7 @@ export default function CompleteProfilePage() {
     }
   };
   
-  if (authLoading || !user || !userProfile) {
+  if (authLoading || !user) {
     return (
       <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm">
         <CardHeader>
@@ -175,7 +175,7 @@ export default function CompleteProfilePage() {
           </div>
            <div className="space-y-2">
             <Label>Name</Label>
-            <p className="text-sm text-muted-foreground">{userProfile.name}</p>
+            <p className="text-sm text-muted-foreground">{userProfile?.name || user.displayName}</p>
           </div>
           
           <div className="grid gap-2">

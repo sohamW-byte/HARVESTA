@@ -98,7 +98,7 @@ export default function SignupPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const auth = useAppAuth();
+  const { auth } = useAppAuth();
   const db = useFirestore();
 
   const form = useForm<SignupFormValues>({
