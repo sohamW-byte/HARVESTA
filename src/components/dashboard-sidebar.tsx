@@ -97,9 +97,10 @@ export function DashboardSidebar() {
                     isActive={pathname === item.href}
                     variant="ghost"
                     tooltip={t(item.label)}
+                     className={cn(isLearningHub && 'animate-pulse shadow-[0_0_12px_2px_hsl(var(--primary))]')}
                   >
                     <item.icon />
-                    <span className={cn(isLearningHub && 'animate-pulse [text-shadow:0_0_8px_hsl(var(--primary))]')}>
+                    <span>
                       {t(item.label)}
                     </span>
                   </SidebarMenuButton>
