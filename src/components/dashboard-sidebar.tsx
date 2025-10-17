@@ -18,7 +18,6 @@ import {
   FileText,
   BadgeDollarSign,
   BookOpen,
-  Code,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -65,10 +64,6 @@ export function DashboardSidebar() {
     { href: '/dashboard/feedback', label: 'Feedback & Help', icon: LifeBuoy },
   ];
   
-  const devMenuItems = [
-    { href: '/dashboard/developer/image-examples', label: 'Image Examples', icon: Code },
-  ];
-
   const userInitial = userProfile?.name?.charAt(0).toUpperCase() || '?';
   const isBuyer = userProfile?.role === 'buyer';
 
@@ -143,33 +138,8 @@ export function DashboardSidebar() {
                 </div>
               </CollapsibleContent>
           </Collapsible>
-
-          {/* Developer Section */}
-          <div className="!mt-auto pt-4">
-              <SidebarGroup>
-                <SidebarGroupLabel>Developer</SidebarGroupLabel>
-                <SidebarGroupContent>
-                     <SidebarMenu>
-                        {devMenuItems.map((item) => (
-                            <SidebarMenuItem key={item.href}>
-                                <Link href={item.href} passHref>
-                                <SidebarMenuButton
-                                    isActive={pathname === item.href}
-                                    variant="ghost"
-                                    tooltip={t(item.label)}
-                                >
-                                    <item.icon />
-                                    <span>{t(item.label)}</span>
-                                </SidebarMenuButton>
-                                </Link>
-                            </SidebarMenuItem>
-                        ))}
-                    </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-          </div>
           
-           <SidebarMenuItem>
+           <SidebarMenuItem className="!mt-auto">
                 <Link href="/dashboard/pricing" passHref>
                   <SidebarMenuButton
                     isActive={pathname === '/dashboard/pricing'}
