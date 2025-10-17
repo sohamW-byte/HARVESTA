@@ -47,38 +47,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     const unsubscribe = onAuthStateChanged(
       auth,
       async (firebaseUser) => {
-        if (firebaseUser) {
-          setUser(firebaseUser);
-          
-          // Check if this is a new user from a social provider login
-          const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-          const docSnap = await getDoc(userDocRef);
-
-          if (!docSnap.exists()) {
-             // This is a new user (likely from Google Sign-in or initial signup)
-             const profileData: Partial<UserProfile> = {
-                name: firebaseUser.displayName || 'New User',
-                email: firebaseUser.email!,
-             };
-             // Conditionally add photoURL only if it exists on the firebaseUser
-             if (firebaseUser.photoURL) {
-                profileData.photoURL = firebaseUser.photoURL;
-             }
-
-            // This is a non-blocking call. The catch block will handle permission errors.
-            setDoc(userDocRef, profileData, { merge: true })
-              .catch((e) => {
-                  // This is the correct place to emit the detailed error.
-                  errorEmitter.emit('permission-error', new FirestorePermissionError({
-                    path: userDocRef.path,
-                    operation: 'create',
-                    requestResourceData: profileData
-                  }));
-              });
-          }
-        } else {
-          setUser(null);
-        }
+        setUser(firebaseUser);
         setLoading(false);
       },
       (error) => {

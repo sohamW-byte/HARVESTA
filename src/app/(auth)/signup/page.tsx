@@ -7,7 +7,6 @@ import { useAuth } from '@/firebase';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -21,8 +20,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { useAuth as useAppAuth } from '@/hooks/use-auth';
 
 const signupSchema = z.object({
+    name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
     email: z.string().email({ message: 'Invalid email address' }),
     password: z
       .string()
@@ -35,10 +36,12 @@ export default function SignupPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const auth = useAuth();
+  const { loading: authHookLoading } = useAppAuth();
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
+      name: '',
       email: '',
       password: '',
     },
@@ -53,6 +56,8 @@ export default function SignupPage() {
         data.email,
         data.password
       );
+      // We are no longer writing to Firestore here to avoid permission errors.
+      // This will be handled on the complete-profile page.
 
     } catch (error: any) {
        if (error.code && error.code.startsWith('auth/')) {
@@ -83,6 +88,19 @@ export default function SignupPage() {
       </CardHeader>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <CardContent className="grid gap-4">
+           <div className="grid gap-2">
+            <Label htmlFor="name">Full Name</Label>
+            <Input
+              id="name"
+              placeholder="John Doe"
+              {...form.register('name')}
+            />
+            {form.formState.errors.name && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.name.message}
+              </p>
+            )}
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -112,8 +130,8 @@ export default function SignupPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col">
-          <Button className="w-full" type="submit" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button className="w-full" type="submit" disabled={loading || authHookLoading}>
+            {(loading || authHookLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create account
           </Button>
           <div className="mt-4 text-center text-sm">

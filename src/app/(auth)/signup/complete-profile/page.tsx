@@ -36,6 +36,7 @@ import { useAuth } from '@/hooks/use-auth';
 
 const profileCompletionSchema = z
   .object({
+    name: z.string().min(2, { message: "Name is required"}),
     role: z.enum(['farmer', 'buyer'], { required_error: 'Please select a role' }),
     farmerId: z.string().optional(),
     gstNumber: z.string().optional(),
@@ -77,6 +78,7 @@ export default function CompleteProfilePage() {
   const form = useForm<ProfileCompletionFormValues>({
     resolver: zodResolver(profileCompletionSchema),
     defaultValues: {
+      name: '',
       farmerId: '',
       gstNumber: '',
     },
@@ -93,9 +95,12 @@ export default function CompleteProfilePage() {
       } else if (userProfile?.role) {
         // Profile is already complete, go to dashboard.
         router.replace('/dashboard');
+      } else {
+        // Pre-fill name if available from user object
+        form.setValue('name', user.displayName || '');
       }
     }
-  }, [user, userProfile, authLoading, router]);
+  }, [user, userProfile, authLoading, router, form]);
 
   const onSubmit = async (data: ProfileCompletionFormValues) => {
     if (!user) {
@@ -107,6 +112,8 @@ export default function CompleteProfilePage() {
       const userDocRef = doc(db, 'users', user.uid);
       
       const userData: Partial<UserProfile> = {
+        name: data.name,
+        email: user.email!,
         role: data.role,
       };
 
@@ -117,18 +124,20 @@ export default function CompleteProfilePage() {
         userData.gstNumber = data.gstNumber;
       }
 
+      // This is now the primary place we write user data to Firestore
       await setDoc(userDocRef, userData, { merge: true })
         .catch((error) => {
            errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: userDocRef.path,
-                operation: 'update',
+                operation: 'create', // Explicitly 'create' as this is the first write
                 requestResourceData: userData
            }));
            throw error;
         });
 
-      // The useAuth hook will handle the redirect to dashboard
+      // The useAuth hook will handle the redirect to dashboard after the profile is updated
     } catch (error: any) {
+      // The permission error will be handled globally, but we can catch other errors.
       if (!(error instanceof FirestorePermissionError)) {
           toast({
             title: 'Update Failed',
@@ -173,9 +182,18 @@ export default function CompleteProfilePage() {
             <Label>Email</Label>
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
-           <div className="space-y-2">
-            <Label>Name</Label>
-            <p className="text-sm text-muted-foreground">{userProfile?.name || user.displayName}</p>
+           <div className="grid gap-2">
+            <Label htmlFor="name">Full Name</Label>
+            <Input
+              id="name"
+              placeholder="Enter your full name"
+              {...form.register('name')}
+            />
+            {form.formState.errors.name && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.name.message}
+              </p>
+            )}
           </div>
           
           <div className="grid gap-2">
