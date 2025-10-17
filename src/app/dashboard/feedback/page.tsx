@@ -58,43 +58,34 @@ export default function FeedbackPage() {
 
   async function onSubmit(data: FeedbackFormValues) {
     setIsSubmitting(true);
-    try {
-      const collectionRef = collection(db, 'feedbacks');
-      
-      const newFeedback = {
-        ...data,
-        userId: user?.uid || null,
-        createdAt: serverTimestamp(),
-      };
+    
+    const collectionRef = collection(db, 'feedbacks');
+    
+    const newFeedback = {
+      ...data,
+      userId: user?.uid || null,
+      createdAt: serverTimestamp(),
+    };
 
-      await addDoc(collectionRef, newFeedback)
-        .catch((error) => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: collectionRef.path,
-                operation: 'create',
-                requestResourceData: newFeedback
-            }));
-            throw error;
+    addDoc(collectionRef, newFeedback)
+      .then(() => {
+        toast({
+          title: 'Thank you!',
+          description: 'Your feedback has been submitted successfully.',
         });
-
-      toast({
-        title: 'Thank you!',
-        description: 'Your feedback has been submitted successfully.',
+        form.reset({ ...form.getValues(), message: '' }); // Clear message field only
+      })
+      .catch((error) => {
+          // Emit the detailed, contextual error for the global listener.
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: collectionRef.path,
+              operation: 'create',
+              requestResourceData: newFeedback
+          }));
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
-
-      form.reset({ ...form.getValues(), message: '' }); // Clear message field only
-      
-    } catch (error: any) {
-       if (!(error instanceof FirestorePermissionError)) {
-         toast({
-            title: 'Submission Failed',
-            description: error.message || 'Could not submit your feedback.',
-            variant: 'destructive',
-        });
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
   }
 
   return (
