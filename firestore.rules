@@ -1,176 +1,161 @@
 /**
- * @fileoverview Firestore Security Rules for the application.
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for personal data
- * and allows public read access to market prices and feedback submissions.
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a strict user-ownership model for most data,
+ *              with public read access for market prices and authenticated-user write access for feedback.
  *
  * Data Structure:
- * - User profiles and associated data (fields, expenses, tasks, produce listings)
- *   are nested under `/users/{userId}`.
- * - Market prices are stored in the top-level `/marketPrices/{marketPriceId}` collection.
- * - Feedback submissions are stored in the top-level `/feedbacks/{feedbackId}` collection.
+ * - All data related to a specific user (fields, expenses, tasks, produce listings, growth data)
+ *   is nested under `/users/{userId}`.
+ * - Market prices are stored in the top-level `/marketPrices/{marketPriceId}` collection and are publicly readable.
+ * - User feedback is stored in the top-level `/feedbacks/{feedbackId}` collection and can be written by any authenticated user.
  *
  * Key Security Decisions:
- * - Users can only access their own data.
- * - Market prices are publicly readable.
- * - Feedback submissions can be created by any authenticated user.
- * - Listing of documents is only permitted for user-owned subcollections.
+ * - Users can only read and write their own data.
+ * - Market prices are publicly readable but not writable via the client.
+ * - User listing is disallowed.
  *
  * Denormalization for Authorization:
- * - User ownership is enforced by matching the `userId` in the path with `request.auth.uid`.
- *   This avoids the need for `get()` calls to verify ownership.
+ * - The `userId` is included in the document and enforced to match the path for data integrity.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Grants access to user profile information.
+     * @description Protects user profile information.
      * @path /users/{userId}
-     * @allow (create) User with matching ID can create their profile.
-     * @allow (get, list, update, delete) User with matching ID can access and manage their profile.
-     * @deny (create, get, list, update, delete) User without matching ID cannot access or manage this profile.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - User with UID 'cEaZX6lta8aq6kwCfVpdmvoN0Ob2' can create their own document with matching ID.
+     * @allow (get, update, delete) - User with UID 'cEaZX6lta8aq6kwCfVpdmvoN0Ob2' can access their own document.
+     * @deny (create) - User with UID 'attackerUID' cannot create a document with userId 'cEaZX6lta8aq6kwCfVpdmvoN0Ob2'.
+     * @deny (get, update, delete) - User with UID 'attackerUID' cannot access user 'cEaZX6lta8aq6kwCfVpdmvoN0Ob2' document.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-
       allow get: if isOwner(userId);
       allow list: if false;
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isOwner(userId) && resource.data.id == userId; //Enforce immutability of id
-      allow delete: if isOwner(userId) && resource != null;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Grants access to field data associated with a user.
+     * @description Protects field data associated with a user.
      * @path /users/{userId}/fields/{fieldId}
-     * @allow (create) User with matching ID can create field data.
-     * @allow (get, list, update, delete) User with matching ID can access and manage their field data.
-     * @deny (create, get, list, update, delete) User without matching ID cannot access or manage this field data.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create, get, update, delete, list) - User with UID 'cEaZX6lta8aq6kwCfVpdmvoN0Ob2' can manage their own fields.
+     * @deny (create, get, update, delete, list) - User with UID 'attackerUID' cannot access fields of user 'cEaZX6lta8aq6kwCfVpdmvoN0Ob2'.
+     * @principle Restricts access to a user's own data tree and enforces path-based ownership.
      */
     match /users/{userId}/fields/{fieldId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
       allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isOwner(userId) && resource != null && resource.data.userId == userId; //Enforce immutability of userId
-      allow delete: if isOwner(userId) && resource != null;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Grants access to expense records associated with a user.
+     * @description Protects expense records associated with a user.
      * @path /users/{userId}/expenses/{expenseId}
-     * @allow (create) User with matching ID can create expense records.
-     * @allow (get, list, update, delete) User with matching ID can access and manage their expense records.
-     * @deny (create, get, list, update, delete) User without matching ID cannot access or manage this expense records.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create, get, update, delete, list) - User with UID 'cEaZX6lta8aq6kwCfVpdmvoN0Ob2' can manage their own expenses.
+     * @deny (create, get, update, delete, list) - User with UID 'attackerUID' cannot access expenses of user 'cEaZX6lta8aq6kwCfVpdmvoN0Ob2'.
+     * @principle Restricts access to a user's own data tree and enforces path-based ownership.
      */
     match /users/{userId}/expenses/{expenseId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
       allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isOwner(userId) && resource != null && resource.data.userId == userId; //Enforce immutability of userId
-      allow delete: if isOwner(userId) && resource != null;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Grants access to tasks associated with a user.
+     * @description Protects tasks associated with a user.
      * @path /users/{userId}/tasks/{taskId}
-     * @allow (create) User with matching ID can create tasks.
-     * @allow (get, list, update, delete) User with matching ID can access and manage their tasks.
-     * @deny (create, get, list, update, delete) User without matching ID cannot access or manage these tasks.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create, get, update, delete, list) - User with UID 'cEaZX6lta8aq6kwCfVpdmvoN0Ob2' can manage their own tasks.
+     * @deny (create, get, update, delete, list) - User with UID 'attackerUID' cannot access tasks of user 'cEaZX6lta8aq6kwCfVpdmvoN0Ob2'.
+     * @principle Restricts access to a user's own data tree and enforces path-based ownership.
      */
     match /users/{userId}/tasks/{taskId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
       allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isOwner(userId) && resource != null && resource.data.userId == userId; //Enforce immutability of userId
-      allow delete: if isOwner(userId) && resource != null;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Grants access to growth data for a specific field.
+     * @description Protects growth data for a specific field.
      * @path /users/{userId}/fields/{fieldId}/growthData/{growthDataId}
-     * @allow (create) User with matching ID can create growth data.
-     * @allow (get, list, update, delete) User with matching ID can access and manage their growth data.
-     * @deny (create, get, list, update, delete) User without matching ID cannot access or manage this growth data.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create, get, update, delete, list) - User with UID 'cEaZX6lta8aq6kwCfVpdmvoN0Ob2' can manage growth data for their fields.
+     * @deny (create, get, update, delete, list) - User with UID 'attackerUID' cannot access growth data of user 'cEaZX6lta8aq6kwCfVpdmvoN0Ob2'.
+     * @principle Restricts access to a user's own data tree and enforces hierarchical path-based ownership.
      */
     match /users/{userId}/fields/{fieldId}/growthData/{growthDataId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isOwner(userId); // No userId to validate in request data. Assuming it's implicit in the path.
-      allow update: if isOwner(userId) && resource != null;
-      allow delete: if isOwner(userId) && resource != null;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Grants public read access to market price data.
+     * @description Provides public read access to market price data.
      * @path /marketPrices/{marketPriceId}
-     * @allow (get, list) Any user can read market prices.
-     * @deny (create, update, delete) Only admin users can create, update, or delete market prices.
+     * @allow (get, list) - Any user can read market prices.
+     * @deny (create, update, delete) - No user can create, update or delete market prices through client side.
      * @principle Allows public read access while restricting write access.
      */
     match /marketPrices/{marketPriceId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add admin role check
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
 
     /**
-     * @description Grants access to produce listings created by users.
+     * @description Protects produce listings created by users.
      * @path /users/{userId}/produceListings/{produceListingId}
-     * @allow (create) User with matching ID can create produce listings.
-     * @allow (get, list, update, delete) User with matching ID can access and manage their produce listings.
-     * @deny (create, get, list, update, delete) User without matching ID cannot access or manage these produce listings.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create, get, update, delete, list) - User with UID 'cEaZX6lta8aq6kwCfVpdmvoN0Ob2' can manage their own produce listings.
+     * @deny (create, get, update, delete, list) - User with UID 'attackerUID' cannot access produce listings of user 'cEaZX6lta8aq6kwCfVpdmvoN0Ob2'.
+     * @principle Restricts access to a user's own data tree and enforces path-based ownership.
      */
     match /users/{userId}/produceListings/{produceListingId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
       allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isOwner(userId) && resource != null && resource.data.userId == userId; //Enforce immutability of userId
-      allow delete: if isOwner(userId) && resource != null;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Grants access to feedback submissions.
+     * @description Allows any authenticated user to submit feedback.
      * @path /feedbacks/{feedbackId}
-     * @allow (create) Any authenticated user can submit feedback.
-     * @deny (get, list, update, delete) Feedback can only be created, not read, updated, or deleted via client.
-     * @principle Allows public write access for feedback submissions, restricts all other access.
+     * @allow (create) - Any authenticated user can submit feedback.
+     * @allow (get, list, update, delete) - No user can get, list, update, or delete feedback via client side.
+     * @principle Allows open writes for authenticated users.
      */
     match /feedbacks/{feedbackId} {
-      function isSignedIn() {
-          return request.auth != null;
-      }
-
-      allow get, list, update, delete: if false;
+      allow get: if false;
+      allow list: if false;
       allow create: if isSignedIn();
+      allow update: if false;
+      allow delete: if false;
     }
+  }
+
+  // Helper function to determine if the user is signed in.
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  // Helper function to determine if the user is the owner of the document.
+  function isOwner(userId) {
+    return request.auth.uid == userId;
+  }
+
+  // Helper function to determine if the user is the owner of the document and it exists.
+  function isExistingOwner(userId) {
+    return isOwner(userId) && resource != null;
   }
 }
