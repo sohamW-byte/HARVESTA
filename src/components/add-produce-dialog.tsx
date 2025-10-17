@@ -70,43 +70,34 @@ export function AddProduceDialog() {
     }
     
     setIsSubmitting(true);
-    try {
-      const collectionRef = collection(db, 'users', user.uid, 'produceListings');
-      
-      const newListing: Omit<ProduceListing, 'id'> = {
-        ...data,
-        userId: user.uid,
-      };
+    
+    const collectionRef = collection(db, 'users', user.uid, 'produceListings');
+    
+    const newListing: Omit<ProduceListing, 'id'> = {
+      ...data,
+      userId: user.uid,
+    };
 
-      await addDoc(collectionRef, newListing)
-        .catch((error) => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: collectionRef.path,
-                operation: 'create',
-                requestResourceData: newListing
-            }));
-            throw error; // Re-throw to be caught by the outer catch block
+    addDoc(collectionRef, newListing)
+      .then(() => {
+        toast({
+          title: 'Success!',
+          description: `${data.cropName} has been listed on the marketplace.`,
         });
-
-      toast({
-        title: 'Success!',
-        description: `${data.cropName} has been listed on the marketplace.`,
+        form.reset();
+        setOpen(false); // Close the dialog on success
+      })
+      .catch((error) => {
+        // Emit the detailed, contextual error for the global listener.
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: collectionRef.path,
+            operation: 'create',
+            requestResourceData: newListing
+        }));
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
-      
-      form.reset();
-      setOpen(false); // Close the dialog on success
-      
-    } catch (error: any) {
-      if (!(error instanceof FirestorePermissionError)) {
-         toast({
-            title: 'Submission failed',
-            description: error.message || 'Could not list your produce.',
-            variant: 'destructive',
-        });
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
   }
 
   return (
