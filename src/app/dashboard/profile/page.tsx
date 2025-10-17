@@ -277,7 +277,7 @@ export default function ProfilePage() {
                         />
                         
                         <div className="space-y-2">
-                            <Label>Email</Label>
+                            <Label>Email ({user?.email})</Label>
                             <p className="text-sm text-muted-foreground pt-2">
                                 Your email address cannot be changed.
                             </p>
@@ -428,5 +428,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    

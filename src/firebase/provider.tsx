@@ -6,6 +6,8 @@ import { Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, getAdditionalUserInfo, UserCredential } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import type { UserProfile } from '@/lib/types';
+import { errorEmitter } from './error-emitter';
+import { FirestorePermissionError } from './errors';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -58,12 +60,15 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
               email: firebaseUser.email!,
               photoURL: firebaseUser.photoURL || undefined,
             };
-            try {
-              await setDoc(userDocRef, profileData, { merge: true });
-            } catch (e) {
+            setDoc(userDocRef, profileData, { merge: true }).catch((e) => {
                 console.error("Failed to create user profile document:", e);
-                setError(e as Error);
-            }
+                // Don't set component error state, just emit for global handler
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: userDocRef.path,
+                    operation: 'create',
+                    requestResourceData: profileData
+                }));
+            });
           }
         }
         setUser(firebaseUser);
