@@ -34,20 +34,24 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isProcessingRedirect, setIsProcessingRedirect] = useState(true);
 
   useEffect(() => {
     if (!auth) {
       setLoading(false);
+      setIsProcessingRedirect(false);
       setError(new Error("Auth service not provided."));
       return;
     }
-
-    const processRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
+    
+    // First, process any pending redirect results from Google Sign-In
+    getRedirectResult(auth)
+      .then(async (result) => {
         if (result) {
           const user = result.user;
           const additionalInfo = getAdditionalUserInfo(result);
+          
+          // If it's a new user, create their profile document shell
           if (additionalInfo?.isNewUser) {
             const userDocRef = doc(firestore, 'users', user.uid);
             const docSnap = await getDoc(userDocRef);
@@ -61,22 +65,25 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
             }
           }
         }
-      } catch (error: any) {
+      })
+      .catch((error) => {
         console.error("Error processing redirect result:", error);
         setError(error);
-      }
-    };
+      })
+      .finally(() => {
+        setIsProcessingRedirect(false);
+      });
 
+  }, [auth, firestore]);
+  
+  useEffect(() => {
+    if (isProcessingRedirect || !auth) return;
+
+    // After processing redirects, set up the normal auth state listener
     const unsubscribe = onAuthStateChanged(
       auth,
-      async (firebaseUser) => {
-        if (firebaseUser) {
-          setUser(firebaseUser);
-        } else {
-          // No user is signed in, but first check for redirect result
-          await processRedirectResult();
-          setUser(null); // Explicitly set user to null if no one is logged in
-        }
+      (firebaseUser) => {
+        setUser(firebaseUser);
         setLoading(false);
       },
       (error) => {
@@ -88,16 +95,17 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     );
 
     return () => unsubscribe();
-  }, [auth, firestore]);
+  }, [isProcessingRedirect, auth]);
+
 
   const contextValue = useMemo((): FirebaseContextState => ({
     firebaseApp,
     firestore,
     auth,
     user,
-    loading,
+    loading: loading || isProcessingRedirect,
     error,
-  }), [firebaseApp, firestore, auth, user, loading, error]);
+  }), [firebaseApp, firestore, auth, user, loading, isProcessingRedirect, error]);
 
   return (
     <FirebaseContext.Provider value={contextValue}>
