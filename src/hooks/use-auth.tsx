@@ -1,16 +1,15 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, signOut as firebaseSignOut, getRedirectResult, getAdditionalUserInfo } from 'firebase/auth';
+import { User, signOut as firebaseSignOut } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuth as useFirebaseAuth, useFirestore, useUser } from '@/firebase';
-import { doc, onSnapshot, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirebase, useFirestore } from '@/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { Loader2, Sprout } from 'lucide-react';
 
 interface AuthContextType {
   user: User | null;
-  auth: ReturnType<typeof useFirebaseAuth>;
   userProfile: UserProfile | null;
   loading: boolean;
   signOut: () => Promise<void>;
@@ -18,143 +17,99 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function setCookie(name: string, value: string, days: number) {
-    let expires = "";
-    if (days) {
-        const date = new Date();
-        date.setTime(date.getTime() + (days*24*60*60*1000));
-        expires = "; expires=" + date.toUTCString();
-    }
-    if (typeof document !== 'undefined') {
-        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-    }
-}
-
-function eraseCookie(name: string) {   
-    if (typeof document !== 'undefined') {
-        document.cookie = name+'=; Max-Age=-99999999; path=/';
-    }
-}
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const { user, isUserLoading: isAuthLoading } = useUser();
-  const auth = useFirebaseAuth();
-  const db = useFirestore();
+function AuthGate({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { user, userProfile, loading } = useAuth();
   
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
-    const handleAuth = async () => {
-      // Step 1: Process any pending redirect from Google Sign-In
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          const user = result.user;
-          const additionalInfo = getAdditionalUserInfo(result);
-          if (additionalInfo?.isNewUser) {
-            const userDocRef = doc(db, 'users', user.uid);
-            const docSnap = await getDoc(userDocRef);
-            if (!docSnap.exists()) {
-              const profileData: Partial<UserProfile> = {
-                name: user.displayName || 'New User',
-                email: user.email!,
-                photoURL: user.photoURL || undefined,
-              };
-              await setDoc(userDocRef, profileData, { merge: true });
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error processing redirect result:", error);
+    if (loading) return; // Wait until loading is complete
+
+    const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/forgot-password');
+
+    if (!user) {
+      // User is not logged in, redirect to login if not on an auth page
+      if (!isAuthPage) {
+        router.replace('/login');
       }
-      
-      // After processing redirect, isAuthLoading will eventually become false.
-      // We wait for that, and then for the actual user object to be available.
-      if (isAuthLoading) {
-        return; // Wait for Firebase Auth to initialize
-      }
-
-      // Step 2: Handle user state (logged in or out)
-      if (!user) {
-        // User is not logged in
-        setUserProfile(null);
-        eraseCookie('firebaseIdToken');
-        const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/forgot-password');
-        if (!isAuthPage) {
-          router.replace('/login');
+    } else {
+      // User is logged in
+      if (userProfile?.role) {
+        // Profile is complete, redirect to dashboard if on an auth page
+        if (isAuthPage) {
+          router.replace('/dashboard');
         }
-        setIsLoading(false);
-        return;
-      }
-
-      // User is logged in, set token and subscribe to profile
-      user.getIdToken().then(token => setCookie('firebaseIdToken', token, 1));
-
-      const userDocRef = doc(db, 'users', user.uid);
-      const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-        const onAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
-
-        if (docSnap.exists()) {
-          const profile = { id: docSnap.id, ...docSnap.data() } as UserProfile;
-          setUserProfile(profile);
-
-          if (profile.role) {
-            // Profile is complete, go to dashboard
-            if (onAuthPage) {
-              router.replace('/dashboard');
-            }
-          } else {
-            // Profile is incomplete, go to completion page
-            if (pathname !== '/signup/complete-profile') {
-              router.replace('/signup/complete-profile');
-            }
-          }
-        } else {
-          // New user (e.g. from Google) whose doc might have just been created
-          // or an old user whose doc was deleted. Send to complete profile.
-          setUserProfile(null);
-          if (pathname !== '/signup/complete-profile') {
-            router.replace('/signup/complete-profile');
-          }
+      } else {
+        // Profile is not complete, redirect to complete-profile page
+        if (pathname !== '/signup/complete-profile') {
+          router.replace('/signup/complete-profile');
         }
-        setIsLoading(false);
-      }, (error) => {
-        console.error("Error listening to user profile:", error);
-        firebaseSignOut(auth);
-        setIsLoading(false);
-      });
+      }
+    }
+  }, [user, userProfile, loading, pathname, router]);
 
-      return () => unsubscribe();
-    };
-
-    handleAuth();
-  }, [user, isAuthLoading, auth, db, router, pathname]);
-
-  const signOut = async () => {
-    setIsLoading(true);
-    await firebaseSignOut(auth);
-    // The useEffect hook will handle the rest
-  };
-  
-  const value: AuthContextType = { user, auth, userProfile, loading: isLoading, signOut };
-
-  if (isLoading) {
+  if (loading) {
     return (
-        <div className="flex h-screen items-center justify-center bg-background">
-             <div className="flex flex-col items-center gap-4">
-                <Sprout className="h-12 w-12 text-primary animate-pulse" />
-                <p className="text-muted-foreground">Initializing Session...</p>
-            </div>
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Sprout className="h-12 w-12 text-primary animate-pulse" />
+          <p className="text-muted-foreground">Initializing Session...</p>
         </div>
+      </div>
     );
   }
 
+  return <>{children}</>;
+}
+
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const { user, auth, loading: authLoading } = useFirebase();
+  const db = useFirestore();
+  
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    if (authLoading) {
+      setProfileLoading(true);
+      return;
+    }
+
+    if (!user) {
+      setUserProfile(null);
+      setProfileLoading(false);
+      return;
+    }
+
+    const userDocRef = doc(db, 'users', user.uid);
+    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setUserProfile({ id: docSnap.id, ...docSnap.data() } as UserProfile);
+      } else {
+        setUserProfile(null); // Profile doesn't exist yet for this new user
+      }
+      setProfileLoading(false);
+    }, (error) => {
+      console.error("Error listening to user profile:", error);
+      setUserProfile(null);
+      setProfileLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, authLoading, db]);
+
+  const signOut = async () => {
+    if(auth) {
+        await firebaseSignOut(auth);
+    }
+  };
+  
+  const value: AuthContextType = { user, userProfile, loading: authLoading || profileLoading, signOut };
+  
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      <AuthGate>{children}</AuthGate>
     </AuthContext.Provider>
   );
 }
