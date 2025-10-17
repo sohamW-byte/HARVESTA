@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
-import { useAuth as useFirebaseAuth } from '@/firebase';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { useAuth } from '@/firebase';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,7 +22,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Sprout } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth as useAppAuth } from '@/hooks/use-auth';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -57,8 +57,8 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const auth = useFirebaseAuth();
-  const { loading: authHookLoading } = useAuth();
+  const auth = useAuth(); // Correct hook for auth instance
+  const { loading: authHookLoading } = useAppAuth();
 
   const {
     register,
@@ -88,14 +88,15 @@ export default function LoginPage() {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-      // Use redirect which is better for some environments and mobile
-      await signInWithRedirect(auth, provider);
+      await signInWithPopup(auth, provider);
+      // The onAuthStateChanged listener in the provider will handle the result.
     } catch (error: any) {
       toast({
         title: 'Google Sign-In Failed',
-        description: error.message || 'Could not start Google Sign-In.',
+        description: error.message || 'Could not complete Google Sign-In.',
         variant: 'destructive',
       });
+    } finally {
       setGoogleLoading(false);
     }
   };

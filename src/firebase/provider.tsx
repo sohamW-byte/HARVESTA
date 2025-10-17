@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
-import { Auth, User, onAuthStateChanged, getRedirectResult, UserCredential } from 'firebase/auth';
+import { Firestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import { Auth, User, onAuthStateChanged, getAuth } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import type { UserProfile } from '@/lib/types';
 import { errorEmitter } from './error-emitter';
@@ -36,7 +36,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  
+
   useEffect(() => {
     if (!auth) {
       setLoading(false);
@@ -49,6 +49,27 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       async (firebaseUser) => {
         if (firebaseUser) {
           setUser(firebaseUser);
+          
+          // Check if this is a new user from a social provider login
+          const userDocRef = doc(firestore, 'users', firebaseUser.uid);
+          const docSnap = await getDoc(userDocRef);
+
+          if (!docSnap.exists()) {
+             // This is a new user (likely from Google Sign-in)
+             // Let's create a profile document shell
+             const profileData: Partial<UserProfile> = {
+                name: firebaseUser.displayName || 'New User',
+                email: firebaseUser.email!,
+                photoURL: firebaseUser.photoURL || undefined,
+            };
+            setDoc(userDocRef, profileData, { merge: true }).catch((e) => {
+                 errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: userDocRef.path,
+                    operation: 'create',
+                    requestResourceData: profileData
+                }));
+            });
+          }
         } else {
           setUser(null);
         }
@@ -62,38 +83,8 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       }
     );
 
-    // Handle redirect result for social providers
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (result) {
-          // This is the first sign-in after a redirect.
-          const userDocRef = doc(firestore, 'users', result.user.uid);
-          const docSnap = await getDoc(userDocRef);
-
-          if (!docSnap.exists()) {
-            // New user, create their profile document
-            const profileData: Partial<UserProfile> = {
-              name: result.user.displayName || 'New User',
-              email: result.user.email!,
-              photoURL: result.user.photoURL || undefined,
-            };
-            
-            setDoc(userDocRef, profileData, { merge: true }).catch((e) => {
-                errorEmitter.emit('permission-error', new FirestorePermissionError({
-                    path: userDocRef.path,
-                    operation: 'create',
-                    requestResourceData: profileData
-                }));
-            });
-          }
-        }
-      }).catch((error) => {
-        console.error("Error getting redirect result:", error);
-      });
-
     return () => unsubscribe();
   }, [auth, firestore]);
-
 
   const contextValue = useMemo((): FirebaseContextState => ({
     firebaseApp,
@@ -112,7 +103,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   );
 };
 
-
 export const useFirebase = (): FirebaseContextState => {
   const context = useContext(FirebaseContext);
   if (context === undefined) {
@@ -120,7 +110,6 @@ export const useFirebase = (): FirebaseContextState => {
   }
   return context;
 };
-
 
 export const useAuth = (): Auth => {
   const { auth } = useFirebase();

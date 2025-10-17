@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, signOut as firebaseSignOut } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
-import { useFirebase, useFirestore } from '@/firebase';
+import { useFirebase, useFirestore, useAuth as useFirebaseAuth } from '@/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { Loader2, Sprout } from 'lucide-react';
@@ -23,20 +23,26 @@ function AuthGate({ children }: { children: ReactNode }) {
   const { user, userProfile, loading } = useContext(AuthContext)!;
   
   useEffect(() => {
+    // Wait until loading is complete before doing anything
     if (loading) return;
 
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/forgot-password');
 
     if (!user) {
+      // If user is not logged in, they must be on an auth page.
+      // If not, redirect them to login.
       if (!isAuthPage) {
         router.replace('/login');
       }
     } else {
+      // User is logged in. Now check their profile.
       if (userProfile?.role) {
+        // Profile is complete. If they are on an auth page, send to dashboard.
         if (isAuthPage) {
           router.replace('/dashboard');
         }
       } else {
+        // Profile is incomplete. They must be sent to complete it.
         if (pathname !== '/signup/complete-profile') {
           router.replace('/signup/complete-profile');
         }
@@ -44,6 +50,7 @@ function AuthGate({ children }: { children: ReactNode }) {
     }
   }, [user, userProfile, loading, pathname, router]);
 
+  // While loading, show a full-screen loader.
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
@@ -55,23 +62,21 @@ function AuthGate({ children }: { children: ReactNode }) {
     );
   }
 
-  // If user is not logged in and on an auth page, show the page
+  // Determine if we should render children or a loader based on redirection logic.
   const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/forgot-password');
+  
+  // Scenarios where we render the page content:
   if (!user && isAuthPage) {
       return <>{children}</>;
   }
-
-  // If user is logged in and profile is complete, show the page (if not an auth page)
   if (user && userProfile?.role && !isAuthPage) {
       return <>{children}</>;
   }
-
-  // if user is logged in but profile is not complete, and they are on the complete profile page
   if (user && !userProfile?.role && pathname === '/signup/complete-profile') {
       return <>{children}</>;
   }
 
-  // In all other intermediate states, show a loader to prevent flashes of incorrect content
+  // In all other intermediate states (e.g., about to redirect), show a loader to prevent flashes of incorrect content.
   return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -82,32 +87,36 @@ function AuthGate({ children }: { children: ReactNode }) {
   );
 }
 
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { user, auth, loading: authLoading } = useFirebase();
+  const { user, loading: authLoading } = useFirebase();
+  const firebaseAuth = useFirebaseAuth();
   const db = useFirestore();
   
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
+    // If the main auth state is still loading, we are also loading.
     if (authLoading) {
       setProfileLoading(true);
       return;
     }
 
+    // If there is no user, there is no profile to fetch.
     if (!user) {
       setUserProfile(null);
       setProfileLoading(false);
       return;
     }
 
+    // There is a user, so let's fetch their profile.
     setProfileLoading(true);
     const userDocRef = doc(db, 'users', user.uid);
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
         setUserProfile({ id: docSnap.id, ...docSnap.data() } as UserProfile);
       } else {
+        // This case can happen briefly for new social sign-ins before the profile is created.
         setUserProfile(null);
       }
       setProfileLoading(false);
@@ -121,9 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, authLoading, db]);
 
   const signOut = async () => {
-    if(auth) {
-        await firebaseSignOut(auth);
-    }
+    await firebaseSignOut(firebaseAuth);
   };
   
   const value: AuthContextType = { user, userProfile, loading: authLoading || profileLoading, signOut };

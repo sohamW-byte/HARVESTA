@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useFirestore, useAuth } from '@/firebase';
@@ -134,25 +133,24 @@ export default function SignupPage() {
         gstNumber: data.gstNumber || undefined,
       };
 
-      await setDoc(userDocRef, userData)
+      // Non-blocking write with error handling
+      setDoc(userDocRef, userData)
         .catch((error) => {
            errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: userDocRef.path,
                 operation: 'create',
                 requestResourceData: userData
            }));
-           throw error;
+           // The global listener will throw the error, so we don't need to toast here.
         });
 
       // The useAuth hook will handle redirection to the dashboard
     } catch (error: any) {
-      if (!(error instanceof FirestorePermissionError)) {
-          toast({
-            title: 'Sign Up Failed',
-            description: error.message || 'An unexpected error occurred.',
-            variant: 'destructive',
-          });
-      }
+      toast({
+        title: 'Sign Up Failed',
+        description: error.message || 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
