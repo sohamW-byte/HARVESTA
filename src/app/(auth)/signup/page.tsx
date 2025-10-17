@@ -102,34 +102,36 @@ export default function SignupPage() {
 
       const userDocRef = doc(db, 'users', user.uid);
       
-      const userData: Partial<UserProfile> = {
+      const userData: Omit<UserProfile, 'id'> = {
         name: data.name,
         email: data.email,
         role: data.role,
+        farmerId: data.farmerId || null,
+        gstNumber: data.gstNumber || null,
+        address: null,
+        cropsGrown: [],
+        phoneNumber: null,
+        photoURL: null,
       };
 
-      if (data.farmerId) userData.farmerId = data.farmerId;
-      if (data.gstNumber) userData.gstNumber = data.gstNumber;
-
-
-      // Non-blocking write with error handling
-      setDoc(userDocRef, userData)
-        .catch((error) => {
-           errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: userDocRef.path,
-                operation: 'create',
-                requestResourceData: userData
-           }));
-           // The global listener will throw the error, so we don't need to toast here.
-        });
+      await setDoc(userDocRef, userData);
 
       // The useAuth hook will handle redirection to the dashboard
     } catch (error: any) {
-      toast({
-        title: 'Sign Up Failed',
-        description: error.message || 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
+       if (error.code && error.code.startsWith('auth/')) {
+         toast({
+            title: 'Sign Up Failed',
+            description: error.message.replace('Firebase: ', ''),
+            variant: 'destructive',
+         });
+       } else {
+            const permissionError = new FirestorePermissionError({
+                path: `users/${data.email}`, // Use a representative path
+                operation: 'create',
+                requestResourceData: { name: data.name, email: data.email, role: data.role }
+            });
+            errorEmitter.emit('permission-error', permissionError);
+       }
     } finally {
       setLoading(false);
     }
