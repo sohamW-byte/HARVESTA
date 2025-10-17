@@ -24,32 +24,27 @@ const AnimatedLoader = () => {
         initial: {
             rotate: 0,
             scale: 1,
-            color: 'hsl(var(--primary))',
         },
         animate: {
-            rotate: [0, 20, -20, 0],
-            scale: [1, 1.2, 1, 1.2, 1],
-            color: ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--primary))'],
+            rotate: [0, 15, -15, 0],
+            scale: [1, 1.1, 1, 1.1, 1],
             transition: {
-                rotate: { duration: 2, ease: "easeInOut", repeat: Infinity },
-                scale: { duration: 2.5, ease: "easeInOut", repeat: Infinity },
-                color: { duration: 5, ease: "linear", repeat: Infinity, repeatType: "reverse" },
+                rotate: { duration: 1.5, ease: "easeInOut", repeat: Infinity },
+                scale: { duration: 1.5, ease: "easeInOut", repeat: Infinity },
             },
         },
     };
 
     return (
         <div className="flex h-screen items-center justify-center bg-background">
-            <div className="flex flex-col items-center gap-4">
-                <motion.div
-                    variants={sproutVariants}
-                    initial="initial"
-                    animate="animate"
-                >
-                    <Sprout className="h-16 w-16" />
-                </motion.div>
-                <p className="text-muted-foreground tracking-widest animate-pulse">HARVESTA</p>
-            </div>
+            <motion.div
+                variants={sproutVariants}
+                initial="initial"
+                animate="animate"
+                className="text-primary"
+            >
+                <Sprout className="h-16 w-16" />
+            </motion.div>
         </div>
     );
 };
