@@ -33,13 +33,13 @@
     {
       "id": "produce-rice",
       "description": "Sona Masoori Rice",
-      "imageUrl": "https://images.unsplash.com/photo-1686820740687-426a7b9b2043?w=400&h=300&fit=crop&q=60",
+      "imageUrl": "https://images.unsplash.com/photo-1686820740687-426a7b9b2043?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHNvbmElMjBtYW5zb29yaSUyMHJpY2V8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&q=60&w=600",
       "imageHint": "rice grains"
     },
     {
       "id": "produce-oranges",
       "description": "Nagpur Oranges",
-      "imageUrl": "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=400&h=300&fit=crop&q=60",
+      "imageUrl": "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8b3JhbmdlfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600",
       "imageHint": "fresh oranges"
     },
     {
@@ -62,9 +62,9 @@
     },
     {
       "id": "produce-tea",
-      "description": "Darjeeling Tea",
-      "imageUrl": "https://picsum.photos/seed/tea/400/300",
-      "imageHint": "tea leaves"
+      "description": "Organic Turmeric",
+      "imageUrl": "https://images.unsplash.com/photo-1666818398897-381dd5eb9139?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dHVybWVyaWN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&q=60&w=600",
+      "imageHint": "turmeric powder"
     },
     {
       "id": "produce-apples",
