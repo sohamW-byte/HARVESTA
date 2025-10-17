@@ -16,47 +16,45 @@ import { useTranslation } from '@/hooks/use-translation';
 
 const plans = [
   {
-    name: 'Starter Farmer',
+    name: 'Basic Farmer',
     price: 'Free',
     commission: '5%',
     features: [
-      'List up to 5 products',
+      'List up to 10 products',
       'Basic market price access',
       'Community forum access',
-      'Standard support',
+      'Standard email support',
     ],
     popular: false,
-    cta: 'Get Started',
+    cta: 'Continue with Basic',
+  },
+  {
+    name: 'Growth Farmer',
+    price: '₹499',
+    pricePeriod: '/month',
+    commission: '3%',
+    features: [
+      'List up to 50 products',
+      'AI Crop Recommendations',
+      'Real-time price alerts',
+      'Priority email support',
+    ],
+    popular: true,
+    cta: 'Upgrade to Growth',
   },
   {
     name: 'Pro Farmer',
-    price: '₹999',
-    pricePeriod: '/month',
-    commission: '2%',
-    features: [
-      'Unlimited product listings',
-      'Advanced AI recommendations',
-      'Real-time price alerts',
-      '0% commission on first 5 orders',
-      'Priority support',
-    ],
-    popular: true,
-    cta: 'Upgrade to Pro',
-  },
-  {
-    name: 'Business Buyer',
-    price: '₹4999',
+    price: '₹1499',
     pricePeriod: '/month',
     commission: '1.5%',
     features: [
-      'Bulk order placement',
-      'Access to verified sellers network',
-      'Advanced supply chain analytics',
-      'Dedicated account manager',
-      '24/7 premium support',
+      'Unlimited product listings',
+      'Advanced AI Analytics & Reports',
+      'Dedicated Relationship Manager',
+      '24/7 Phone & Email Support',
     ],
     popular: false,
-    cta: 'Contact Sales',
+    cta: 'Upgrade to Pro',
   },
 ];
 
@@ -89,10 +87,10 @@ export default function PricingPage() {
     <div className="container mx-auto py-8">
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold tracking-tight">
-          Find the Perfect Plan for Your Needs
+          Find the Perfect Plan for Your Farm
         </h1>
         <p className="text-lg text-muted-foreground mt-2">
-          Affordable pricing for everyone. From individual farmers to large buyers.
+          Simple, transparent pricing that grows with you.
         </p>
       </div>
 
@@ -141,7 +139,7 @@ export default function PricingPage() {
                 </ul>
               </CardContent>
               <CardFooter>
-                <Button className={cn('w-full', !plan.popular && 'bg-secondary text-secondary-foreground hover:bg-secondary/80')}>
+                <Button className={cn('w-full', !plan.popular && 'bg-secondary text-secondary-foreground hover:bg-secondary/80')} variant={plan.popular ? 'default' : 'outline'}>
                   {t(plan.cta)}
                 </Button>
               </CardFooter>
